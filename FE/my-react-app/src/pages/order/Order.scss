@@ -1,0 +1,182 @@
+@import "../../styles/_mixins.scss";
+@import "../../styles/_variables.scss";
+@import "../../styles/_base.scss";
+
+.orderPage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+
+  .customerForm-order {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+
+    h2 {
+      margin-bottom: 10px;
+      color: $primary-color;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 28px;
+    }
+
+    .inputContainer {
+      display: flex;
+      align-items: center;
+      margin: 10px 0;
+
+      label {
+        width: 120px; // Chiều rộng label
+        margin-right: 10px; // Khoảng cách giữa label và input
+        color: $primary-color;
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
+        font-size: 16px;
+      }
+
+      input {
+        width: 300px;
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-family: 'Inter', sans-serif;
+      }
+
+      .payment-method {
+        display: flex;
+        gap: 20px; // Khoảng cách giữa các lựa chọn
+
+        label {
+          display: flex;
+          align-items: center;
+          gap: 5px; // Khoảng cách giữa vòng tròn radio và text
+
+          input[type="radio"] {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid $primary-color;
+            border-radius: 50%;
+            outline: none;
+            cursor: pointer;
+            position: relative;
+
+            &:checked {
+              background-color: $primary-color;
+              box-shadow: inset 0 0 0 5px white;
+            }
+          }
+        }
+      }
+
+    }
+  }
+
+  .cart-order {
+    width: 80%;
+
+    h2 {
+      color: $primary-color;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 28px;
+    }
+
+    .cartItems {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+
+      .cartItem {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        border: 1px solid #ddd;
+        padding: 10px;
+        border-radius: 5px;
+
+        //img {
+        //  width: 100px;
+        //  height: 100px;
+        //  object-fit: cover;
+        //  border-radius: 5px;
+        //}
+        .cart-pic {
+          width: 200px;
+          height: 200px;
+          background-size: contain;
+          background-position: center;
+          background-repeat: no-repeat;
+          @media (max-width: 1000px) {
+            display: none; // Ẩn ảnh khi kích thước cửa sổ <= 1000px
+          }
+        }
+
+        .details {
+          h3 {
+            margin: 10px 0 20px 0;
+          }
+
+          p {
+            margin: 10px 0 10px 0;
+            color: $primary-color;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 16px;
+          }
+
+
+        }
+      }
+    }
+
+    //button {
+    //  padding: 10px 20px;
+    //  background-color: $primary-color;
+    //  color: white;
+    //
+    //  border: none;
+    //  border-radius: 8px;
+    //  cursor: pointer;
+    //
+    //  &:hover {
+    //    background-color: $secondary-color;
+    //  }
+    //}
+  }
+
+  .checkout-order {
+    display: flex;
+    justify-content: flex-end; /* Cả hai sẽ lệch phải */
+
+    .totalPrice {
+      margin-right: 30px; /* Khoảng cách giữa Total Price và nút Place Order */
+      //font-size: 18px;
+      //font-weight: bold;
+      color: $primary-color;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 22px;
+    }
+
+    button {
+      padding: 5px 20px;
+      margin: 10px 0 10px 0;
+      background-color: $primary-color;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+
+      &:hover {
+        background-color: $secondary-color;
+      }
+    }
+  }
+}

@@ -1,0 +1,85 @@
+@import "../../styles/_mixins.scss";
+@import "../../styles/_variables.scss";
+@import "../../styles/_base.scss";
+
+// Product Grid
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 24px;
+  padding: 32px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+// Product Item
+.product-item {
+  background: #FAFAF5;
+  border: 2px solid $divider-color;
+  border-radius: 24px;
+  overflow: hidden;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: transform 0.3s ease;
+
+  &:hover {
+    transform: scale(1.02);
+  }
+
+  .pic {
+    width: 100%;
+    height: 200px;
+    background-size: contain;
+    background-position: center;
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+    background-repeat: no-repeat;
+  }
+
+  .techName {
+    font-family: $font-family-main;
+    font-weight: 600;
+    font-size: 18px;
+    margin-top: 16px;
+    color: $text-in-header-color;
+  }
+
+  .price {
+    font-family: $font-family-main;
+    font-weight: 600;
+    font-size: 16px;
+    color: $primary-color;
+    margin-top: 8px;
+  }
+
+  .addToCart {
+    margin-top: 16px;
+    width: 80%;
+    background: $primary-color;
+    color: $background-color;
+    border-radius: 8px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+
+    &:hover {
+      background-color: $secondary-color;
+    }
+
+    &.disabled {
+      background-color: grey;
+      cursor: not-allowed;
+    }
+  }
+
+
+}
+
+.out-of-stock {
+  border-color: red; /* Tạo viền màu đỏ nếu muốn */
+  background-color: #ffe6e6; /* Màu nền nhạt hơn cho sản phẩm hết hàng */
+}

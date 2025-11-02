@@ -1,0 +1,13 @@
+//@import "../../styles/_mixins.scss";
+//@import "../../styles/_variables.scss";
+//@import "../../styles/_base.scss";
+
+.AboutMe_title {
+  font-size: 64px;
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 112px);
+  text-align: center;
+}

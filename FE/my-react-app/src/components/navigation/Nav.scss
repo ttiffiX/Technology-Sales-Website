@@ -1,0 +1,202 @@
+@import "../../styles/_mixins.scss";
+@import "../../styles/_variables.scss";
+@import "../../styles/_base.scss";
+
+// Navigation
+.navigation {
+  position: relative;
+  height: 112px;
+  width: 100%;
+  background: $background-color;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 96px;
+  box-sizing: border-box;
+  //border-bottom: 1px solid $divider-color;
+
+  .shopName {
+    font-family: $font-family-header;
+    font-weight: 500;
+    font-size: $font-size-header;
+    color: $primary-color;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    text-decoration: none;
+    user-select: none;
+  }
+
+  .login-button {
+    position: absolute;
+    width: 42px;
+    height: 21px;
+    right: 287px;
+    top: 46px;
+    font-family: $font-family-main;
+    font-size: $font-size-base;
+    color: $text-in-header-color;
+    cursor: pointer;
+
+    &:hover {
+      color: $nav-button-color;
+    }
+
+    text-decoration: none; /* Removes underline */
+    user-select: none;
+    @media (max-width: 650px) {
+      display: none;
+    }
+  }
+
+  .avatar-container {
+    @media (max-width: 650px) {
+      display: none;
+    }
+    position: absolute;
+    width: 48px;
+    height: 48px;
+    border: 4px solid $background-color; /* Viền vòng tròn */
+    //border-radius: 50%; /* Tạo hình tròn */
+    overflow: hidden;
+    cursor: pointer;
+
+    .user-avatar {
+      border-radius: 50%; /* Tạo hình tròn */
+      width: 100%;
+      height: 100%;
+      object-fit: cover; /* Đảm bảo ảnh không bị méo */
+    }
+  }
+
+
+  .user-dropdown {
+    position: absolute;
+    display: inline-block;
+    right: 275px;
+    top: 28px;
+    width: 48px;
+    height: 48px;
+
+
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      min-width: 142px;
+      top: 53px;
+      left: -25px;
+      background: $background-color;
+      border: 1px solid #ccc;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+      border-radius: 20px;
+      z-index: 1;
+
+      button {
+        color: $text-in-header-color;
+        padding: 12px 16px;
+        text-decoration: none;
+        display: block;
+        border-radius: 20px;
+        font: 600 $font-size-base $font-family-main;
+        line-height: 130%;
+        width: 100%;
+        text-align: left;
+
+        &:hover {
+          background-color: $hover-color;
+        }
+      }
+    }
+
+    &:hover .dropdown-menu {
+      display: block;
+    }
+  }
+
+
+  /* Cart button */
+  .cartButton {
+    position: absolute;
+    width: 126px;
+    height: 48px;
+    right: 96px;
+    top: 32px;
+    @include button-style($primary-color, $secondary-color);
+
+
+    .cartText {
+      position: absolute;
+      width: 50px;
+      height: 21px;
+      left: calc(50% - 55px / 2);
+      top: calc(50% - 21px / 2);
+      font-family: $font-family-main;
+      font-weight: 600;
+      font-size: $font-size-base;
+      color: $background-color;
+      @include flex-center;
+      user-select: none;
+      text-decoration: none;
+    }
+  }
+
+  /* Shop */
+  .shop {
+    position: absolute;
+    width: 39px;
+    height: 21px;
+    right: 383px;
+    top: 45.5px;
+
+    font-family: $font-family-main;
+    font-style: normal;
+    font-weight: 400;
+    font-size: $font-size-base;
+    line-height: 130%;
+    /* identical to box height, or 21px */
+    display: flex;
+    align-items: center;
+    text-align: center;
+
+    color: $text-in-header-color;
+
+    &:hover {
+      color: $nav-button-color;
+    }
+
+    text-decoration: none; /* Removes underline */
+    user-select: none;
+    @media (max-width: 750px) {
+      display: none;
+    }
+  }
+
+  /* About Me */
+  .aboutMe {
+    @media (max-width: 850px) {
+      display: none;
+    }
+    position: absolute;
+    width: 74px;
+    height: 21px;
+    right: 476px;
+    top: 45.5px;
+
+    font-family: $font-family-main;
+    font-style: normal;
+    font-weight: 400;
+    font-size: $font-size-base;
+    line-height: 130%;
+    /* identical to box height, or 21px */
+
+    color: $text-in-header-color;
+
+    &:hover {
+      color: $nav-button-color;
+    }
+
+    text-decoration: none; /* Removes underline */
+    user-select: none;
+  }
+
+
+}

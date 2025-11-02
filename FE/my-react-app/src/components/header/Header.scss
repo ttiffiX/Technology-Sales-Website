@@ -1,0 +1,189 @@
+@import "../../styles/_mixins.scss";
+@import "../../styles/_variables.scss";
+@import "../../styles/_base.scss";
+
+// Header
+.header {
+  position: relative;
+  width: 100%;
+  height: 149px;
+  background: $background-color;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 32px 96px;
+  box-sizing: border-box;
+
+  .product {
+    position: absolute;
+    width: 219px;
+    height: 77px;
+    left: 96px;
+    bottom: 15px;
+
+    font-family: $font-family-header;
+    font-weight: 400;
+    font-size: $font-size-product;
+    color: $text-in-header-color;
+    line-height: 120%;
+
+    letter-spacing: -0.02em;
+  }
+
+  .divider {
+    position: absolute;
+    left: 96px;
+    right: 96px;
+    bottom: 0;
+    height: 1px;
+    background: $divider-color;
+  }
+
+  .date {
+    position: absolute;
+    width: 200px;
+    height: 26px;
+    left: 347px;
+    bottom: 33px;
+
+    font-family: $font-family-main;
+    font-weight: 300;
+    font-size: $font-size-date;
+    color: $text-in-header-color;
+    @media (max-width: 600px) {
+      display: none;
+    }
+  }
+
+  /* Cấu trúc chung cho các nút chip */
+  .chip-price {
+    position: absolute; /* Sử dụng absolute để căn chỉnh vị trí */
+    box-sizing: border-box;
+    width: 100px;
+    height: 40px;
+    background: $background-color;
+    border: 1px solid $border-color;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease; /* Hiệu ứng chuyển màu mượt mà */
+    text-align: center;
+    color: $text-in-header-color; /* Màu chữ mặc định */
+
+    /* Căn chỉnh các nút theo vị trí cụ thể */
+    &.chip-price-asc {
+      right: 320px;
+      bottom: 33px;
+    }
+
+    &.chip-price-desc {
+      right: 210px;
+      bottom: 33px;
+    }
+    @media (max-width: 1450px) {
+      display: none;
+    }
+  }
+
+  /* Cấu trúc cho văn bản trong nút */
+  .chip-price-text {
+    font-family: $font-family-main;
+    font-weight: 600;
+    font-size: $font-size-base;
+    line-height: 130%;
+  }
+
+  /* Hiển thị khi nút được active */
+  .chip-price.active {
+    background-color: $primary-color; /* Màu nền xanh khi active */
+    color: white; /* Chữ màu trắng khi active */
+    cursor: initial;
+
+    &:hover{
+      background-color: $primary-color;
+      color: white;
+    }
+  }
+
+  /* Hiệu ứng hover khi di chuột vào nút */
+  .chip-price:hover {
+    background-color: $hover-color; /* Màu nền xám khi hover */
+    color: $text-in-header-color;
+  }
+
+
+  /* List Chip */
+  .chip-list {
+    box-sizing: border-box;
+    position: absolute;
+    width: 101px;
+    height: 40px;
+    background: $background-color;
+    border: 1px solid $border-color;
+    border-radius: 20px;
+    font-family: $font-family-main;
+    font-weight: 600;
+    font-size: $font-size-base;
+    line-height: 130%;
+    cursor: pointer;
+    @media (max-width: 1200px) {
+      display: none;
+    }
+  }
+
+  /* Dropdown */
+  .dropdown {
+    position: absolute;
+    width: 101px;
+    height: 40px;
+    right: 96px;
+    bottom: 33px;
+    display: inline-block;
+
+
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      background-color: $drop-content-color;
+      min-width: 126px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+      z-index: 1;
+      border-radius: 20px;
+
+      button {
+        color: $text-in-header-color;
+        padding: 12px 16px;
+        text-decoration: none;
+        display: block;
+        border-radius: 20px;
+        font: 600 $font-size-base $font-family-main;
+        line-height: 130%;
+        width: 100%;
+        text-align: left;
+
+        &:hover {
+          background-color: $hover-color;
+        }
+      }
+    }
+
+    &:hover .dropdown-content {
+      display: block;
+    }
+
+
+    &.dropdown .active {
+      background-color: $primary-color; /* Màu xanh khi nút được chọn */
+      color: white;
+      //border-color: $border-color;
+
+      &:hover{
+        background-color: $primary-color;
+      }
+    }
+  }
+
+
+}
