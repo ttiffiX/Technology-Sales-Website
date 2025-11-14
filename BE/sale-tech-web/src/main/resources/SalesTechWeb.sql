@@ -11,7 +11,7 @@ CREATE TABLE product
 );
 
 
---Customer (CustomerID, Name, Email, Password, name, phone, role)
+--Users (CustomerID, Name, Email, Password, name, phone, role)
 CREATE TABLE Customer
 (
     customer_id SERIAL PRIMARY KEY,
@@ -20,11 +20,11 @@ CREATE TABLE Customer
     password    VARCHAR(255) NOT NULL,
     name        VARCHAR(255),
     phone       VARCHAR(20),
-    role        VARCHAR(50)  NOT NULL CHECK (role IN ('Admin', 'Customer')),
+    role        VARCHAR(50)  NOT NULL CHECK (role IN ('Admin', 'Users')),
 );
 
-INSERT INTO customer (username, email, password, name, role)
-VALUES ('ttiffX', 'sangpham1224@gmail.com', '123456', 'Sang', 'Customer')
+INSERT INTO users (username, email, password, name, role)
+VALUES ('ttiffX', 'sangpham1224@gmail.com', '123456', 'Sang', 'Users')
 
 --Order (OrderID, CustomerID, order_date, update_at, total_price, Status, name, phone, address)
 CREATE TABLE orders
