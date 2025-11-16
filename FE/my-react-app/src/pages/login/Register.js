@@ -1,24 +1,65 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Nav from "../../components/navigation/Nav";
 import './Register.scss';
 import {getCartItems} from "../../api/CartAPI";
+import {register, isAuthenticated} from "../../api/AuthAPI";
+import {useNavigate} from "react-router-dom";
 
 function Register() {
     const {totalQuantity} = getCartItems();
-    const [username, setUsername] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const navigate = useNavigate();
+    const [formData, setFormData] = useState({
+        username: '',
+        email: '',
+        phone: '',
+        name: '',
+        password: '',
+        confirmPassword: ''
+    });
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
 
-    const handleSubmit = (e) => {
+    useEffect(() => {
+        if (isAuthenticated()) {
+            navigate('/');
+        }
+    }, [navigate]);
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setError('');
 
-        // Giả lập xác thực đăng ký
-        if (username && email && password) {
-            alert('Registration Successful!');
-            setError('');
-        } else {
-            setError('Please fill all fields correctly.');
+        // Kiểm tra password và confirmPassword có khớp không
+        if (formData.password !== formData.confirmPassword) {
+            setError('Passwords do not match!');
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const result = await register(formData);
+
+            if (result.success) {
+                // Đăng ký thành công
+                alert('Registration Successful! Please login.');
+                navigate('/login'); // Chuyển về trang login
+            } else {
+                // Đăng ký thất bại
+                setError(result.message);
+            }
+        } catch (err) {
+            setError('An error occurred. Please try again.');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -36,9 +77,23 @@ function Register() {
                         <input
                             type="text"
                             id="username"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
+                            name="username"
+                            value={formData.username}
+                            onChange={handleChange}
                             placeholder="Enter your username"
+                            required
+                        />
+                    </div>
+
+                    <div className="register_input-group">
+                        <label htmlFor="name">Full Name</label>
+                        <input
+                            type="text"
+                            id="name"
+                            name="name"
+                            value={formData.name}
+                            onChange={handleChange}
+                            placeholder="Enter your full name"
                             required
                         />
                     </div>
@@ -48,9 +103,23 @@ function Register() {
                         <input
                             type="email"
                             id="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            name="email"
+                            value={formData.email}
+                            onChange={handleChange}
                             placeholder="Enter your email"
+                            required
+                        />
+                    </div>
+
+                    <div className="register_input-group">
+                        <label htmlFor="phone">Phone</label>
+                        <input
+                            type="tel"
+                            id="phone"
+                            name="phone"
+                            value={formData.phone}
+                            onChange={handleChange}
+                            placeholder="Enter your phone number"
                             required
                         />
                     </div>
@@ -60,15 +129,29 @@ function Register() {
                         <input
                             type="password"
                             id="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            name="password"
+                            value={formData.password}
+                            onChange={handleChange}
                             placeholder="Enter your password"
                             required
                         />
                     </div>
 
-                    <button type="submit" className="register_register-button">
-                        Register
+                    <div className="register_input-group">
+                        <label htmlFor="confirmPassword">Confirm Password</label>
+                        <input
+                            type="password"
+                            id="confirmPassword"
+                            name="confirmPassword"
+                            value={formData.confirmPassword}
+                            onChange={handleChange}
+                            placeholder="Confirm your password"
+                            required
+                        />
+                    </div>
+
+                    <button type="submit" className="register_register-button" disabled={loading}>
+                        {loading ? 'Registering...' : 'Register'}
                     </button>
                 </form>
             </div>

@@ -8,8 +8,14 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: calc(100vh - 112px);
-  overflow: hidden;
+  // height: calc(100vh - 112px);
+  min-height: calc(100vh - 112px);
+  // overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
   background-color: $divider-color;
 
   .login_login-form {
@@ -21,6 +27,7 @@
     max-width: 400px;
     transition: all 0.3s ease;
     border: 2px solid $divider-color;
+    margin: 24px 0; // tránh dính mép khi màn hình rất thấp
   }
 
   .login_login-title {
@@ -48,6 +55,7 @@
     border-radius: 5px;
     font-size: 1rem;
     transition: border-color 0.2s;
+    width: 90%;
   }
 
   .login_input-group input:focus {
@@ -81,5 +89,42 @@
 
   .login_login-button:focus {
     outline: none;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .login_login-container {
+    padding: 12px;
+
+    .login_login-form {
+      padding: 1.25rem;
+      max-width: 420px; // cho phép rộng hơn chút nếu cần
+    }
+
+    .login_login-title {
+      font-size: 1.5rem;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .login_login-container {
+    padding: 12px;
+
+    .login_login-form {
+      padding: 1rem;
+      border-radius: 8px;
+    }
+
+    .login_input-group input {
+      font-size: 0.95rem;
+      padding: 10px;
+    }
+
+    .login_login-button {
+      padding: 12px;
+      font-size: 1rem;
+    }
   }
 }

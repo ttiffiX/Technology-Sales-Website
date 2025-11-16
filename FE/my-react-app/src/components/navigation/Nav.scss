@@ -24,6 +24,7 @@
     transition: background-color 0.3s;
     text-decoration: none;
     user-select: none;
+    outline: none;
   }
 
   .login-button {
@@ -41,30 +42,23 @@
       color: $nav-button-color;
     }
 
-    text-decoration: none; /* Removes underline */
+    text-decoration: none;
     user-select: none;
-    @media (max-width: 650px) {
-      display: none;
-    }
   }
 
   .avatar-container {
-    @media (max-width: 650px) {
-      display: none;
-    }
     position: absolute;
     width: 48px;
     height: 48px;
-    border: 4px solid $background-color; /* Viền vòng tròn */
-    //border-radius: 50%; /* Tạo hình tròn */
+    border: 4px solid $background-color;
     overflow: hidden;
     cursor: pointer;
 
     .user-avatar {
-      border-radius: 50%; /* Tạo hình tròn */
+      border-radius: 50%;
       width: 100%;
       height: 100%;
-      object-fit: cover; /* Đảm bảo ảnh không bị méo */
+      object-fit: cover;
     }
   }
 
@@ -152,29 +146,21 @@
     font-weight: 400;
     font-size: $font-size-base;
     line-height: 130%;
-    /* identical to box height, or 21px */
     display: flex;
     align-items: center;
     text-align: center;
-
     color: $text-in-header-color;
 
     &:hover {
       color: $nav-button-color;
     }
 
-    text-decoration: none; /* Removes underline */
+    text-decoration: none;
     user-select: none;
-    @media (max-width: 750px) {
-      display: none;
-    }
   }
 
   /* About Me */
   .aboutMe {
-    @media (max-width: 850px) {
-      display: none;
-    }
     position: absolute;
     width: 74px;
     height: 21px;
@@ -186,17 +172,201 @@
     font-weight: 400;
     font-size: $font-size-base;
     line-height: 130%;
-    /* identical to box height, or 21px */
-
     color: $text-in-header-color;
 
     &:hover {
       color: $nav-button-color;
     }
 
-    text-decoration: none; /* Removes underline */
+    text-decoration: none;
     user-select: none;
   }
 
+  /* ========== RESPONSIVE ========== */
 
+  // Tablet landscape (<=1200px)
+  @media (max-width: 1200px) {
+    padding: 0 60px;
+
+    .cartButton {
+      right: 60px;
+    }
+
+    .user-dropdown {
+      right: 220px;
+    }
+
+    .login-button {
+      right: 232px;
+    }
+
+    .shop {
+      right: 330px;
+    }
+
+    .aboutMe {
+      right: 410px;
+    }
+  }
+
+  // Tablet portrait (<=950px)
+  @media (max-width: 950px) {
+    padding: 0 40px;
+
+    .shopName {
+      font-size: 28px;
+    }
+
+    .cartButton {
+      right: 40px;
+      width: 110px;
+    }
+
+    .user-dropdown {
+      right: 170px;
+    }
+
+    .login-button {
+      right: 182px;
+    }
+
+    .shop {
+      right: 260px;
+    }
+
+    .aboutMe {
+      display: none;
+    }
+  }
+
+  // Mobile landscape (<=768px)
+  @media (max-width: 768px) {
+    height: 80px;
+    padding: 0 24px;
+
+    .shopName {
+      font-size: 24px;
+    }
+
+    .cartButton {
+      right: 24px;
+      width: 90px;
+      height: 40px;
+      top: 20px;
+    }
+
+    .user-dropdown {
+      right: 130px;
+      top: 16px;
+      width: 40px;
+      height: 40px;
+    }
+
+    .avatar-container {
+      width: 40px;
+      height: 40px;
+      border-width: 3px;
+    }
+
+    .login-button {
+      right: 140px;
+      top: 30px;
+      font-size: 14px;
+    }
+
+    .shop {
+      display: none;
+    }
+  }
+
+  // Mobile portrait (<=600px)
+  @media (max-width: 600px) {
+    height: 70px;
+    padding: 0 16px;
+
+    .shopName {
+      font-size: 20px;
+      max-width: 140px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .cartButton {
+      right: 16px;
+      width: 80px;
+      height: 36px;
+      top: 17px;
+      border-radius: 6px;
+
+      .cartText {
+        font-size: 14px;
+      }
+    }
+
+    .user-dropdown {
+      right: 110px;
+      top: 15px;
+      width: 36px;
+      height: 36px;
+
+      .dropdown-menu {
+        left: auto;
+        right: 0;
+        min-width: 130px;
+      }
+    }
+
+    .avatar-container {
+      width: 36px;
+      height: 36px;
+      border-width: 2px;
+    }
+
+    .login-button {
+      right: 115px;
+      top: 24px;
+      font-size: 13px;
+    }
+  }
+
+  // Very small mobile (<=400px)
+  @media (max-width: 400px) {
+    height: 64px;
+    padding: 0 12px;
+
+    .shopName {
+      font-size: 18px;
+      max-width: 100px;
+    }
+
+    .cartButton {
+      right: 12px;
+      width: 70px;
+      height: 32px;
+      top: 16px;
+
+      .cartText {
+        font-size: 13px;
+      }
+    }
+
+    .user-dropdown {
+      right: 95px;
+      top: 14px;
+      width: 32px;
+      height: 32px;
+    }
+
+    .avatar-container {
+      width: 32px;
+      height: 32px;
+    }
+
+    .login-button {
+      right: 98px;
+      top: 21px;
+      font-size: 12px;
+    }
+  }
 }

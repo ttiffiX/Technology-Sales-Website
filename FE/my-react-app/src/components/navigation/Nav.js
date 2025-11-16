@@ -1,32 +1,53 @@
 import CartClicked from "../../utils/CartClicked";
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import "./Nav.scss"
 import {Link, useNavigate} from "react-router-dom";
 import avatarIcon from "../../assets/icon/img.png";
+import {isAuthenticated, getCurrentUser, logout} from "../../api/AuthAPI";
 
 function Nav({count}) {
-    // Trạng thái đăng nhập và thông tin người dùng
-    // const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [isLoggedIn, setIsLoggedIn] = useState(true);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [userName, setUserName] = useState("");
-    // const [userAvatar, setUserAvatar] = useState("");
     const [userAvatar, setUserAvatar] = useState(avatarIcon);
     const navigate = useNavigate();
 
-    // Xử lý đăng nhập (demo)
+    // Kiểm tra authentication khi component mount
+    useEffect(() => {
+        const checkAuth = () => {
+            if (isAuthenticated()) {
+                const user = getCurrentUser();
+                setIsLoggedIn(true);
+                setUserName(user.name || user.username);
+                setUserAvatar(user.imageUrl || avatarIcon);
+            } else {
+                setIsLoggedIn(false);
+                setUserName("");
+                setUserAvatar(avatarIcon);
+            }
+        };
+
+        checkAuth();
+
+        // Lắng nghe sự kiện storage để cập nhật khi login/logout từ tab khác
+        window.addEventListener('storage', checkAuth);
+
+        return () => {
+            window.removeEventListener('storage', checkAuth);
+        };
+    }, []);
+
+    // Xử lý đăng nhập
     const handleLogin = () => {
-        // Giả sử sau khi đăng nhập, thông tin người dùng được lưu:
-        setIsLoggedIn(true);
-        setUserName("John Doe"); // Gán tên user tạm thời
-        setIsLoggedIn(true);
-        setUserAvatar(avatarIcon); // Link demo ảnh đại diện
-        // navigate("/login");
+        navigate("/login");
     };
 
     // Xử lý đăng xuất
     const handleLogout = () => {
+        logout();
         setIsLoggedIn(false);
         setUserName("");
+        setUserAvatar(avatarIcon);
+        navigate("/");
     };
 
     function handleProfile() {

@@ -1,24 +1,45 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import Nav from "../../components/navigation/Nav";
 import './Login.scss'
-import {Link} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 import {getCartItems} from "../../api/CartAPI";
+import {login, isAuthenticated} from "../../api/AuthAPI";
 
 function Login() {
     const {totalQuantity} = getCartItems();
+    const navigate = useNavigate();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
 
-    const handleSubmit = (e) => {
+    useEffect(() => {
+        if (isAuthenticated()) {
+            navigate('/');
+        }
+    }, [navigate]);
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setError('');
+        setLoading(true);
 
-        // Giả lập quá trình xác thực
-        if (username === 'admin' && password === '123456') {
-            alert('Login Successful!');
-            setError('');
-        } else {
-            setError('Invalid email or password');
+        try {
+            console.log(username, password);
+            const result = await login(username, password);
+
+            if (result.success) {
+                // Đăng nhập thành công
+                alert('Login Successful!');
+                navigate('/'); // Chuyển về trang chủ
+            } else {
+                // Đăng nhập thất bại
+                setError(result.message);
+            }
+        } catch (err) {
+            setError('An error occurred. Please try again.');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -55,8 +76,8 @@ function Login() {
                         />
                     </div>
 
-                    <button type="submit" className="login_login-button">
-                        Submit
+                    <button type="submit" className="login_login-button" disabled={loading}>
+                        {loading ? 'Logging in...' : 'Submit'}
                     </button>
 
                     <div className="login_register-link">
