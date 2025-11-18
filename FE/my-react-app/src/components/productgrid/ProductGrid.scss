@@ -2,6 +2,14 @@
 @import "../../styles/_variables.scss";
 @import "../../styles/_base.scss";
 
+// Product Grid Empty State
+.product-grid-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #666;
+  font-size: 16px;
+}
+
 // Product Grid
 .product-grid {
   display: grid;
@@ -13,9 +21,51 @@
   margin: 0 auto;
 }
 
+/* Responsive Product Grid */
+@media (max-width: 1400px) {
+  .product-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+    padding: 24px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .product-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 18px;
+    padding: 20px;
+  }
+}
+
+@media (max-width: 968px) {
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    padding: 16px;
+    padding-bottom: 80px; // Space for floating filter button
+  }
+}
+
+@media (max-width: 600px) {
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    padding: 12px;
+    padding-bottom: 80px;
+  }
+}
+
+@media (max-width: 400px) {
+  .product-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
 // Product Item
 .product-item {
-  background: #FAFAF5;
+  background: $drop-content-color;
   border: 2px solid $divider-color;
   border-radius: 24px;
   overflow: hidden;
@@ -24,10 +74,13 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+  cursor: pointer;
 
   &:hover {
     transform: scale(1.02);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   }
 
   .pic {
@@ -38,6 +91,7 @@
     border-top-left-radius: 24px;
     border-top-right-radius: 24px;
     background-repeat: no-repeat;
+    pointer-events: none;
   }
 
   .techName {
@@ -56,30 +110,122 @@
     margin-top: 8px;
   }
 
-  .addToCart {
+  .compareBtn {
     margin-top: 16px;
     width: 80%;
-    background: $primary-color;
+    background: $secondary-color;
     color: $background-color;
+    border: none;
     border-radius: 8px;
     padding: 8px 16px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    font-weight: 600;
+    transition: all 0.3s;
 
     &:hover {
-      background-color: $secondary-color;
+      background: darken($secondary-color, 10%);
+      transform: translateY(-2px);
     }
 
-    &.disabled {
-      background-color: grey;
-      cursor: not-allowed;
+    &:active {
+      transform: translateY(0);
     }
   }
 
+  .category-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: $primary-color;
+    color: $background-color;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    pointer-events: none;
+  }
 
+  .sold-count {
+    font-size: 13px;
+    color: #666;
+    margin-top: 4px;
+    font-style: italic;
+  }
+}
+
+/* Responsive Product Item */
+@media (max-width: 968px) {
+  .product-item {
+    padding: 12px;
+
+    .pic {
+      height: 160px;
+    }
+
+    .techName {
+      font-size: 16px;
+      margin-top: 12px;
+    }
+
+    .price {
+      font-size: 15px;
+    }
+
+    .compareBtn {
+      margin-top: 12px;
+      padding: 6px 12px;
+      font-size: 14px;
+    }
+
+    .category-badge {
+      padding: 3px 10px;
+      font-size: 11px;
+    }
+
+    .sold-count {
+      font-size: 12px;
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .product-item {
+    padding: 10px;
+
+    .pic {
+      height: 140px;
+    }
+
+    .techName {
+      font-size: 14px;
+      margin-top: 10px;
+    }
+
+    .price {
+      font-size: 14px;
+    }
+
+    .compareBtn {
+      margin-top: 10px;
+      padding: 5px 10px;
+      font-size: 13px;
+      width: 90%;
+    }
+
+    .category-badge {
+      top: 8px;
+      right: 8px;
+      padding: 2px 8px;
+      font-size: 10px;
+    }
+
+    .sold-count {
+      font-size: 11px;
+    }
+  }
 }
 
 .out-of-stock {
-  border-color: red; /* Tạo viền màu đỏ nếu muốn */
-  background-color: #ffe6e6; /* Màu nền nhạt hơn cho sản phẩm hết hàng */
+  border-color: $error-color;
+  background-color: lighten($error-color, 40%);
 }

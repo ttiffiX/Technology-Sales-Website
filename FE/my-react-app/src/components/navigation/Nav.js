@@ -47,6 +47,7 @@ function Nav({count}) {
         setIsLoggedIn(false);
         setUserName("");
         setUserAvatar(avatarIcon);
+        window.alert(`Logout successfully`);
         navigate("/");
     };
 
@@ -58,10 +59,18 @@ function Nav({count}) {
         navigate("/placedorder")
     }
 
+    // Handle navigate to home and clear all filters
+    const handleNavigateHome = (e) => {
+        e.preventDefault();
+        navigate('/', { replace: true });
+        // Force reload to clear any cached state
+        window.location.href = '/';
+    };
+
     return (
         <div className={"navigation"}>
-            <Link to="/" className="shopName">Magic Shop</Link>
-            <Link to="/" className={"shop"}>Shop</Link>
+            <Link to="/" className="shopName" onClick={handleNavigateHome}>Magic Shop</Link>
+            <Link to="/" className={"shop"} onClick={handleNavigateHome}>Shop</Link>
             <Link to="/aboutme" className={"aboutMe"}>About Me</Link>
             {/* Hiển thị Login hoặc Tên User */}
             {isLoggedIn ? (
@@ -72,7 +81,7 @@ function Nav({count}) {
                     <div className="dropdown-menu">
                         {/*<Link to="/profile">My Profile</Link>*/}
                         <button onClick={handleProfile}>My Profile</button>
-                        <button onClick={handlePlacedOrder}>Placed Orders</button>
+                        <button onClick={handlePlacedOrder}>Orders</button>
                         <button onClick={handleLogout}>Logout</button>
                     </div>
                 </div>

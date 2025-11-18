@@ -1,62 +1,71 @@
-import HandleDate from "../../utils/HandleDate";
-import SearchBar from "../searchbar/SearchBar";
 import React from "react";
 import './Header.scss'
 
 function Header({
                     title,
-                    onFilterChange,
-                    activeOrder,
-                    handleSort,
-                    selectedCategory,
-                    handleCategoryChange,
+                    onSearch,
+                    selectedCategoryId,
+                    onCategoryChange,
+                    categories = [],
                     modeDisplay
                 }) {
+
+    const [searchText, setSearchText] = React.useState('');
+
+    const handleSearchChange = (e) => {
+        setSearchText(e.target.value);
+    };
+
+    const handleSearchSubmit = (e) => {
+        e.preventDefault();
+        if (onSearch) {
+            onSearch(searchText);
+        }
+    };
+
+    // Add "All Products" option to categories
+    const allCategories = [
+        { id: null, name: 'All products' },
+        ...categories
+    ];
 
     return modeDisplay === "product" ? (
         <div className={"header"}>
             <div className={"product"}>
                 <span>{title}</span>
             </div>
-            <HandleDate/>
-            <SearchBar onFilterChange={onFilterChange}/>
+            {/*<HandleDate/>*/}
 
-            <button
-                className={`chip-price chip-price-asc ${activeOrder === 'asc' ? 'active' : ''}`}
-                onClick={() => handleSort('asc')}
-            >
-                <span className="chip-price-text">Price ASC</span>
-            </button>
-            <button
-                className={`chip-price chip-price-desc ${activeOrder === 'desc' ? 'active' : ''}`}
-                onClick={() => handleSort('desc')}
-            >
-                <span className="chip-price-text">Price DESC</span>
-            </button>
-
-            <div className={"dropdown"}>
-                <button className={"chip-list"}>
-                    <span>List View</span>
+            {/* Search Bar */}
+            <form onSubmit={handleSearchSubmit} className="search-form">
+                <input
+                    type="text"
+                    placeholder="Search products..."
+                    value={searchText}
+                    onChange={handleSearchChange}
+                    className="search-input"
+                />
+                <button type="submit" className="search-button">
+                    Search
                 </button>
+            </form>
 
-                <div className="dropdown-content">
-                    <button
-                        className={`category-btn ${selectedCategory === 'Laptop' ? 'active' : ''}`}
-                        onClick={() => handleCategoryChange('Laptop')}>Laptop
-                    </button>
-                    <button className={`category-btn ${selectedCategory === 'Keyboard' ? 'active' : ''}`}
-                            onClick={() => handleCategoryChange('Keyboard')}>Keyboard
-                    </button>
-                    <button
-                        className={`category-btn ${selectedCategory === 'Mouse' ? 'active' : ''}`}
-                        onClick={() => handleCategoryChange('Mouse')}>Mouse
-                    </button>
-                    <button
-                        className={`category-btn ${selectedCategory === '' ? 'active' : ''}`}
-                        onClick={() => handleCategoryChange('')}>All Products
-                    </button>
-                </div>
+            {/* Category Selector */}
+            <div className={"category-selector"}>
+                <label>Category:</label>
+                <select
+                    value={selectedCategoryId || ''}
+                    onChange={(e) => onCategoryChange(e.target.value ? parseInt(e.target.value) : null)}
+                    className="category-dropdown"
+                >
+                    {allCategories.map(cat => (
+                        <option key={cat.id || 'all'} value={cat.id || ''}>
+                            {cat.name}
+                        </option>
+                    ))}
+                </select>
             </div>
+
             <div className={"divider"}/>
         </div>
     ) : (
@@ -64,7 +73,7 @@ function Header({
             <div className={"product"}>
                 <span>{title}</span>
             </div>
-            <HandleDate/>
+            {/*<HandleDate/>*/}
             <div className={"divider"}/>
         </div>
     );

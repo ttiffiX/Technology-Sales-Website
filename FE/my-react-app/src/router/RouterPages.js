@@ -9,6 +9,7 @@ import Cart from "../pages/Cart/Cart";
 import Profile from "../pages/profile/Profile";
 import Order from "../pages/order/Order";
 import PlacedOrder from "../pages/placedorder/PlacedOrder";
+import ProductDetail from "../pages/productdetail/ProductDetail";
 
 
 function RouterPages() {
@@ -26,6 +27,7 @@ function RouterPages() {
                 <Route path="/profile" element={<Profile/>}/>
                 <Route path="/checkout" element={<Order/>}/>
                 <Route path="/placedorder" element={<PlacedOrder/>}/>
+                <Route path="/product/:id" element={<ProductDetail/>}/>
             </Routes>
         </Router>
     );
