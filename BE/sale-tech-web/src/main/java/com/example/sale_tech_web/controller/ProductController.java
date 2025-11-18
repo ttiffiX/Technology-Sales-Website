@@ -1,9 +1,10 @@
 package com.example.sale_tech_web.controller;
 
+import com.example.sale_tech_web.feature.product.dto.CategoryDTO;
 import com.example.sale_tech_web.feature.product.dto.CategoryFilterOptionsDTO;
 import com.example.sale_tech_web.feature.product.dto.ProductDetailDTO;
 import com.example.sale_tech_web.feature.product.dto.ProductListDTO;
-import com.example.sale_tech_web.feature.product.manager.ProductService;
+import com.example.sale_tech_web.feature.product.manager.ProductServiceInterface;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -16,16 +17,25 @@ import java.util.*;
 @RequestMapping("/product")
 @Slf4j
 public class ProductController {
-    private final ProductService productService;
+    private final ProductServiceInterface productServiceInterface;
+
+    /**
+     * GET /product/categories - Get all categories
+     */
+    @GetMapping("/categories")
+    public ResponseEntity<List<CategoryDTO>> getAllCategories() {
+        List<CategoryDTO> categories = productServiceInterface.getAllCategories();
+        log.info("Get all categories: {} categories found", categories.size());
+        return ResponseEntity.ok(categories);
+    }
 
     /**
      * GET /product - Get all active products
      */
     @GetMapping
     public ResponseEntity<List<ProductListDTO>> getAllProducts() {
-        log.info("Get all products - Start");
-        List<ProductListDTO> products = productService.getAllProducts();
-        log.info("Get all products - End: {} products found", products.size());
+        List<ProductListDTO> products = productServiceInterface.getAllProducts();
+        log.info("Get all products: {} products found", products.size());
         return ResponseEntity.ok(products);
     }
 
@@ -35,7 +45,7 @@ public class ProductController {
     @GetMapping("/{id}")
     public ResponseEntity<ProductDetailDTO> getProductById(@PathVariable Long id) {
         log.info("Get product detail - ID: {}", id);
-        ProductDetailDTO product = productService.getProductById(id);
+        ProductDetailDTO product = productServiceInterface.getProductById(id);
         return ResponseEntity.ok(product);
     }
 
@@ -44,8 +54,7 @@ public class ProductController {
      */
     @GetMapping("/category/{categoryId}")
     public ResponseEntity<List<ProductListDTO>> getProductsByCategory(@PathVariable Long categoryId) {
-        log.info("Get products by category - Category ID: {}", categoryId);
-        List<ProductListDTO> products = productService.getProductsByCategory(categoryId);
+        List<ProductListDTO> products = productServiceInterface.getProductsByCategory(categoryId);
         log.info("Found {} products in category {}", products.size(), categoryId);
         return ResponseEntity.ok(products);
     }
@@ -56,8 +65,7 @@ public class ProductController {
     @GetMapping("/search")
     public ResponseEntity<List<ProductListDTO>> searchProducts(@RequestParam String keyword) {
         log.info("Search products - Keyword: {}", keyword);
-        List<ProductListDTO> products = productService.searchProducts(keyword);
-        log.info("Search found {} products", products.size());
+        List<ProductListDTO> products = productServiceInterface.searchProducts(keyword);
         return ResponseEntity.ok(products);
     }
 
@@ -70,7 +78,7 @@ public class ProductController {
             @PathVariable Long categoryId
     ) {
         log.info("Get filter options for category: {}", categoryId);
-        CategoryFilterOptionsDTO options = productService.getFilterOptions(categoryId);
+        CategoryFilterOptionsDTO options = productServiceInterface.getFilterOptions(categoryId);
         return ResponseEntity.ok(options);
     }
 
@@ -114,15 +122,13 @@ public class ProductController {
             }
         }
 
-        List<ProductListDTO> products = productService.filterByAttributes(
+        List<ProductListDTO> products = productServiceInterface.filterByAttributes(
                 categoryId,
                 attributeFilters.isEmpty() ? null : attributeFilters,
                 minPrice,
                 maxPrice,
                 sort
         );
-
-        log.info("Filter found {} products", products.size());
         return ResponseEntity.ok(products);
     }
 }

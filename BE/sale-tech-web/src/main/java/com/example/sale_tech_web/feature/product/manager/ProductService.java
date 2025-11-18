@@ -15,12 +15,25 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class ProductService {
+public class ProductService implements ProductServiceInterface {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final CategoryAttributeMappingRepository categoryAttributeMappingRepository;
     private final ProductAttributeValueRepository productAttributeValueRepository;
     private final EntityManager entityManager;
+
+    /**
+     * Get all categories
+     */
+    public List<CategoryDTO> getAllCategories() {
+        List<Category> categories = categoryRepository.findAll();
+        return categories.stream()
+                .map(category -> CategoryDTO.builder()
+                        .id(category.getId())
+                        .name(category.getName())
+                        .build())
+                .collect(Collectors.toList());
+    }
 
     /**
      * Get all active products with basic info for listing
