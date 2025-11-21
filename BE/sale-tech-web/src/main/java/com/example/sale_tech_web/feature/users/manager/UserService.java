@@ -4,14 +4,16 @@ import com.example.sale_tech_web.controller.exception.ClientException;
 import com.example.sale_tech_web.controller.request.LogInRequest;
 import com.example.sale_tech_web.controller.request.RegisterRequest;
 import com.example.sale_tech_web.controller.response.LogInResponse;
+import com.example.sale_tech_web.feature.cart.entity.Cart;
+import com.example.sale_tech_web.feature.cart.repository.CartRepository;
 import com.example.sale_tech_web.feature.users.entity.Users;
 import com.example.sale_tech_web.feature.users.enums.Role;
 import com.example.sale_tech_web.feature.users.repository.UserRepository;
 import com.example.sale_tech_web.feature.jwt.JwtUtils;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -19,13 +21,14 @@ import static com.example.sale_tech_web.utils.CheckUtils.isStrongPassword;
 import static com.example.sale_tech_web.utils.CheckUtils.isValidEmail;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class UserService implements UserServiceInterface {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final JwtUtils jwtUtils;
+    private final CartRepository cartRepository;
 
+    @Override
     public LogInResponse login(LogInRequest logInRequest) {
         Users users = userRepository.findByUsername(logInRequest.getUsername()).orElseThrow(() -> new ClientException("User not found"));
         if (!passwordEncoder.matches(logInRequest.getPassword(), users.getPassword())) {
@@ -41,6 +44,8 @@ public class UserService implements UserServiceInterface {
                 .build();
     }
 
+    @Override
+    @Transactional
     public String createUser(RegisterRequest registerRequest) {
         String username = registerRequest.getUsername();
         String password = registerRequest.getPassword();
@@ -62,7 +67,7 @@ public class UserService implements UserServiceInterface {
             throw new ClientException("Password is too weak! It must contain at least 8 characters, one uppercase, one lowercase, one number, and one special character.");
         }
 
-        if(!password.equals(registerRequest.getConfirmPassword())) {
+        if (!password.equals(registerRequest.getConfirmPassword())) {
             throw new ClientException("Password and Confirm Password do not match.");
         }
 
@@ -77,8 +82,6 @@ public class UserService implements UserServiceInterface {
         }
 
         // 4. Mã hóa Mật khẩu và Xây dựng Đối tượng
-
-
         Users users = Users.builder()
                 .email(email)
                 .username(username)
@@ -90,8 +93,18 @@ public class UserService implements UserServiceInterface {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        // 5. Lưu và Trả về
-        userRepository.save(users);
+        // 5. Lưu User
+        Users savedUser = userRepository.save(users);
+
+        // 6. Tạo Cart cho User ngay sau khi đăng ký
+        // Vì thiết kế có userId trong Cart table (UNIQUE constraint)
+        Cart cart = Cart.builder()
+                .userId(savedUser.getId())
+                .updatedAt(LocalDateTime.now())
+                .totalPrice(0)
+                .build();
+
+        cartRepository.save(cart);
         return "Register Successfully";
     }
 }
