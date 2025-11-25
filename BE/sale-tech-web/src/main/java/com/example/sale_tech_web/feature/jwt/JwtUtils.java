@@ -13,30 +13,31 @@ import java.util.Date;
 @Slf4j
 @Component
 public class JwtUtils {
-    @Value("${JWT_SECRET}")
+    @Value("${jwt.secret}")
     private String jwtSecret;
 
-    @Value("${JWT_EXPIRATION}")
+    @Value("${jwt.expiration}")
     private int jwtExp;
 
-    public String generateToken(String username) {
+    public String generateToken(Long userId) {
         SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
         return Jwts.builder()
-                .subject(username)
+                .subject(userId.toString())
                 .issuedAt(new Date())
                 .expiration(new Date((new Date()).getTime() + jwtExp))
                 .signWith(key)
                 .compact();
     }
 
-    public String getUsernameFromJwtToken(String token) {
+    public Long getUserIdFromJwtToken(String token) {
         SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
-        return Jwts.parser()
+        String subject = Jwts.parser()
                 .verifyWith(key)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload()
                 .getSubject();
+        return Long.parseLong(subject);
     }
 
     public boolean validateToken(String token) {
