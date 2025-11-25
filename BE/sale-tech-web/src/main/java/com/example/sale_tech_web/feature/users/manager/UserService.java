@@ -35,7 +35,7 @@ public class UserService implements UserServiceInterface {
             throw new ClientException("Invalid username or password");
         }
 
-        String token = jwtUtils.generateToken(logInRequest.getUsername());
+        String token = jwtUtils.generateToken(users.getId());
         return LogInResponse.builder()
                 .token(token)
                 .username(users.getUsername())

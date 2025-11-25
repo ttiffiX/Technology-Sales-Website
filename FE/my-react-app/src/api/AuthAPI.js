@@ -1,33 +1,9 @@
-import axios from 'axios';
-
-// const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || '/auth';
-const API_BASE_URL = 'http://localhost:8080/auth';
-// Tạo axios instance với config chung
-const axiosInstance = axios.create({
-    baseURL: API_BASE_URL,
-    headers: {
-        'Content-Type': 'application/json',
-    },
-});
-
-// Interceptor để tự động thêm token vào header cho mọi request
-axiosInstance.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
-    }
-);
+import apiClient from './apiClient';
 
 // Hàm đăng nhập
 export const login = async (username, password) => {
     try {
-        const response = await axiosInstance.post('/login', {
+        const response = await apiClient.post('/auth/login', {
             username,
             password,
         });
@@ -47,7 +23,7 @@ export const login = async (username, password) => {
     } catch (error) {
         return {
             success: false,
-            message: error.response.data || 'Login failed. Please check your credentials.',
+            message: error.response?.data || 'Login failed. Please check your credentials.',
         };
     }
 };
@@ -55,7 +31,7 @@ export const login = async (username, password) => {
 // Hàm đăng ký
 export const register = async (userData) => {
     try {
-        const response = await axiosInstance.post('/register', {
+        const response = await apiClient.post('/auth/register', {
             username: userData.username,
             password: userData.password,
             confirmPassword: userData.confirmPassword,
@@ -71,7 +47,7 @@ export const register = async (userData) => {
     } catch (error) {
         return {
             success: false,
-            message: error.response.data || 'Registration failed. Please try again.',
+            message: error.response?.data || 'Registration failed. Please try again.',
         };
     }
 };
@@ -99,4 +75,3 @@ export const getCurrentUser = () => {
     };
 };
 
-export default axiosInstance;
