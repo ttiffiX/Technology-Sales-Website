@@ -1,7 +1,7 @@
 //package com.example.sale_tech_web.feature.order.manager;
 //
 //import com.example.sale_tech_web.controller.exception.ClientException;
-//import com.example.sale_tech_web.feature.cart.entity.CartResponse;
+//import com.example.sale_tech_web.feature.cart.entity.CartDTO;
 //import com.example.sale_tech_web.feature.cart.manager.CartService;
 //import com.example.sale_tech_web.feature.order.entity.orderdetails.OrderDetailDTO;
 //import com.example.sale_tech_web.feature.order.entity.orders.Order;
@@ -50,9 +50,9 @@
 //    }
 //
 //    public String placeOrder(String name, String phone, String address, String payment_method) {
-//        CartResponse cartResponse = cartService.getCartItems();
+//        CartDTO cartResponse = cartService.getCartItems();
 //
-//        int totalPrice = cartResponse.getCartDTO().stream()
+//        int totalPrice = cartResponse.getCartDetailDTO().stream()
 //                .mapToInt(cart -> cart.getPrice() * cart.getQuantity())
 //                .sum();
 //
@@ -71,7 +71,7 @@
 //        Order savedOrder = orderRepository.save(newOrder);
 //
 //        // Lưu từng sản phẩm trong giỏ hàng vào OrderDetail
-//        List<OrderDetail> orderDetails = cartResponse.getCartDTO().stream()
+//        List<OrderDetail> orderDetails = cartResponse.getCartDetailDTO().stream()
 //                .map(cart -> OrderDetail.builder()
 //                        .orderId(savedOrder.getOrderId())
 //                        .productId(cart.getProductId())

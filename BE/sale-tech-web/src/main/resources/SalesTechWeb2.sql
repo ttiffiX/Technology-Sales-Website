@@ -9,9 +9,9 @@
 CREATE TABLE users
 (
     id         SERIAL PRIMARY KEY,
-    email      VARCHAR(50) UNIQUE                                      NOT NULL,
-    username   VARCHAR(50) UNIQUE                                      NOT NULL,
-    password   VARCHAR(255)                                            NOT NULL,
+    email      VARCHAR(50) UNIQUE                                   NOT NULL,
+    username   VARCHAR(50) UNIQUE                                   NOT NULL,
+    password   VARCHAR(255)                                         NOT NULL,
     phone      VARCHAR(11),
     role       VARCHAR(20) CHECK (role IN ('admin', 'users', 'pm')) NOT NULL,
     name       VARCHAR(50),
@@ -141,10 +141,9 @@ CREATE TABLE invoice
 -- 10. Bảng Cart
 CREATE TABLE cart
 (
-    id          SERIAL PRIMARY KEY,
-    user_id     INT UNIQUE NOT NULL, -- UNIQUE vì mỗi User chỉ có 1 Cart
-    updated_at  DATE,
-    total_price INT,
+    id         SERIAL PRIMARY KEY,
+    user_id    INT UNIQUE NOT NULL, -- UNIQUE vì mỗi User chỉ có 1 Cart
+    updated_at DATE,
     -- Khóa ngoại đến User
     CONSTRAINT fk_cart_user FOREIGN KEY (user_id) REFERENCES users (id)
 );
@@ -152,10 +151,11 @@ CREATE TABLE cart
 -- 11. Bảng CartDetail
 CREATE TABLE cart_detail
 (
-    id         SERIAL PRIMARY KEY,
-    cart_id    INT,
-    product_id INT,
-    quantity   INT NOT NULL,
+    id          SERIAL PRIMARY KEY,
+    cart_id     INT,
+    product_id  INT,
+    quantity    INT NOT NULL,
+    is_selected BOOLEAN DEFAULT TRUE,
     -- Khóa ngoại đến Cart
     CONSTRAINT fk_cd_cart FOREIGN KEY (cart_id) REFERENCES cart (id),
     -- Khóa ngoại đến Product

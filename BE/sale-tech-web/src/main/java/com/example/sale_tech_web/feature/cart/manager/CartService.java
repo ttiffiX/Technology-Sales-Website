@@ -1,129 +1,296 @@
-//package com.example.sale_tech_web.feature.cart.manager;
-//
-//import com.example.sale_tech_web.controller.exception.ClientException;
-//import com.example.sale_tech_web.feature.cart.entity.Cart;
-//import com.example.sale_tech_web.feature.cart.entity.CartDTO;
-//import com.example.sale_tech_web.feature.cart.entity.CartResponse;
-//import com.example.sale_tech_web.feature.cart.repository.CartRepository;
-//import com.example.sale_tech_web.feature.product.entity.Product;
-//import com.example.sale_tech_web.feature.product.manager.ProductService;
-//import lombok.RequiredArgsConstructor;
-//import lombok.extern.slf4j.Slf4j;
-//import org.springframework.data.domain.Sort;
-//import org.springframework.stereotype.Service;
-//
-//import java.util.List;
-//import java.util.stream.Collectors;
-//
-//@Service
-//@RequiredArgsConstructor
-//@Slf4j
-//public class CartService {
-//    private final CartRepository cartRepository;
-//    private final ProductService productService;
-//
-//    public CartResponse getCartItems() {
-//        List<Cart> cartItems = cartRepository.findAll(Sort.by(Sort.Order.desc("updateAt")));
-//
-//        int totalQuantity = cartItems.stream()
-//                .mapToInt(Cart::getQuantity)
-//                .sum();
-//
-//        List<CartDTO> cartDTOS = cartItems.stream().map(cart -> {
-//            // Tìm product theo productId
-//            Product product = productService.getProductById(cart.getProductId());
-//
-//            // Tạo DTO CartDTO
-//            CartDTO CartDTO = new CartDTO();
-//            CartDTO.setProductId(cart.getProductId());
-//            CartDTO.setCategory(product.getCategory());
-//            CartDTO.setCartId(cart.getCartId());
-//            CartDTO.setName(product.getName());
-//            CartDTO.setPrice(product.getPrice());
-//            CartDTO.setQuantity(cart.getQuantity());
-//            CartDTO.setImage(product.getImage());
-//
-//            return CartDTO;
-//        }).collect(Collectors.toList());
-//        return new CartResponse(totalQuantity, cartDTOS);
-//    }
-//
-//    public String addProductToCart(Long productId, int quantity) {
-//        Product product = productService.getProductById(productId);
-//
-//        Cart existingCartItem = cartRepository.findByProductId(productId);
-//        if (existingCartItem != null) {
-//            if (existingCartItem.getQuantity() + quantity <= product.getQuantity()) {
-//                existingCartItem.setQuantity(existingCartItem.getQuantity() + quantity);
-//                cartRepository.save(existingCartItem);  // Cập nhật giỏ hàng
-//                return "Item added successfully!";
-//            } else {
-//                throw new ClientException("Not enough stock available.");
-//            }
-//        } else {
-//            if (quantity <= product.getQuantity()) {
-//                Cart cart = Cart.builder()
-//                        .productId(productId)
-//                        .quantity(quantity)
-//                        .customerId(1L)
-//                        .build();
-//                cartRepository.save(cart);
-//                return "Item added successfully!";
-//            } else throw new ClientException("Not enough stock available.");
-//        }
-//    }
-//
-//    public String incQuantity(Long productId, int quantity) {
-//        Product product = productService.getProductById(productId);
-//        Cart existingCartItem = cartRepository.findByProductId(productId);
-//        if (existingCartItem == null) {
-//            throw new ClientException("Product not found in cart.");
-//        }
-//
-//        if (existingCartItem.getQuantity() + quantity > product.getQuantity()) {
-//            throw new ClientException("Not enough stock available.");
-//        }
-//
-//        existingCartItem.setQuantity(existingCartItem.getQuantity() + quantity);
-//        cartRepository.save(existingCartItem);
-//        return "Updated successfully!";
-//    }
-//
-//    public String decQuantity(Long productId, int quantity) {
-//        Cart existingCartItem = cartRepository.findByProductId(productId);
-//
-//        if (existingCartItem == null) {
-//            throw new ClientException("Product not found in cart.");
-//        }
-//        // Giảm số lượng sản phẩm
-//        int updatedQuantity = existingCartItem.getQuantity() - quantity;
-//        if (updatedQuantity <= 0) {
-//            // Xoá sản phẩm nếu số lượng <= 0
-//            cartRepository.delete(existingCartItem);
-//            return "Removed successfully!";
-//        }
-//
-//        existingCartItem.setQuantity(updatedQuantity);
-//        cartRepository.save(existingCartItem);
-//        return "Updated successfully!";
-//    }
-//
-//    public String removeFromCart(Long productId) {
-//        Cart existingCartItem = cartRepository.findByProductId(productId);
-//
-//        if (existingCartItem == null) {
-//            throw new ClientException("Product not found in cart.");
-//        }
-//
-//        cartRepository.delete(existingCartItem);
-//        return "Removed successfully!";
-//    }
-//
-//    public String removeAllFromCart() {
-//        cartRepository.deleteAll();
-//        return "Removed all successfully!";
-//    }
-//
-//
-//
-//}
+package com.example.sale_tech_web.feature.cart.manager;
+
+import com.example.sale_tech_web.controller.exception.ClientException;
+import com.example.sale_tech_web.controller.exception.ServerException;
+import com.example.sale_tech_web.feature.cart.entity.Cart;
+import com.example.sale_tech_web.feature.cart.entity.CartDetailDTO;
+import com.example.sale_tech_web.feature.cart.entity.CartDetail;
+import com.example.sale_tech_web.feature.cart.entity.CartDTO;
+import com.example.sale_tech_web.feature.cart.repository.CartDetailRepository;
+import com.example.sale_tech_web.feature.cart.repository.CartRepository;
+import com.example.sale_tech_web.feature.jwt.SecurityUtils;
+import com.example.sale_tech_web.feature.product.dto.ProductListDTO;
+import com.example.sale_tech_web.feature.product.entity.Product;
+import com.example.sale_tech_web.feature.product.repository.ProductRepository;
+import com.example.sale_tech_web.feature.users.entity.Users;
+import com.example.sale_tech_web.feature.users.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class CartService implements CartServiceInterface {
+    private final CartRepository cartRepository;
+    private final CartDetailRepository cartDetailRepository;
+    private final ProductRepository productRepository;
+    private final UserRepository userRepository;
+
+    @Override
+    public CartDTO getCartItems() {
+        // 1. Lấy userId từ JWT token
+        Long userId = getUserIdFromToken();
+
+        // 2. Lấy Cart với tất cả relationships trong 1 query (JOIN FETCH)
+        // Không cần query User riêng, không cần query CartDetails riêng, không cần query Products riêng
+        Cart cart = cartRepository.findByUserIdWithDetails(userId)
+                .orElseThrow(() -> new ServerException("Cart not found"));
+
+        // 3. Lấy CartDetails từ relationship (đã được load bởi JOIN FETCH)
+        List<CartDetail> cartItems = cart.getCartDetailList();
+
+        // 4. Nếu giỏ hàng trống
+        if (cartItems.isEmpty()) {
+            return CartDTO.builder()
+                    .cartId(cart.getId())
+                    .totalQuantity(0)
+                    .totalPrice(0)
+                    .cartDetailDTO(List.of())
+                    .build();
+        }
+
+
+        // 6. Tính tổng số lượng và giá cho các sản phẩm ĐƯỢC CHỌN
+        int totalQuantity = cartItems.stream()
+                .filter(item -> item.getIsSelected() != null && item.getIsSelected())
+                .mapToInt(CartDetail::getQuantity)
+                .sum();
+
+        int totalPrice = cartItems.stream()
+                .filter(item -> item.getIsSelected() != null && item.getIsSelected())
+                .mapToInt(item -> item.getProduct().getPrice() * item.getQuantity())
+                .sum();
+
+        // 7. Map to DTOs (không có query trong loop vì đã JOIN FETCH)
+        List<CartDetailDTO> cartDetailDTOS = cartItems.stream()
+                .map(cartDetail -> {
+                    Product product = cartDetail.getProduct(); // Đã được load
+
+                    ProductListDTO productDTO = ProductListDTO.builder()
+                            .id(product.getId())
+                            .title(product.getTitle())
+                            .price(product.getPrice())
+                            .quantitySold(product.getQuantitySold() != null ? product.getQuantitySold() : 0)
+                            .imageUrl(product.getImageUrl())
+                            .stocked(product.getStocked())
+                            .categoryName(product.getCategory().getName()) // Category cũng đã được load
+                            .build();
+
+                    return CartDetailDTO.builder()
+                            .cartDetailId(cartDetail.getId())
+                            .productList(productDTO)
+                            .quantity(cartDetail.getQuantity())
+                            .isSelected(cartDetail.getIsSelected() != null ? cartDetail.getIsSelected() : true)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        // 8. Return DTO với totalPrice và selectedPrice được tính động
+        return CartDTO.builder()
+                .cartId(cart.getId())
+                .totalQuantity(totalQuantity)
+                .totalPrice(totalPrice)
+                .cartDetailDTO(cartDetailDTOS)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public String addProductToCart(Long productId) {
+        // 1. Get current user from JWT
+        Long userId = getUserIdFromToken();
+
+        // 2. Validate product exists and is in stock
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ClientException("Product not found"));
+
+        // Check if product is active
+        if (product.getIsActive() != null && !product.getIsActive()) {
+            throw new ClientException("Product is no longer available");
+        }
+
+        if (!product.getStocked()) {
+            throw new ClientException("Product is out of stock");
+        }
+
+        // 3. Get or create cart for user
+        Cart cart = cartRepository.findByUserId(userId)
+                .orElseGet(() -> {
+                    Users user = userRepository.findById(userId)
+                            .orElseThrow(() -> new ServerException("User not found"));
+
+                    Cart newCart = Cart.builder()
+                            .user(user)
+                            .updatedAt(LocalDateTime.now())
+                            .build();
+                    return cartRepository.save(newCart);
+                });
+
+        // 4. Check if product already exists in cart
+        CartDetail existingCartDetail = cartDetailRepository
+                .findByCartIdAndProductId(cart.getId(), productId).orElse(null);
+
+        if (existingCartDetail != null) {
+            throw new ClientException("Product already exists in cart. Use change quantity instead.");
+        }
+
+        // 5. Add new product to cart
+        CartDetail cartDetail = CartDetail.builder()
+                .cart(cart)
+                .product(product)
+                .quantity(1)
+                .build();
+
+        cartDetailRepository.save(cartDetail);
+
+        // 6. Update cart timestamp
+        cart.setUpdatedAt(LocalDateTime.now());
+        cartRepository.save(cart);
+
+        return "Product added to cart successfully";
+    }
+
+    @Override
+    @Transactional
+    public CartDTO changeProductQuantity(Long productId, int quantity) {
+        // 1. Validate quantity
+        if (quantity <= 0) {
+            throw new ClientException("Quantity must be greater than 0. Use remove function to delete item.");
+        }
+
+        if (quantity > 10) {
+            throw new ClientException("Maximum quantity per product is 10");
+        }
+
+        // 2. Get current user from JWT
+        Long userId = getUserIdFromToken();
+
+        // 3. Get user's cart
+        Cart cart = getUserCart(userId);
+
+        // 4. Find cart detail for this product
+        CartDetail cartDetail = getCartDetail(cart.getId(), productId);
+
+        // 5. Check product availability and stock
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ClientException("Product not found"));
+
+        // Check if product is active
+        if (product.getIsActive() != null && !product.getIsActive()) {
+            throw new ClientException("Product is no longer available");
+        }
+
+        // Check if requested quantity is available in inventory
+        if (product.getQuantity() == null || product.getQuantity() < quantity) {
+            throw new ClientException("Insufficient stock. Available quantity: " +
+                    (product.getQuantity() != null ? product.getQuantity() : 0));
+        }
+
+        // 6. Update quantity
+        cartDetail.setQuantity(quantity);
+        cartDetailRepository.save(cartDetail);
+
+        // 7. Update cart timestamp
+        cart.setUpdatedAt(LocalDateTime.now());
+        cartRepository.save(cart);
+
+        // 8. Return updated cart
+        return getCartItems();
+    }
+
+    @Override
+    @Transactional
+    public CartDTO removeProductFromCart(Long productId) {
+        // 1. Get current user from JWT
+        Long userId = getUserIdFromToken();
+
+        // 2. Get user's cart
+        Cart cart = getUserCart(userId);
+
+        // 3. Find cart detail for this product
+        CartDetail cartDetail = getCartDetail(cart.getId(), productId);
+
+        // 4. Remove product from cart
+        // Note: We keep the cart even if it becomes empty (better UX)
+        // The cart will be reused when user adds new products
+        cartDetailRepository.delete(cartDetail);
+
+        // 5. Update cart timestamp
+        cart.setUpdatedAt(LocalDateTime.now());
+        cartRepository.save(cart);
+
+        // 6. Return updated cart
+        return getCartItems();
+    }
+
+    @Override
+    @Transactional
+    public CartDTO toggleProductSelection(Long productId) {
+        // 1. Get current user from JWT
+        Long userId = getUserIdFromToken();
+
+        // 2. Get user's cart
+        Cart cart = getUserCart(userId);
+
+        // 3. Find cart detail for this product
+        CartDetail cartDetail = getCartDetail(cart.getId(), productId);
+
+        // 4. Toggle selection status
+        Boolean currentStatus = cartDetail.getIsSelected();
+        cartDetail.setIsSelected(currentStatus == null || !currentStatus);
+        cartDetailRepository.save(cartDetail);
+
+        cartRepository.save(cart);
+
+        // 5. Return updated cart
+        return getCartItems();
+    }
+
+    @Override
+    @Transactional
+    public CartDTO toggleAllProducts(boolean selectAll) {
+        // 1. Get current user from JWT
+        Long userId = getUserIdFromToken();
+
+        // 2. Get user's cart
+        Cart cart = getUserCart(userId);
+
+        // 3. Get all cart details
+        List<CartDetail> cartDetails = cartDetailRepository.findByCartId(cart.getId());
+
+        // 4. Update all cart details
+        cartDetails.forEach(cartDetail -> cartDetail.setIsSelected(selectAll));
+        cartDetailRepository.saveAll(cartDetails);
+
+        cartRepository.save(cart);
+
+        // 5. Return updated cart
+        return getCartItems();
+    }
+
+    // -- Helper methods -- //
+
+    private Long getUserIdFromToken() {
+        Long userId = SecurityUtils.getCurrentUserId();
+        if (userId == null) {
+            throw new ClientException("User not authenticated");
+        }
+        return userId;
+    }
+
+    private Cart getUserCart(Long userId) {
+        return cartRepository.findByUserId(userId)
+                .orElseThrow(() -> new ClientException("Cart not found"));
+    }
+
+    private CartDetail getCartDetail(Long cartId, Long productId) {
+        return cartDetailRepository
+                .findByCartIdAndProductId(cartId, productId)
+                .orElseThrow(() -> new ClientException("Product not found in cart"));
+    }
+
+}

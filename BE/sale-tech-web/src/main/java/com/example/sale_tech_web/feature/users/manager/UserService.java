@@ -94,14 +94,13 @@ public class UserService implements UserServiceInterface {
                 .build();
 
         // 5. Lưu User
-        Users savedUser = userRepository.save(users);
+        userRepository.save(users);
 
         // 6. Tạo Cart cho User ngay sau khi đăng ký
         // Vì thiết kế có userId trong Cart table (UNIQUE constraint)
         Cart cart = Cart.builder()
-                .userId(savedUser.getId())
+                .user(users)
                 .updatedAt(LocalDateTime.now())
-                .totalPrice(0)
                 .build();
 
         cartRepository.save(cart);
