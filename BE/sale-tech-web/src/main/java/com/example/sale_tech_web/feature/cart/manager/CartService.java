@@ -143,6 +143,7 @@ public class CartService implements CartServiceInterface {
                 .cart(cart)
                 .product(product)
                 .quantity(1)
+                .addedAt(LocalDateTime.now())
                 .build();
 
         cartDetailRepository.save(cartDetail);

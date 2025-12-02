@@ -156,6 +156,7 @@ CREATE TABLE cart_detail
     product_id  INT,
     quantity    INT NOT NULL,
     is_selected BOOLEAN DEFAULT TRUE,
+    added_at    DATE,
     -- Khóa ngoại đến Cart
     CONSTRAINT fk_cd_cart FOREIGN KEY (cart_id) REFERENCES cart (id),
     -- Khóa ngoại đến Product

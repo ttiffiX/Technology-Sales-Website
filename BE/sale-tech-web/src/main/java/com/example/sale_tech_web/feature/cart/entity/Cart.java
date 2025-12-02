@@ -29,6 +29,7 @@ public class Cart {
     private Users user;
 
     @OneToMany(mappedBy = "cart", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("addedAt DESC")
     private List<CartDetail> cartDetailList = new ArrayList<>();
 
     private LocalDateTime updatedAt;

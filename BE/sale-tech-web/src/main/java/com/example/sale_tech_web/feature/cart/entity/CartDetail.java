@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -31,7 +33,9 @@ public class CartDetail {
     private Integer quantity;
 
     @Column(name = "is_selected")
-
     @Builder.Default
     private Boolean isSelected = true; // Mặc định sản phẩm được chọn khi thêm vào giỏ
+
+    @Column(name = "added_at")
+    private LocalDateTime addedAt;
 }
