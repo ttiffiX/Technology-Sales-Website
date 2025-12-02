@@ -2,14 +2,14 @@
 import React, {useEffect, useState} from 'react';
 import './PlacedOrder.scss';
 import Nav from "../../components/navigation/Nav";
-import {getCartItems} from "../../api/CartAPI";
+import {useGetCartItems} from "../../api/CartAPI";
 import Header from "../../components/header/Header";
 import {getOrders, useCancelOrder} from "../../api/OrderAPI";
 import {useToast} from "../../components/Toast/Toast";
 
 
 const PlacedOrder = () => {
-    const {totalQuantity} = getCartItems();
+    const {totalQuantity} = useGetCartItems();
     const {orders: initialOrders, orderDetails, loading, error} = getOrders();
     const {cancelOrder} = useCancelOrder();
     const {triggerToast} = useToast();

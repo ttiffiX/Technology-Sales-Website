@@ -8,13 +8,13 @@ import Nav from "../../components/navigation/Nav";
 import Header from "../../components/header/Header";
 import FilterSidebar from "../../components/filtersidebar/FilterSidebar";
 import useFetchProducts, { filterProducts, searchProducts, getAllCategories } from "../../api/ProductAPI";
-import {getCartItems} from "../../api/CartAPI";
+import {useGetCartItems} from "../../api/CartAPI";
 
 function Home() {
     const [searchParams, setSearchParams] = useSearchParams();
     const {products: allProducts, loading: initialLoading, error: initialError} = useFetchProducts();
     const [count, setCount] = useState(0);
-    const {totalQuantity} = getCartItems();
+    const {totalQuantity} = useGetCartItems();
 
     // State for filtering
     const [selectedCategoryId, setSelectedCategoryId] = useState(null);
@@ -252,7 +252,7 @@ function Home() {
                 <div className={`products-container ${selectedCategoryId ? 'with-sidebar' : 'full-width'}`}>
                     {loading && <div className="loading-overlay">Loading...</div>}
                     {error && <div className="error-message">{error}</div>}
-                    <ProductGrid products={products} count={setCount}/>
+                    <ProductGrid products={products}/>
                 </div>
             </div>
         </div>

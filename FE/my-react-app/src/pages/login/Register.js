@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
 import Nav from "../../components/navigation/Nav";
 import './Register.scss';
-import {getCartItems} from "../../api/CartAPI";
+import {useGetCartItems} from "../../api/CartAPI";
 import {register, isAuthenticated} from "../../api/AuthAPI";
 import {useNavigate} from "react-router-dom";
+import {useToast} from "../../components/Toast/Toast";
 
 function Register() {
-    const {totalQuantity} = getCartItems();
+    const {totalQuantity} = useGetCartItems();
     const navigate = useNavigate();
+    const {triggerToast} = useToast();
     const [formData, setFormData] = useState({
         username: '',
         email: '',
@@ -50,7 +52,8 @@ function Register() {
 
             if (result.success) {
                 // Đăng ký thành công
-                alert('Registration Successful! Please login.');
+                // alert('Registration Successful! Please login.');
+                triggerToast('success', 'Registration Successful! Please login.');
                 navigate('/login'); // Chuyển về trang login
             } else {
                 // Đăng ký thất bại

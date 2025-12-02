@@ -2,10 +2,10 @@ import React, {useState} from "react";
 import "./Profile.scss";  // Chúng ta sẽ tạo file SCSS sau
 import avatarIcon from "../../assets/icon/img.png";
 import Nav from "../../components/navigation/Nav";
-import {getCartItems} from "../../api/CartAPI";
+import {useGetCartItems} from "../../api/CartAPI";
 
 const Profile = () => {
-    const {totalQuantity} = getCartItems();
+    const {totalQuantity} = useGetCartItems();
     // Giả sử bạn đã có các dữ liệu người dùng như avatar, tên, v.v. từ API hoặc qua props.
     const [user, setUser] = useState({
         avatar: avatarIcon,

@@ -28,13 +28,13 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 401) {
+        if (error.response?.status === 401 || error.response?.status === 403) {
             // Token hết hạn hoặc không hợp lệ
             localStorage.removeItem('token');
             localStorage.removeItem('username');
             localStorage.removeItem('name');
             localStorage.removeItem('imageUrl');
-            window.location.href = '/login';
+            // window.location.href = '/login';
         }
         return Promise.reject(error);
     }

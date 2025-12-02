@@ -2,16 +2,18 @@ import React, {useEffect, useState} from "react";
 import Nav from "../../components/navigation/Nav";
 import './Login.scss'
 import {Link, useNavigate} from "react-router-dom";
-import {getCartItems} from "../../api/CartAPI";
+import {useGetCartItems} from "../../api/CartAPI";
 import {login, isAuthenticated} from "../../api/AuthAPI";
+import {useToast} from "../../components/Toast/Toast";
 
 function Login() {
-    const {totalQuantity} = getCartItems();
+    const {totalQuantity} = useGetCartItems();
     const navigate = useNavigate();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const {triggerToast} = useToast();
 
     useEffect(() => {
         if (isAuthenticated()) {
@@ -25,12 +27,12 @@ function Login() {
         setLoading(true);
 
         try {
-            console.log(username, password);
             const result = await login(username, password);
 
             if (result.success) {
                 // Đăng nhập thành công
-                alert('Login Successful!');
+                // alert('Login Successful!');
+                triggerToast('success', 'Login Successful!');
                 navigate('/'); // Chuyển về trang chủ
             } else {
                 // Đăng nhập thất bại

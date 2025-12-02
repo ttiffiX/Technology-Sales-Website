@@ -1,15 +1,16 @@
-import CartClicked from "../../utils/CartClicked";
 import React, {useEffect, useState} from "react";
 import "./Nav.scss"
 import {Link, useNavigate} from "react-router-dom";
 import avatarIcon from "../../assets/icon/img.png";
 import {isAuthenticated, getCurrentUser, logout} from "../../api/AuthAPI";
+import {useToast} from "../Toast/Toast";
 
 function Nav({count}) {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [userName, setUserName] = useState("");
     const [userAvatar, setUserAvatar] = useState(avatarIcon);
     const navigate = useNavigate();
+    const {triggerToast} = useToast();
 
     // Kiểm tra authentication khi component mount
     useEffect(() => {
@@ -47,24 +48,35 @@ function Nav({count}) {
         setIsLoggedIn(false);
         setUserName("");
         setUserAvatar(avatarIcon);
-        window.alert(`Logout successfully`);
+        // window.alert(`Logout successfully`);
+        triggerToast('success', 'Logout successfully');
         navigate("/");
     };
 
-    function handleProfile() {
+    const handleProfile = () => {
         navigate("/profile");
-    }
+    };
 
-    function handlePlacedOrder(){
-        navigate("/placedorder")
-    }
+    const handlePlacedOrder = () => {
+        navigate("/placedorder");
+    };
 
     // Handle navigate to home and clear all filters
     const handleNavigateHome = (e) => {
         e.preventDefault();
-        navigate('/', { replace: true });
+        navigate('/', {replace: true});
         // Force reload to clear any cached state
         window.location.href = '/';
+    };
+
+    const handleCartClick = () => {
+        if (!isLoggedIn) {
+            // alert('Please login to view your cart');
+            triggerToast('error', 'Please login to view your cart');
+            navigate('/login');
+            return;
+        }
+        navigate('/cart');
     };
 
     return (
@@ -79,19 +91,26 @@ function Nav({count}) {
                         <img src={userAvatar} alt="" className="user-avatar"/>
                     </div>
                     <div className="dropdown-menu">
-                        {/*<Link to="/profile">My Profile</Link>*/}
                         <button onClick={handleProfile}>My Profile</button>
                         <button onClick={handlePlacedOrder}>Orders</button>
                         <button onClick={handleLogout}>Logout</button>
                     </div>
                 </div>
             ) : (
-                // <Link to="/Login" className={"login-button"}>Login</Link>
                 <button className="login-button" onClick={handleLogin}>Login</button>
             )}
-            <CartClicked count={count}/>
+            <button
+                className={'cartButton'}
+                onClick={handleCartClick}
+                title={!isLoggedIn ? 'Please login to view cart' : 'View cart'}
+            >
+                <span className="cartText">
+                    🛒 <p>Cart({count})</p>
+                </span>
+            </button>
         </div>
     );
 }
 
 export default Nav;
+

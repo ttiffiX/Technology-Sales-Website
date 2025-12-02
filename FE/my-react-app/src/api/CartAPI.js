@@ -1,43 +1,39 @@
-import axios from 'axios';
+import apiClient from './apiClient';
 import {useEffect, useState} from "react";
 
-const BASE_URL = 'http://localhost:8080';
-
-export const addCartItem = () => {
-    const [loading, setLoading] = useState(false); // Trạng thái loading
-
-    const addItem = async (productId, quantity) => {
-        setLoading(true);
-        try {
-            const response = await axios.post(`${BASE_URL}/cart/add`, {
-                productId,
-                quantity,
-            });
-            return response.data;
-        } catch (err) {
-            throw err.response.data;
-        } finally {
-            setLoading(false); // Reset trạng thái loading
-        }
-    };
-
-    return {addItem, loading};
+// Add item to cart
+export const addCartItem = async (productId) => {
+    try {
+        const response = await apiClient.post('/cart', {
+            productId
+        });
+        return response.data;
+    } catch (err) {
+        throw err.response?.data || err.message;
+    }
 };
 
-export const getCartItems = () => {
-    const [cartItems, setCartItems] = useState([]);  // Lưu trữ danh sách sản phẩm trong giỏ
-    const [loading, setLoading] = useState(true);  // Trạng thái loading
-    const [error, setError] = useState(null);  // Trạng thái lỗi
-    const [totalQuantity, setTotalQuantity] = useState(0);  // Tổng số lượng hàng hóa
+// Hook to get cart items (for Cart page initial load)
+export const useGetCartItems = () => {
+    const [cartItems, setCartItems] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [totalQuantity, setTotalQuantity] = useState(0);
 
     useEffect(() => {
         const fetchCart = async () => {
             try {
-                const {totalQuantity, cartDTO} = await fetchCartItems();
-                setCartItems(cartDTO);
-                setTotalQuantity(totalQuantity)
+                const {totalQuantity, cartDetailDTO} = await fetchCartItems();
+                setCartItems(cartDetailDTO);
+                setTotalQuantity(totalQuantity);
             } catch (err) {
-                setError('Failed to fetch products');
+                // console.error('Failed to fetch cart:', err);
+                // Set user-friendly error message
+                if (err === 'User not authenticated') {
+                    setError('Please login to view your cart');
+                } else {
+                    setError('Failed to fetch cart products');
+                }
             } finally {
                 setLoading(false);
             }
@@ -48,49 +44,58 @@ export const getCartItems = () => {
     return {cartItems, totalQuantity, loading, error};
 };
 
+// Fetch cart items (direct API call)
 export const fetchCartItems = async () => {
-    const response = await axios.get(`${BASE_URL}/cart`)
+    const response = await apiClient.get('/cart');
     return response.data;
-}
-
-export const updateItems = () => {
-    const incItems = async (productId, quantity) => {
-        try {
-            const response = await axios.put(`${BASE_URL}/cart/adjust/increment`, {
-                productId,
-                quantity,
-            });
-            return response.data;
-        } catch (error) {
-            throw error.response.data;
-        }
-    };
-
-    const decItems = async (productId, quantity) => {
-        try {
-            const response = await axios.put(`${BASE_URL}/cart/adjust/decrement`, {
-                productId,
-                quantity,
-            });
-            return response.data; // Phản hồi từ BE
-        } catch (error) {
-            throw error.response.data;
-        }
-    }
-    return {incItems, decItems};
 };
 
-export const removeCartItem = () => {
-    const removeItem = async (productId) => {
-        try {
-            const response = await axios.delete(`${BASE_URL}/cart/remove`, {
-                data: { productId },
-            });
-            return response.data;
-        } catch (error) {
-            throw error.response.data;
-        }
+// Update cart item quantity (delta change)
+export const updateCartQuantity = async (productId, delta) => {
+    try {
+        const response = await apiClient.patch('/cart', {
+            productId,
+            quantity: delta
+        });
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || error.message;
     }
-    return {removeItem};
-}
+};
+
+// Remove item from cart
+export const removeCartItem = async (productId) => {
+    try {
+        const response = await apiClient.delete('/cart', {
+            data: { productId },
+        });
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || error.message;
+    }
+};
+
+// Toggle selection for a single product
+export const toggleProductSelection = async (productId) => {
+    try {
+        const response = await apiClient.patch('/cart/toggle-selection', {
+            productId
+        });
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || error.message;
+    }
+};
+
+// Toggle selection for all products
+export const toggleAllProducts = async (selectAll) => {
+    try {
+        const response = await apiClient.patch('/cart/toggle-all', {
+            selectAll
+        });
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || error.message;
+    }
+};
 

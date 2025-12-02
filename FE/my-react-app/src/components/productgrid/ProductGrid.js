@@ -1,8 +1,9 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import {useNavigate} from 'react-router-dom';
 import './ProductGrid.scss';
+import pic from '../../assets/icon/img.png';
 
-function ProductGrid({products, count}) {
+function ProductGrid({products}) {
     const navigate = useNavigate();
 
     // Format price
@@ -45,7 +46,8 @@ function ProductGrid({products, count}) {
                     key={product.id}
                     onClick={() => handleProductClick(product.id)}
                 >
-                    <div className="pic" style={{backgroundImage: `url(${getImage(product.imageUrl)})`}}></div>
+                    {/*<div className="pic" style={{backgroundImage: `url(${getImage(product.imageUrl)})`}}></div>*/}
+                    <div className="pic" style={{backgroundImage: `url(${pic})`}}></div>
                     <div className="category-badge">{product.categoryName}</div>
                     <div className="techName">{product.title}</div>
                     <div className="price">{formatPrice(product.price)}</div>

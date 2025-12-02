@@ -2,14 +2,14 @@ import React, {useEffect, useState} from 'react';
 import './Order.scss';
 import Nav from "../../components/navigation/Nav";
 import Header from "../../components/header/Header";
-import {getCartItems} from "../../api/CartAPI";
+import {useGetCartItems} from "../../api/CartAPI";
 import {useToast} from "../../components/Toast/Toast";
 import {PlaceOrder} from "../../api/OrderAPI";
 import {useNavigate} from "react-router-dom";
 
 const Order = () => {
     const {triggerToast} = useToast();
-    const {cartItems, totalQuantity} = getCartItems();
+    const {cartItems, totalQuantity} = useGetCartItems();
     const {getInfoOrders} = PlaceOrder();
     const [showConfirmPopup, setShowConfirmPopup] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState("Card");

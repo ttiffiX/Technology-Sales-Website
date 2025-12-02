@@ -4,22 +4,36 @@ import './ProductDetail.scss';
 import Nav from "../../components/navigation/Nav";
 import Header from "../../components/header/Header";
 import { getProductDetail } from "../../api/ProductAPI";
-import { getCartItems } from "../../api/CartAPI";
-import AddToCart from "../../utils/AddToCart";
+import { addCartItem, fetchCartItems } from "../../api/CartAPI";
+import { useToast } from "../../components/Toast/Toast";
+import {isAuthenticated} from "../../api/AuthAPI";
 
 function ProductDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { triggerToast } = useToast();
+
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [count, setCount] = useState(0);
-    const { totalQuantity } = getCartItems();
+    const [addingToCart, setAddingToCart] = useState(false);
 
+    // Load cart count on mount
     useEffect(() => {
-        setCount(totalQuantity);
-    }, [totalQuantity]);
+        const loadCart = async () => {
+            try {
+                const { totalQuantity } = await fetchCartItems();
+                setCount(totalQuantity);
+            } catch (err) {
+                // Ignore error if user not logged in
+                console.log('Cart not loaded:', err);
+            }
+        };
+        loadCart();
+    }, []);
 
+    // Fetch product details
     useEffect(() => {
         const fetchProduct = async () => {
             try {
@@ -27,7 +41,7 @@ function ProductDetail() {
                 const data = await getProductDetail(id);
                 setProduct(data);
             } catch (err) {
-                setError(err.response.data || 'Failed to load product details');
+                setError(err.response?.data || 'Failed to load product details');
             } finally {
                 setLoading(false);
             }
@@ -36,9 +50,37 @@ function ProductDetail() {
         fetchProduct();
     }, [id]);
 
-    const handleAddToCart = () => {
-        if (product && product.stocked) {
-            AddToCart(product.id, setCount);
+    const handleAddToCart = async () => {
+        if (!product || !product.stocked) return;
+
+        // Check if user is logged in
+        if (!isAuthenticated()) {
+            triggerToast('error', 'Please login to add items to cart');
+            navigate('/login');
+            return;
+        }
+
+        setAddingToCart(true);
+        try {
+            // Check current cart quantity
+            const { totalQuantity } = await fetchCartItems();
+            if (totalQuantity >= 10) {
+                triggerToast('error', 'Maximum 10 items in cart');
+                return;
+            }
+
+            // Add to cart
+            const response = await addCartItem(product.id);
+            triggerToast('success', response || 'Added to cart successfully');
+
+            // Refresh cart count
+            const updated = await fetchCartItems();
+            setCount(updated.totalQuantity);
+        } catch (err) {
+            console.error('Error adding to cart:', err);
+            triggerToast('error', err || 'Failed to add to cart');
+        } finally {
+            setAddingToCart(false);
         }
     };
 
@@ -152,9 +194,9 @@ function ProductDetail() {
                             <button
                                 className={`add-to-cart-btn ${!product.stocked ? 'disabled' : ''}`}
                                 onClick={handleAddToCart}
-                                disabled={!product.stocked}
+                                disabled={!product.stocked || addingToCart}
                             >
-                                {product.stocked ? 'Add to Cart' : 'Out of Stock'}
+                                {addingToCart ? 'Adding...' : product.stocked ? 'Add to Cart' : 'Out of Stock'}
                             </button>
                         </div>
                     </div>

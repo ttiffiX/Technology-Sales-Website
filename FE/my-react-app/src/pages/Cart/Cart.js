@@ -2,10 +2,10 @@ import React, {useEffect, useState} from "react";
 import Nav from "../../components/navigation/Nav";
 import Header from "../../components/header/Header";
 import CartGrid from "../../components/cartgrid/CartGrid";
-import {getCartItems} from "../../api/CartAPI";
+import {useGetCartItems} from "../../api/CartAPI";
 
 function Cart(){
-    const { cartItems,totalQuantity, loading, error } = getCartItems();
+    const { cartItems,totalQuantity, loading, error } = useGetCartItems();
     const [count, setCount] = useState(0);
 
     useEffect(() => {

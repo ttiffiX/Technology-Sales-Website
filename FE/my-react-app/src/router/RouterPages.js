@@ -10,6 +10,7 @@ import Profile from "../pages/profile/Profile";
 import Order from "../pages/order/Order";
 import PlacedOrder from "../pages/placedorder/PlacedOrder";
 import ProductDetail from "../pages/productdetail/ProductDetail";
+import ProtectedRoute from "./ProtectedRoute";
 
 
 function RouterPages() {
@@ -23,11 +24,29 @@ function RouterPages() {
                 <Route path="/login" element={<Login/>}/>
                 <Route path="/register" element={<Register/>}/>
                 <Route path="/aboutme" element={<AboutMe/>}/>
-                <Route path="/cart" element={<Cart/>}/>
-                <Route path="/profile" element={<Profile/>}/>
-                <Route path="/checkout" element={<Order/>}/>
-                <Route path="/placedorder" element={<PlacedOrder/>}/>
                 <Route path="/product/:id" element={<ProductDetail/>}/>
+
+                {/* Protected Routes - Require Authentication */}
+                <Route path="/cart" element={
+                    <ProtectedRoute>
+                        <Cart/>
+                    </ProtectedRoute>
+                }/>
+                <Route path="/profile" element={
+                    <ProtectedRoute>
+                        <Profile/>
+                    </ProtectedRoute>
+                }/>
+                <Route path="/checkout" element={
+                    <ProtectedRoute>
+                        <Order/>
+                    </ProtectedRoute>
+                }/>
+                <Route path="/placedorder" element={
+                    <ProtectedRoute>
+                        <PlacedOrder/>
+                    </ProtectedRoute>
+                }/>
             </Routes>
         </Router>
     );
