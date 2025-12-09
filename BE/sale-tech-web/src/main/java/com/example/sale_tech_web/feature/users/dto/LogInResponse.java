@@ -1,4 +1,4 @@
-package com.example.sale_tech_web.controller.response;
+package com.example.sale_tech_web.feature.users.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

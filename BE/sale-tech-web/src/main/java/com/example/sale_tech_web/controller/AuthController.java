@@ -1,8 +1,8 @@
 package com.example.sale_tech_web.controller;
 
-import com.example.sale_tech_web.controller.request.LogInRequest;
-import com.example.sale_tech_web.controller.request.RegisterRequest;
-import com.example.sale_tech_web.controller.response.LogInResponse;
+import com.example.sale_tech_web.feature.users.dto.LogInRequest;
+import com.example.sale_tech_web.feature.users.dto.RegisterRequest;
+import com.example.sale_tech_web.feature.users.dto.LogInResponse;
 import com.example.sale_tech_web.feature.users.manager.UserServiceInterface;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

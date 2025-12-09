@@ -1,9 +1,9 @@
 package com.example.sale_tech_web.feature.users.manager;
 
 import com.example.sale_tech_web.controller.exception.ClientException;
-import com.example.sale_tech_web.controller.request.LogInRequest;
-import com.example.sale_tech_web.controller.request.RegisterRequest;
-import com.example.sale_tech_web.controller.response.LogInResponse;
+import com.example.sale_tech_web.feature.users.dto.LogInRequest;
+import com.example.sale_tech_web.feature.users.dto.RegisterRequest;
+import com.example.sale_tech_web.feature.users.dto.LogInResponse;
 import com.example.sale_tech_web.feature.cart.entity.Cart;
 import com.example.sale_tech_web.feature.cart.repository.CartRepository;
 import com.example.sale_tech_web.feature.users.entity.Users;
