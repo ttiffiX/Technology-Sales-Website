@@ -35,8 +35,9 @@ public class Users {
 
     private String phone;
 
-    @Column(nullable = false)
-    private String role;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, name = "role")
+    private Role role;
 
     private String name;
     private boolean isActive;

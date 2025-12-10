@@ -88,7 +88,7 @@ public class UserService implements UserServiceInterface {
                 .password(passwordEncoder.encode(password))
                 .phone(registerRequest.getPhone())
                 .name(registerRequest.getName())
-                .role(Role.CUSTOMER.getValue())
+                .role(Role.CUSTOMER)
                 .isActive(true)
                 .createdAt(LocalDateTime.now())
                 .build();

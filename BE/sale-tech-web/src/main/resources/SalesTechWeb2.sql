@@ -1,5 +1,17 @@
--- Kích hoạt extension nếu cần thiết (cho UUID, nhưng vì bạn dùng SERIAL nên không cần)
--- CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Enums
+CREATE TYPE user_role_enum AS ENUM (
+    'ADMIN',
+    'USER',
+    'PM'
+);
+
+CREATE TYPE order_status_enum AS ENUM (
+    'PENDING',
+    'APPROVED',
+    'REJECTED',
+    'CANCELLED',
+    'SUCCESS'
+);
 
 --------------------------
 -- BẢNG CHÍNH (MASTER TABLES)
@@ -9,11 +21,11 @@
 CREATE TABLE users
 (
     id         SERIAL PRIMARY KEY,
-    email      VARCHAR(50) UNIQUE                                   NOT NULL,
-    username   VARCHAR(50) UNIQUE                                   NOT NULL,
-    password   VARCHAR(255)                                         NOT NULL,
+    email      VARCHAR(50) UNIQUE NOT NULL,
+    username   VARCHAR(50) UNIQUE NOT NULL,
+    password   VARCHAR(255)       NOT NULL,
     phone      VARCHAR(11),
-    role       VARCHAR(20) CHECK (role IN ('admin', 'users', 'pm')) NOT NULL,
+    role       user_role_enum     NOT NULL,
     name       VARCHAR(50),
     is_active  BOOLEAN,
     created_at DATE,
@@ -104,8 +116,8 @@ CREATE TABLE orders
     delivery_fee  INT,
     total_price   INT,
     created_at    DATE,
-    -- Sử dụng kiểu TEXT để mô phỏng ENUM trong PostgreSQL
-    status        TEXT CHECK (status IN ('pending', 'approved', 'rejected', 'cancelled', 'success')),
+    status        order_status_enum,
+    description   TEXT,
     -- Khóa ngoại đến User
     CONSTRAINT fk_order_user FOREIGN KEY (user_id) REFERENCES users (id)
 );
