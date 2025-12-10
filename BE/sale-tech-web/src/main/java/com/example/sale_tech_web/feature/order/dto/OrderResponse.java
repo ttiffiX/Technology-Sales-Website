@@ -1,6 +1,6 @@
 //package com.example.sale_tech_web.feature.order.entity;
 //
-//import com.example.sale_tech_web.feature.order.entity.orderdetails.OrderDetailDTO;
+//import com.example.sale_tech_web.feature.order.dto.OrderDetailDTO;
 //import com.example.sale_tech_web.feature.order.entity.orders.Order;
 //import lombok.AllArgsConstructor;
 //import lombok.Data;
