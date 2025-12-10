@@ -1,4 +1,4 @@
-package com.example.sale_tech_web.feature.cart.entity;
+package com.example.sale_tech_web.feature.cart.dto;
 
 import com.example.sale_tech_web.feature.product.dto.ProductListDTO;
 import lombok.AllArgsConstructor;

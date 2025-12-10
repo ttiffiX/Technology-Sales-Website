@@ -1,6 +1,6 @@
 package com.example.sale_tech_web.feature.cart.manager;
 
-import com.example.sale_tech_web.feature.cart.entity.CartDTO;
+import com.example.sale_tech_web.feature.cart.dto.CartDTO;
 
 public interface CartServiceInterface {
     CartDTO getCartItems();

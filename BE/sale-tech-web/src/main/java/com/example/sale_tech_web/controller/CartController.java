@@ -1,6 +1,6 @@
 package com.example.sale_tech_web.controller;
 
-import com.example.sale_tech_web.feature.cart.entity.CartDTO;
+import com.example.sale_tech_web.feature.cart.dto.CartDTO;
 import com.example.sale_tech_web.feature.cart.manager.CartServiceInterface;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
