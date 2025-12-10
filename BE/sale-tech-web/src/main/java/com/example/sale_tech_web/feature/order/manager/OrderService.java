@@ -1,102 +1,77 @@
-//package com.example.sale_tech_web.feature.order.manager;
-//
-//import com.example.sale_tech_web.controller.exception.ClientException;
-//import com.example.sale_tech_web.feature.cart.entity.CartDTO;
-//import com.example.sale_tech_web.feature.cart.manager.CartService;
-//import com.example.sale_tech_web.feature.order.entity.orderdetails.OrderDetailDTO;
-//import com.example.sale_tech_web.feature.order.entity.orders.Order;
-//import com.example.sale_tech_web.feature.order.entity.orderdetails.OrderDetail;
-//import com.example.sale_tech_web.feature.order.entity.OrderResponse;
-//import com.example.sale_tech_web.feature.order.repository.OrderDetailRepository;
-//import com.example.sale_tech_web.feature.order.repository.OrderRepository;
-//import com.example.sale_tech_web.feature.payment.manager.PaymentService;
-//import com.example.sale_tech_web.feature.product.entity.Product;
-//import com.example.sale_tech_web.feature.product.manager.ProductService;
-//import lombok.RequiredArgsConstructor;
-//import org.springframework.data.domain.Sort;
-//import org.springframework.stereotype.Service;
-//
-//import java.time.LocalDateTime;
-//import java.util.List;
-//import java.util.stream.Collectors;
-//
-//@Service
-//@RequiredArgsConstructor
-//public class OrderService {
-//
-//    private final OrderRepository orderRepository;
-//    private final OrderDetailRepository orderDetailRepository;
-//    private final CartService cartService;
-//    private final ProductService productService;
-//    private final PaymentService paymentService;
-//
-//    public OrderResponse getAllOrders() {
-//        List<Order> orders = orderRepository.findAll(Sort.by(Sort.Order.desc("updateAt")));
-//        List<OrderDetail> orderDetails = orderDetailRepository.findAll();
-//        List<OrderDetailDTO> orderDetailDTOS = orderDetails.stream().map(item -> {
-//            Product product = productService.getProductById(item.getProductId());
-//
-//            OrderDetailDTO orderDetailDTO = new OrderDetailDTO();
-//            orderDetailDTO.setOrderDetailId(item.getOrderdetailId());
-//            orderDetailDTO.setOrderId(item.getOrderId());
-//            orderDetailDTO.setName(product.getName());
-//            orderDetailDTO.setPrice(product.getPrice());
-//            orderDetailDTO.setQuantity(item.getQuantity());
-//            orderDetailDTO.setImage(product.getImage());
-//
-//            return orderDetailDTO;
-//        }).collect(Collectors.toList());
-//        return new OrderResponse(orders, orderDetailDTOS);
-//    }
-//
-//    public String placeOrder(String name, String phone, String address, String payment_method) {
-//        CartDTO cartResponse = cartService.getCartItems();
-//
-//        int totalPrice = cartResponse.getCartDetailDTO().stream()
-//                .mapToInt(cart -> cart.getPrice() * cart.getQuantity())
-//                .sum();
-//
-//        // Tạo Order mới
-//        Order newOrder = Order.builder()
-//                .customerId(1L)
-//                .totalPrice(totalPrice)
-//                .orderDate(LocalDateTime.now())
-//                .status("pending")
-//                .name(name)
-//                .phone(phone)
-//                .address(address)
-//                .build();
-//
-//        // Lưu Order vào CSDL
-//        Order savedOrder = orderRepository.save(newOrder);
-//
-//        // Lưu từng sản phẩm trong giỏ hàng vào OrderDetail
-//        List<OrderDetail> orderDetails = cartResponse.getCartDetailDTO().stream()
-//                .map(cart -> OrderDetail.builder()
-//                        .orderId(savedOrder.getOrderId())
-//                        .productId(cart.getProductId())
-//                        .quantity(cart.getQuantity())
-//                        .unitPrice(cart.getPrice())
-//                        .build()).collect(Collectors.toList());
-//
-//        // Lưu danh sách OrderDetail
-//        orderDetailRepository.saveAll(orderDetails);
-//
-//        paymentService.setPayment(savedOrder.getOrderId(), payment_method);
-//
-//        // Xóa tất cả các sản phẩm trong giỏ hàng
-//        cartService.removeAllFromCart();
-//
-//        return "Place order successfully!";
-//    }
-//
-//    public String cancelOrder(Long orderId) {
-//        Order order = orderRepository.findById(orderId)
-//                .orElseThrow(() -> new ClientException("Order not found."));
-//        order.setStatus("canceled");
-//        paymentService.cancelPayment(order.getOrderId());
-//        orderRepository.save(order);
-//        return "Canceled successfully!";
-//    }
-//}
-//
+package com.example.sale_tech_web.feature.order.manager;
+
+import com.example.sale_tech_web.controller.exception.ClientException;
+import com.example.sale_tech_web.feature.jwt.SecurityUtils;
+import com.example.sale_tech_web.feature.order.dto.OrderDTO;
+import com.example.sale_tech_web.feature.order.dto.OrderDetailDTO;
+import com.example.sale_tech_web.feature.order.dto.PlaceOrderRequest;
+import com.example.sale_tech_web.feature.order.entity.orders.Order;
+import com.example.sale_tech_web.feature.order.repository.OrderRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class OrderService implements OrderServiceInterface {
+    private final OrderRepository orderRepository;
+
+    @Override
+    public List<OrderDTO> getOrderByUserId() {
+        Long userId = getUserIdFromToken();
+
+        List<Order> orders = orderRepository.findByUserId(userId)
+                .orElseThrow(() -> new ClientException("Order not found"));
+
+        List<OrderDTO> orderDTOs = new ArrayList<>();
+        for (Order order : orders) {
+            OrderDTO orderDTO = OrderDTO.builder()
+                    .id(order.getId())
+                    .customerName(order.getCustomerName())
+                    .phone(order.getPhone())
+                    .email(order.getEmail())
+                    .address(order.getAddress())
+                    .province(order.getProvince())
+                    .deliveryFee(order.getDeliveryFee())
+                    .totalPrice(order.getTotalPrice())
+                    .createdAt(order.getCreatedAt())
+                    .status(order.getStatus().name())
+                    .build();
+
+            orderDTOs.add(orderDTO);
+        }
+        return orderDTOs;
+    }
+
+    @Override
+    public List<OrderDetailDTO> getOrderDetailsByUserId() {
+        return List.of();
+    }
+
+    @Override
+    public String placeOrder(PlaceOrderRequest request) {
+        return "";
+    }
+
+    @Override
+    public String cancelOrder(Long orderId) {
+        return "";
+    }
+
+    @Override
+    public List<OrderDTO> getOrdersByStatus(String status) {
+        return List.of();
+    }
+
+    // -- Helper Method -- //
+    private Long getUserIdFromToken() {
+        Long userId = SecurityUtils.getCurrentUserId();
+        if (userId == null) {
+            throw new ClientException("User not authenticated");
+        }
+        return userId;
+    }
+}
+
