@@ -13,6 +13,11 @@ CREATE TYPE order_status_enum AS ENUM (
     'SUCCESS'
 );
 
+CREATE TYPE order_payment_method_enum AS ENUM (
+    'CASH',
+    'VNPAY'
+    );
+
 --------------------------
 -- BẢNG CHÍNH (MASTER TABLES)
 --------------------------
@@ -116,8 +121,10 @@ CREATE TABLE orders
     delivery_fee  INT,
     total_price   INT,
     created_at    DATE,
+    updated_at    DATE,
     status        order_status_enum,
     description   TEXT,
+    payment_method order_payment_method_enum,
     -- Khóa ngoại đến User
     CONSTRAINT fk_order_user FOREIGN KEY (user_id) REFERENCES users (id)
 );
@@ -128,6 +135,8 @@ CREATE TABLE order_detail
     id         SERIAL PRIMARY KEY,
     order_id   INT,
     product_id INT,
+    product_title VARCHAR(255) NOT NULL,
+    category_name  VARCHAR(100),
     quantity   INT NOT NULL,
     price      INT NOT NULL,
     -- Khóa ngoại đến Order
