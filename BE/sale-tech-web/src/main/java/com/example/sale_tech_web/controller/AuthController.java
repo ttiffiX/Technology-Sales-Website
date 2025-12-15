@@ -4,6 +4,7 @@ import com.example.sale_tech_web.feature.users.dto.LogInRequest;
 import com.example.sale_tech_web.feature.users.dto.RegisterRequest;
 import com.example.sale_tech_web.feature.users.dto.LogInResponse;
 import com.example.sale_tech_web.feature.users.manager.UserServiceInterface;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +28,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest registerRequest) {
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest registerRequest) {
         log.info("Register attempt for user: {}", registerRequest.getUsername());
         String response = userServiceInterface.createUser(registerRequest);
         return ResponseEntity.ok(response);

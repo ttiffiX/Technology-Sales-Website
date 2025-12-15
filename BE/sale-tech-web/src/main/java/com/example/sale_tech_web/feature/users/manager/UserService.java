@@ -19,9 +19,6 @@ import static org.springframework.http.HttpStatus.*;
 
 import java.time.LocalDateTime;
 
-import static com.example.sale_tech_web.utils.CheckUtils.isStrongPassword;
-import static com.example.sale_tech_web.utils.CheckUtils.isValidEmail;
-
 @Service
 @RequiredArgsConstructor
 public class UserService implements UserServiceInterface {
@@ -53,37 +50,18 @@ public class UserService implements UserServiceInterface {
         String password = registerRequest.getPassword();
         String email = registerRequest.getEmail();
 
-        if (username == null || username.trim().isEmpty() ||
-                password == null || password.isEmpty() ||
-                email == null || email.trim().isEmpty()) {
-            throw new ResponseStatusException(CONFLICT, "Username, password, and email must not be empty.");
-        }
-
-        // 2. Kiểm tra Tính hợp lệ của Dữ liệu (Dùng Regex nếu cần)
-        // Ví dụ: Kiểm tra định dạng email và độ mạnh của mật khẩu
-        if (!isValidEmail(email)) {
-            throw new ResponseStatusException(CONFLICT, "Invalid email format.");
-        }
-
-        if (!isStrongPassword(password)) {
-            throw new ResponseStatusException(CONFLICT, "Password is too weak! It must contain at least 8 characters, one uppercase, one lowercase, one number, and one special character.");
-        }
-
         if (!password.equals(registerRequest.getConfirmPassword())) {
-            throw new ResponseStatusException(CONFLICT, "Password and Confirm Password do not match.");
+            throw new ResponseStatusException(BAD_REQUEST, "Password and Confirm Password do not match.");
         }
 
-        // 3. Kiểm tra Tồn tại (Unique Constraint Check)
         if (userRepository.existsByUsername(username)) {
             throw new ResponseStatusException(CONFLICT, "Username '" + username + "' already exists.");
         }
 
-        // Nên kiểm tra email riêng để cung cấp thông báo lỗi chi tiết hơn (nếu bảo mật cho phép)
         if (userRepository.existsByEmail(email)) {
             throw new ResponseStatusException(CONFLICT, "Email '" + email + "' already exists.");
         }
 
-        // 4. Mã hóa Mật khẩu và Xây dựng Đối tượng
         Users users = Users.builder()
                 .email(email)
                 .username(username)
@@ -95,11 +73,8 @@ public class UserService implements UserServiceInterface {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        // 5. Lưu User
         userRepository.save(users);
 
-        // 6. Tạo Cart cho User ngay sau khi đăng ký
-        // Vì thiết kế có userId trong Cart table (UNIQUE constraint)
         Cart cart = Cart.builder()
                 .user(users)
                 .updatedAt(LocalDateTime.now())
