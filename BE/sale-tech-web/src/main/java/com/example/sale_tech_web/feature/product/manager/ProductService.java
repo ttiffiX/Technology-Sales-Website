@@ -1,6 +1,6 @@
 package com.example.sale_tech_web.feature.product.manager;
 
-import com.example.sale_tech_web.controller.exception.ServerException;
+import static org.springframework.http.HttpStatus.*;
 import com.example.sale_tech_web.feature.product.dto.*;
 import com.example.sale_tech_web.feature.product.entity.*;
 import com.example.sale_tech_web.feature.product.repository.*;
@@ -12,6 +12,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -50,7 +51,7 @@ public class ProductService implements ProductServiceInterface {
      */
     public ProductDetailDTO getProductById(Long productId) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ServerException("Product not found"));
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Product not found"));
         return convertToDetailDTO(product);
     }
 
@@ -59,7 +60,7 @@ public class ProductService implements ProductServiceInterface {
      */
     public CategoryFilterOptionsDTO getFilterOptions(Long categoryId) {
         Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new ServerException("Category not found"));
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Category not found"));
 
         // Get all filterable attributes for this category
         List<CategoryAttributeMapping> mappings = categoryAttributeMappingRepository

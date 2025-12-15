@@ -1,6 +1,5 @@
 package com.example.sale_tech_web.feature.users.manager;
 
-import com.example.sale_tech_web.controller.exception.ClientException;
 import com.example.sale_tech_web.feature.users.dto.LogInRequest;
 import com.example.sale_tech_web.feature.users.dto.RegisterRequest;
 import com.example.sale_tech_web.feature.users.dto.LogInResponse;
@@ -14,6 +13,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
+import static org.springframework.http.HttpStatus.*;
 
 import java.time.LocalDateTime;
 
@@ -30,9 +32,9 @@ public class UserService implements UserServiceInterface {
 
     @Override
     public LogInResponse login(LogInRequest logInRequest) {
-        Users users = userRepository.findByUsername(logInRequest.getUsername()).orElseThrow(() -> new ClientException("User not found"));
+        Users users = userRepository.findByUsername(logInRequest.getUsername()).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
         if (!passwordEncoder.matches(logInRequest.getPassword(), users.getPassword())) {
-            throw new ClientException("Invalid username or password");
+            throw new ResponseStatusException(CONFLICT, "Invalid username or password");
         }
 
         String token = jwtUtils.generateToken(users.getId());
@@ -54,31 +56,31 @@ public class UserService implements UserServiceInterface {
         if (username == null || username.trim().isEmpty() ||
                 password == null || password.isEmpty() ||
                 email == null || email.trim().isEmpty()) {
-            throw new ClientException("Username, password, and email must not be empty.");
+            throw new ResponseStatusException(CONFLICT, "Username, password, and email must not be empty.");
         }
 
         // 2. Kiểm tra Tính hợp lệ của Dữ liệu (Dùng Regex nếu cần)
         // Ví dụ: Kiểm tra định dạng email và độ mạnh của mật khẩu
         if (!isValidEmail(email)) {
-            throw new ClientException("Invalid email format.");
+            throw new ResponseStatusException(CONFLICT, "Invalid email format.");
         }
 
         if (!isStrongPassword(password)) {
-            throw new ClientException("Password is too weak! It must contain at least 8 characters, one uppercase, one lowercase, one number, and one special character.");
+            throw new ResponseStatusException(CONFLICT, "Password is too weak! It must contain at least 8 characters, one uppercase, one lowercase, one number, and one special character.");
         }
 
         if (!password.equals(registerRequest.getConfirmPassword())) {
-            throw new ClientException("Password and Confirm Password do not match.");
+            throw new ResponseStatusException(CONFLICT, "Password and Confirm Password do not match.");
         }
 
         // 3. Kiểm tra Tồn tại (Unique Constraint Check)
         if (userRepository.existsByUsername(username)) {
-            throw new ClientException("Username '" + username + "' already exists.");
+            throw new ResponseStatusException(CONFLICT, "Username '" + username + "' already exists.");
         }
 
         // Nên kiểm tra email riêng để cung cấp thông báo lỗi chi tiết hơn (nếu bảo mật cho phép)
         if (userRepository.existsByEmail(email)) {
-            throw new ClientException("Email '" + email + "' already exists.");
+            throw new ResponseStatusException(CONFLICT, "Email '" + email + "' already exists.");
         }
 
         // 4. Mã hóa Mật khẩu và Xây dựng Đối tượng

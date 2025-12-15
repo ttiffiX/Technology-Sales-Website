@@ -1,7 +1,5 @@
 package com.example.sale_tech_web.feature.cart.manager;
 
-import com.example.sale_tech_web.controller.exception.ClientException;
-import com.example.sale_tech_web.controller.exception.ServerException;
 import com.example.sale_tech_web.feature.cart.entity.Cart;
 import com.example.sale_tech_web.feature.cart.dto.CartDetailDTO;
 import com.example.sale_tech_web.feature.cart.entity.CartDetail;
@@ -17,6 +15,9 @@ import com.example.sale_tech_web.feature.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
+import static org.springframework.http.HttpStatus.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -38,7 +39,7 @@ public class CartService implements CartServiceInterface {
         // 2. Lấy Cart với tất cả relationships trong 1 query (JOIN FETCH)
         // Không cần query User riêng, không cần query CartDetails riêng, không cần query Products riêng
         Cart cart = cartRepository.findByUserIdWithDetails(userId)
-                .orElseThrow(() -> new ServerException("Cart not found"));
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Cart not found"));
 
         // 3. Lấy CartDetails từ relationship (đã được load bởi JOIN FETCH)
         List<CartDetail> cartItems = cart.getCartDetailList();
@@ -106,22 +107,22 @@ public class CartService implements CartServiceInterface {
 
         // 2. Validate product exists and is in stock
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ClientException("Product not found"));
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Product not found"));
 
         // Check if product is active
         if (product.getIsActive() != null && !product.getIsActive()) {
-            throw new ClientException("Product is no longer available");
+            throw new ResponseStatusException(CONFLICT, "Product is no longer available");
         }
 
         if (!product.getStocked()) {
-            throw new ClientException("Product is out of stock");
+            throw new ResponseStatusException(CONFLICT, "Product is out of stock");
         }
 
         // 3. Get or create cart for user
         Cart cart = cartRepository.findByUserId(userId)
                 .orElseGet(() -> {
                     Users user = userRepository.findById(userId)
-                            .orElseThrow(() -> new ServerException("User not found"));
+                            .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
 
                     Cart newCart = Cart.builder()
                             .user(user)
@@ -135,7 +136,7 @@ public class CartService implements CartServiceInterface {
                 .findByCartIdAndProductId(cart.getId(), productId).orElse(null);
 
         if (existingCartDetail != null) {
-            throw new ClientException("Product already exists in cart. Use change quantity instead.");
+            throw new ResponseStatusException(CONFLICT, "Product already exists in cart. Use change quantity instead.");
         }
 
         // 5. Add new product to cart
@@ -160,11 +161,11 @@ public class CartService implements CartServiceInterface {
     public CartDTO changeProductQuantity(Long productId, int quantity) {
         // 1. Validate quantity
         if (quantity <= 0) {
-            throw new ClientException("Quantity must be greater than 0. Use remove function to delete item.");
+            throw new ResponseStatusException(CONFLICT, "Quantity must be greater than 0. Use remove function to delete item.");
         }
 
         if (quantity > 10) {
-            throw new ClientException("Maximum quantity per product is 10");
+            throw new ResponseStatusException(CONFLICT, "Maximum quantity per product is 10");
         }
 
         // 2. Get current user from JWT
@@ -178,16 +179,16 @@ public class CartService implements CartServiceInterface {
 
         // 5. Check product availability and stock
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ClientException("Product not found"));
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Product not found"));
 
         // Check if product is active
         if (product.getIsActive() != null && !product.getIsActive()) {
-            throw new ClientException("Product is no longer available");
+            throw new ResponseStatusException(CONFLICT, "Product is no longer available");
         }
 
         // Check if requested quantity is available in inventory
         if (product.getQuantity() == null || product.getQuantity() < quantity) {
-            throw new ClientException("Insufficient stock. Available quantity: " +
+            throw new ResponseStatusException(CONFLICT, "Insufficient stock. Available quantity: " +
                     (product.getQuantity() != null ? product.getQuantity() : 0));
         }
 
@@ -278,20 +279,20 @@ public class CartService implements CartServiceInterface {
     private Long getUserIdFromToken() {
         Long userId = SecurityUtils.getCurrentUserId();
         if (userId == null) {
-            throw new ClientException("User not authenticated");
+            throw new ResponseStatusException(UNAUTHORIZED, "User not authenticated");
         }
         return userId;
     }
 
     private Cart getUserCart(Long userId) {
         return cartRepository.findByUserId(userId)
-                .orElseThrow(() -> new ClientException("Cart not found"));
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Cart not found"));
     }
 
     private CartDetail getCartDetail(Long cartId, Long productId) {
         return cartDetailRepository
                 .findByCartIdAndProductId(cartId, productId)
-                .orElseThrow(() -> new ClientException("Product not found in cart"));
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Product not found in cart"));
     }
 
 }
