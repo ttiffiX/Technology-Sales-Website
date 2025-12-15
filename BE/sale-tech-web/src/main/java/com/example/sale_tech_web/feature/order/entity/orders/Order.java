@@ -10,7 +10,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,15 +50,18 @@ public class Order {
     @Column(name = "total_price")
     private Integer totalPrice;
 
-    @Column(name = "created_at")
-    private LocalDate createdAt;
-
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
     @Column(name = "description")
     private String description;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     @Column(name = "payment_method")
     @Enumerated(EnumType.STRING)
