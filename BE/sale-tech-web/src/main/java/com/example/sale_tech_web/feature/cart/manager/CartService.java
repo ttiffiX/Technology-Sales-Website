@@ -161,11 +161,11 @@ public class CartService implements CartServiceInterface {
     public CartDTO changeProductQuantity(Long productId, int quantity) {
         // 1. Validate quantity
         if (quantity <= 0) {
-            throw new ResponseStatusException(CONFLICT, "Quantity must be greater than 0. Use remove function to delete item.");
+            throw new ResponseStatusException(BAD_REQUEST, "Quantity must be greater than 0. Use remove function to delete item.");
         }
 
         if (quantity > 10) {
-            throw new ResponseStatusException(CONFLICT, "Maximum quantity per product is 10");
+            throw new ResponseStatusException(BAD_REQUEST, "Maximum quantity per product is 10");
         }
 
         // 2. Get current user from JWT
