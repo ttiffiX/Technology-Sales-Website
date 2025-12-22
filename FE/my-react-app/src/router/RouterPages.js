@@ -8,8 +8,8 @@ import AboutMe from "../pages/aboutme/AboutMe";
 import Cart from "../pages/Cart/Cart";
 import Profile from "../pages/profile/Profile";
 import Order from "../pages/order/Order";
-import PlacedOrder from "../pages/placedorder/PlacedOrder";
 import ProductDetail from "../pages/productdetail/ProductDetail";
+import OrderHistory from "../pages/orderhistory/OrderHistory";
 import ProtectedRoute from "./ProtectedRoute";
 
 
@@ -42,9 +42,9 @@ function RouterPages() {
                         <Order/>
                     </ProtectedRoute>
                 }/>
-                <Route path="/placedorder" element={
+                <Route path="/orders" element={
                     <ProtectedRoute>
-                        <PlacedOrder/>
+                        <OrderHistory/>
                     </ProtectedRoute>
                 }/>
             </Routes>

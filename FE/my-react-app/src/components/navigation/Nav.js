@@ -58,7 +58,7 @@ function Nav({count}) {
     };
 
     const handlePlacedOrder = () => {
-        navigate("/placedorder");
+        navigate("/orders");
     };
 
     // Handle navigate to home and clear all filters

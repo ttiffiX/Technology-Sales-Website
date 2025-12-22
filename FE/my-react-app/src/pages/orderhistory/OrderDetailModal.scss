@@ -1,0 +1,275 @@
+@import "../../styles/variables";
+
+.order-detail-modal {
+    max-width: 800px !important;
+    width: 95% !important;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e9ecef;
+        margin-bottom: 1.5rem;
+
+        h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: #212529;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            color: #6c757d;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+
+            &:hover {
+                background: #f8f9fa;
+                color: #212529;
+            }
+        }
+    }
+
+    .modal-body {
+        flex: 1;
+        overflow-y: auto;
+        margin: 0 -2rem;
+        padding: 0 2rem;
+
+        .loading, .error, .empty {
+            text-align: center;
+            padding: 2rem;
+            color: #6c757d;
+        }
+
+        .error {
+            color: #dc3545;
+        }
+
+        .products-list {
+            .products-table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 0.95rem;
+
+                thead {
+                    background: #f8f9fa;
+
+                    th {
+                        padding: 1rem 0.75rem;
+                        text-align: left;
+                        font-weight: 600;
+                        color: #495057;
+                        border-bottom: 2px solid #dee2e6;
+
+                        &:first-child {
+                            width: 50px;
+                            text-align: center;
+                        }
+
+                        &:nth-child(3), &:nth-child(4), &:nth-child(5), &:nth-child(6) {
+                            text-align: right;
+                        }
+                    }
+                }
+
+                tbody {
+                    tr {
+                        border-bottom: 1px solid #e9ecef;
+                        transition: background-color 0.2s ease;
+
+                        &:hover {
+                            background: #f8f9fa;
+                        }
+
+                        td {
+                            padding: 1rem 0.75rem;
+                            color: #212529;
+
+                            &:first-child {
+                                text-align: center;
+                                color: #6c757d;
+                                font-weight: 600;
+                            }
+
+                            &.product-name {
+                                font-weight: 600;
+                                color: #212529;
+                            }
+
+                            &:nth-child(3), &:nth-child(4), &:nth-child(5), &:nth-child(6) {
+                                text-align: right;
+                            }
+
+                            &.quantity {
+                                font-weight: 600;
+                                color: $primary-color;
+                            }
+
+                            &.subtotal {
+                                font-weight: 600;
+                                color: #212529;
+                            }
+                        }
+                    }
+                }
+
+                tfoot {
+                    tr {
+                        background: #f8f9fa;
+
+                        td {
+                            padding: 1rem 0.75rem;
+                            font-weight: 700;
+                            border-top: 2px solid #dee2e6;
+
+                            &.total-label {
+                                text-align: right;
+                                color: #495057;
+                                font-size: 1.1rem;
+                            }
+
+                            &.total-amount {
+                                text-align: right;
+                                color: $primary-color;
+                                font-size: 1.3rem;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    .modal-footer {
+        padding-top: 1.5rem;
+        border-top: 2px solid #e9ecef;
+        margin-top: 1.5rem;
+        display: flex;
+        justify-content: flex-end;
+
+        .btn-close {
+            padding: 0.75rem 2rem;
+            background: $primary-color;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+
+            &:hover {
+                background: darken($primary-color, 10%);
+            }
+        }
+    }
+}
+
+// Responsive
+@media (max-width: 768px) {
+    .order-detail-modal {
+        .modal-body {
+            .products-table {
+                font-size: 0.85rem;
+
+                thead th,
+                tbody td,
+                tfoot td {
+                    padding: 0.75rem 0.5rem;
+                }
+
+                // Hide category column on mobile
+                thead th:nth-child(3),
+                tbody td:nth-child(3) {
+                    display: none;
+                }
+            }
+        }
+    }
+}
+
+@media (max-width: 480px) {
+    .order-detail-modal {
+        max-width: 95% !important;
+        padding: 1.5rem !important;
+
+        .modal-header h2 {
+            font-size: 1.2rem;
+        }
+
+        .modal-body {
+            margin: 0 -1.5rem;
+            padding: 0 1.5rem;
+
+            .products-table {
+                font-size: 0.8rem;
+
+                // Convert to mobile-friendly layout
+                thead {
+                    display: none;
+                }
+
+                tbody {
+                    display: block;
+
+                    tr {
+                        display: block;
+                        margin-bottom: 1rem;
+                        padding: 1rem;
+                        background: #f8f9fa;
+                        border-radius: 8px;
+                        border: none;
+
+                        td {
+                            display: block;
+                            text-align: left !important;
+                            padding: 0.5rem 0;
+
+                            &:first-child {
+                                display: none;
+                            }
+
+                            &:before {
+                                content: attr(data-label);
+                                font-weight: 600;
+                                margin-right: 0.5rem;
+                                color: #495057;
+                            }
+                        }
+                    }
+                }
+
+                tfoot {
+                    display: block;
+
+                    tr {
+                        display: block;
+
+                        td {
+                            display: block;
+                            text-align: left !important;
+
+                            &.total-label {
+                                margin-bottom: 0.5rem;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+

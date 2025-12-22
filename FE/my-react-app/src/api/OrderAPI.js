@@ -1,66 +1,125 @@
-import {useEffect, useState} from "react";
-import axios from "axios";
+import { useState, useEffect } from "react";
+import apiClient from "./apiClient";
 
-const BASE_URL = 'http://localhost:8080/orders';
+const BASE_URL = '/orders';
 
-export const getOrders = () => {
-    const [orders, setOrders] = useState([]);  // Lưu trữ danh sách sản phẩm trong giỏ
-    const [loading, setLoading] = useState(true);  // Trạng thái loading
-    const [error, setError] = useState(null);  // Trạng thái lỗi
-    const [orderDetails, setOrderDetails] = useState(0);  // Tổng số lượng hàng hóa
+/**
+ * Hook to get all orders for current user
+ * @param {string} status - Optional filter by status (PENDING, APPROVED, REJECTED, CANCELLED, SUCCESS)
+ */
+export const useGetOrders = (status = null) => {
+    const [orders, setOrders] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
-        const useOrders = async () => {
+        const fetchOrders = async () => {
             try {
-                const {orders, orderDetails} = await fetchOrders();
-                setOrders(orders);
-                setOrderDetails(orderDetails);
+                setLoading(true);
+                const url = status ? `${BASE_URL}?status=${status}` : BASE_URL;
+                const response = await apiClient.get(url);
+                setOrders(response.data);
+                setError(null);
             } catch (err) {
-                setError('Failed to fetch orders');
+                setError(err.response?.data.message || 'Failed to fetch orders');
+                // console.error('Error fetching orders:', err);
             } finally {
                 setLoading(false);
             }
         };
-        useOrders();
-    }, []);
 
-    return {orders, orderDetails, loading, error};
+        fetchOrders();
+    }, [status]);
+
+    return { orders, loading, error, refetch: () => setLoading(true) };
 };
 
-export const fetchOrders = async () => {
-    const response = await axios.get(`${BASE_URL}`)
-    return response.data;
-}
-
-export const PlaceOrder = () => {
+/**
+ * Hook to get order details (products) for a specific order
+ * @param {number} orderId
+ */
+export const useGetOrderDetails = (orderId) => {
+    const [orderDetails, setOrderDetails] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
-    const getInfoOrders = async (name, phone, address, paymentMethod) => {
-        setLoading(true);
+    const fetchDetails = async () => {
+        if (!orderId) return;
+
         try {
-            const response = await axios.post(`${BASE_URL}/add`, {
-                name, phone, address, paymentMethod
-            });
-            return response.data;
+            setLoading(true);
+            const response = await apiClient.get(`${BASE_URL}/${orderId}`);
+            setOrderDetails(response.data);
+            setError(null);
         } catch (err) {
-            throw err.response.data;
+            setError(err.response?.data.message || 'Failed to fetch order details');
+            // console.error('Error fetching order details:', err);
         } finally {
-            setLoading(false); // Reset trạng thái loading
+            setLoading(false);
         }
     };
-    return {getInfoOrders, loading};
-}
 
-export const useCancelOrder = () => {
-    const cancelOrder = async (orderId) => {
+    useEffect(() => {
+        fetchDetails();
+    }, [orderId]);
+
+    return { orderDetails, loading, error, refetch: fetchDetails };
+};
+
+/**
+ * Hook to place a new order
+ */
+export const usePlaceOrder = () => {
+    const [loading, setLoading] = useState(false);
+
+    const placeOrder = async (orderData) => {
+        setLoading(true);
         try {
-            const response = await axios.put(`${BASE_URL}/cancel`, {
-                orderId
-            });
-            return response.data;
+            // Map FE data to BE PlaceOrderRequest format
+            const request = {
+                customerName: orderData.customerName,
+                phone: orderData.phone,
+                email: orderData.email,
+                address: orderData.address,
+                province: orderData.province,
+                description: orderData.description || "",
+                paymentMethod: orderData.paymentMethod // "VNPAY" or "CASH"
+            };
+
+            const response = await apiClient.post(BASE_URL, request);
+            return { success: true, message: response.data };
         } catch (err) {
-            throw err.response.data;
+            const errorMessage = err.response?.data.message || 'Failed to place order';
+            // console.error('Error placing order:', err);
+            throw new Error(errorMessage);
+        } finally {
+            setLoading(false);
         }
-    }
-    return {cancelOrder};
-}
+    };
+
+    return { placeOrder, loading };
+};
+
+/**
+ * Hook to cancel an order
+ */
+export const useCancelOrder = () => {
+    const [loading, setLoading] = useState(false);
+
+    const cancelOrder = async (orderId) => {
+        setLoading(true);
+        try {
+            const response = await apiClient.patch(`${BASE_URL}/${orderId}/cancel`);
+            return { success: true, message: response.data };
+        } catch (err) {
+            const errorMessage = err.response?.data.message || 'Failed to cancel order';
+            // console.error('Error canceling order:', err);
+            throw new Error(errorMessage);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return { cancelOrder, loading };
+};
+
