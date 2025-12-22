@@ -23,6 +23,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -33,34 +34,54 @@ public class OrderService implements OrderServiceInterface {
     private final UserRepository userRepository;
 
     @Override
-    public List<OrderDTO> getOrderByUserId() {
+    public List<OrderDTO> getOrderByUserId(String status) {
         Long userId = getUserIdFromToken();
 
-        List<Order> orders = orderRepository.findByUserId(userId);
+        List<Order> orders;
 
-        List<OrderDTO> orderDTOs = new ArrayList<>();
-        for (Order order : orders) {
-            OrderDTO orderDTO = OrderDTO.builder()
-                    .id(order.getId())
-                    .customerName(order.getCustomerName())
-                    .phone(order.getPhone())
-                    .email(order.getEmail())
-                    .address(order.getAddress())
-                    .province(order.getProvince())
-                    .deliveryFee(order.getDeliveryFee())
-                    .totalPrice(order.getTotalPrice())
-                    .createdAt(order.getCreatedAt())
-                    .status(order.getStatus().name())
-                    .build();
-
-            orderDTOs.add(orderDTO);
+        // If status is provided, filter by status; otherwise get all orders
+        OrderStatus orderStatus = null;
+        if (status != null && !status.trim().isEmpty()) {
+            try {
+                orderStatus = OrderStatus.valueOf(status.trim().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new ResponseStatusException(BAD_REQUEST,
+                        "Invalid status '" + status + "'. Valid values: " +
+                                Arrays.toString(OrderStatus.values()));
+            }
         }
-        return orderDTOs;
+
+        orders = orderRepository.findByUserIdAndOptionalStatus(userId, orderStatus);
+
+        return orders.stream()
+                .map(this::convertToDTO)
+                .toList();
     }
 
     @Override
-    public List<OrderDetailDTO> getOrderDetailsByUserId() {
-        return List.of();
+    public List<OrderDetailDTO> getOrderDetailsByOrderId(Long orderId) {
+        Long userId = getUserIdFromToken();
+
+        // Verify that the order belongs to the current user
+        Order order = orderRepository.findByIdAndUserId(orderId, userId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND,
+                        "Order not found or you don't have permission to view this order"));
+
+        List<OrderDetail> orderDetails = order.getOrderDetails();
+
+        List<OrderDetailDTO> orderDetailDTOs = new ArrayList<>();
+        for (OrderDetail detail : orderDetails) {
+            OrderDetailDTO dto = OrderDetailDTO.builder()
+                    .id(detail.getId())
+                    .productTitle(detail.getProductTitle())
+                    .categoryName(detail.getCategoryName())
+                    .quantity(detail.getQuantity())
+                    .price(detail.getPrice())
+                    .build();
+            orderDetailDTOs.add(dto);
+        }
+
+        return orderDetailDTOs;
     }
 
     @Override
@@ -129,14 +150,26 @@ public class OrderService implements OrderServiceInterface {
     }
 
     @Override
+    @Transactional
     public String cancelOrder(Long orderId) {
-        return "";
+        Long userId = getUserIdFromToken();
+
+        Order order = orderRepository.findByIdAndUserId(orderId, userId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND,
+                        "Order not found or you don't have permission to cancel this order"));
+
+        if (order.getStatus() != OrderStatus.PENDING) {
+            throw new ResponseStatusException(BAD_REQUEST,
+                    "Only orders with PENDING status can be cancelled. Current status: " + order.getStatus());
+        }
+
+        order.setStatus(OrderStatus.CANCELLED);
+        order.setUpdatedAt(LocalDateTime.now());
+        orderRepository.save(order);
+
+        return "Order #" + orderId + " has been cancelled successfully";
     }
 
-    @Override
-    public List<OrderDTO> getOrdersByStatus(String status) {
-        return List.of();
-    }
 
     // -- Helper Method -- //
     private Long getUserIdFromToken() {
@@ -146,5 +179,21 @@ public class OrderService implements OrderServiceInterface {
         }
         return userId;
     }
+
+    private OrderDTO convertToDTO(Order order) {
+        return OrderDTO.builder()
+                .id(order.getId())
+                .customerName(order.getCustomerName())
+                .phone(order.getPhone())
+                .email(order.getEmail())
+                .address(order.getAddress())
+                .province(order.getProvince())
+                .deliveryFee(order.getDeliveryFee())
+                .totalPrice(order.getTotalPrice())
+                .createdAt(order.getCreatedAt())
+                .status(order.getStatus().name())
+                .build();
+    }
+
 }
 

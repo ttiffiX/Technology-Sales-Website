@@ -7,14 +7,12 @@ import com.example.sale_tech_web.feature.order.dto.PlaceOrderRequest;
 import java.util.List;
 
 public interface OrderServiceInterface {
-    List<OrderDTO> getOrderByUserId();
+    List<OrderDTO> getOrderByUserId(String status);
 
-    List<OrderDetailDTO> getOrderDetailsByUserId();
+    List<OrderDetailDTO> getOrderDetailsByOrderId(Long orderId);
 
     String placeOrder(PlaceOrderRequest request);
 
     String cancelOrder(Long orderId);
-
-    List<OrderDTO> getOrdersByStatus(String status);
 }
 
