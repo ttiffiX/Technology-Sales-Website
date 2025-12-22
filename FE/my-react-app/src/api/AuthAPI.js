@@ -23,7 +23,7 @@ export const login = async (username, password) => {
     } catch (error) {
         return {
             success: false,
-            message: error.response?.data || 'Login failed. Please check your credentials.',
+            message: error.response?.data.message || 'Login failed. Please check your credentials.',
         };
     }
 };
@@ -47,7 +47,7 @@ export const register = async (userData) => {
     } catch (error) {
         return {
             success: false,
-            message: error.response?.data || 'Registration failed. Please try again.',
+            message: error.response?.data.message || 'Registration failed. Please try again.',
         };
     }
 };

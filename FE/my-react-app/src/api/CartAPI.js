@@ -9,7 +9,7 @@ export const addCartItem = async (productId) => {
         });
         return response.data;
     } catch (err) {
-        throw err.response?.data || err.message;
+        throw err.response?.data.message || err.message;
     }
 };
 
@@ -59,7 +59,7 @@ export const updateCartQuantity = async (productId, delta) => {
         });
         return response.data;
     } catch (error) {
-        throw error.response?.data || error.message;
+        throw error.response?.data.message || error.message;
     }
 };
 
@@ -71,7 +71,7 @@ export const removeCartItem = async (productId) => {
         });
         return response.data;
     } catch (error) {
-        throw error.response?.data || error.message;
+        throw error.response?.data.message || error.message;
     }
 };
 
@@ -83,7 +83,7 @@ export const toggleProductSelection = async (productId) => {
         });
         return response.data;
     } catch (error) {
-        throw error.response?.data || error.message;
+        throw error.response?.data.message || error.message;
     }
 };
 
@@ -95,7 +95,7 @@ export const toggleAllProducts = async (selectAll) => {
         });
         return response.data;
     } catch (error) {
-        throw error.response?.data || error.message;
+        throw error.response?.data.message || error.message;
     }
 };
 
