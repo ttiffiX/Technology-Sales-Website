@@ -55,9 +55,8 @@ public class CartService implements CartServiceInterface {
         }
 
 
-        // 6. Tính tổng số lượng và giá cho các sản phẩm ĐƯỢC CHỌN
+        // 6. Tính tổng số lượng cho tất cả và giá cho các sản phẩm ĐƯỢC CHỌN
         int totalQuantity = cartItems.stream()
-                .filter(item -> item.getIsSelected() != null && item.getIsSelected())
                 .mapToInt(CartDetail::getQuantity)
                 .sum();
 

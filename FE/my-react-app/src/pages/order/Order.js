@@ -98,8 +98,11 @@ const Order = () => {
         }
     };
 
+    const selectedCartItems = cartItems
+        .filter(p => p.selected);
+
     // Calculate totals
-    const subtotal = cartItems.reduce((sum, item) => sum + item.productList.price * item.quantity, 0);
+    const subtotal = selectedCartItems.reduce((sum, item) => sum + item.productList.price * item.quantity, 0);
     const deliveryFee = 30000; // Fixed for now, can be dynamic based on province
     const total = subtotal + deliveryFee;
 
@@ -128,7 +131,7 @@ const Order = () => {
             <Nav count={totalQuantity}/>
             <Header title="Place Order" modeDisplay="order"/>
 
-            {cartItems.length > 0 ? (
+            {selectedCartItems.length > 0 ? (
                 <div className="orderPage">
                     {/* LEFT SIDE - FORM */}
                     <form className="customerForm-order" onSubmit={handlePlaceOrder}>
@@ -251,10 +254,10 @@ const Order = () => {
 
                     {/* RIGHT SIDE - PRODUCTS & CHECKOUT */}
                     <div className="cart-order">
-                        <h2>Order Summary ({cartItems.length} items)</h2>
+                        <h2>Order Summary ({selectedCartItems.length} items)</h2>
 
                         <div className="cartItems">
-                            {cartItems.map((item) => (
+                            {selectedCartItems.map((item) => (
                                 <div key={item.cartDetailId} className="cartItem">
                                     <div
                                         className="cart-pic"
