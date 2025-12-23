@@ -32,6 +32,7 @@ public class WebSecurityConfig  {
                     .authorizeHttpRequests(auth -> auth
                             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                             .requestMatchers("/auth/**", "/product", "/product/**").permitAll()
+                            .requestMatchers("/payment/vnpay/callback", "/payment/vnpay/ipn").permitAll()
                             .anyRequest().authenticated()
                     )
                     .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

@@ -13,9 +13,11 @@ import com.example.sale_tech_web.feature.order.entity.orders.Order;
 import com.example.sale_tech_web.feature.order.enums.OrderStatus;
 import com.example.sale_tech_web.feature.order.enums.PaymentMethod;
 import com.example.sale_tech_web.feature.order.repository.OrderRepository;
+import com.example.sale_tech_web.feature.payment.service.VNPayService;
 import com.example.sale_tech_web.feature.product.entity.Product;
 import com.example.sale_tech_web.feature.users.entity.Users;
 import com.example.sale_tech_web.feature.users.repository.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +34,7 @@ public class OrderService implements OrderServiceInterface {
     private final OrderRepository orderRepository;
     private final CartDetailRepository cartDetailRepository;
     private final UserRepository userRepository;
+    private final VNPayService vnPayService;
 
     @Override
     public List<OrderDTO> getOrderByUserId(String status) {
@@ -86,7 +89,7 @@ public class OrderService implements OrderServiceInterface {
 
     @Override
     @Transactional
-    public String placeOrder(PlaceOrderRequest request) {
+    public Object placeOrder(PlaceOrderRequest request, HttpServletRequest httpRequest) {
         Long userId = getUserIdFromToken();
 
         Users user = userRepository.findById(userId)
@@ -110,7 +113,7 @@ public class OrderService implements OrderServiceInterface {
                 .description(request.getDescription())
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
-                .paymentMethod(PaymentMethod.CASH)
+                .paymentMethod(request.getPaymentMethod())
                 .orderDetails(new ArrayList<>())
                 .build();
 
@@ -143,7 +146,22 @@ public class OrderService implements OrderServiceInterface {
         }
         order.setOrderDetails(orderDetails);
         order.setTotalPrice(tempTotalPrice + order.getDeliveryFee());
-        orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+
+        // Check payment method
+        if (request.getPaymentMethod() == PaymentMethod.VNPAY) {
+            // Create VNPay payment URL
+            String orderInfo = "Thanh toan don hang #" + savedOrder.getId();
+            // Don't delete cart yet - will delete after successful payment
+            return vnPayService.createPayment(
+                    savedOrder.getId(),
+                    savedOrder.getTotalPrice(),
+                    orderInfo,
+                    httpRequest
+            );
+        }
+
+        // For CASH payment - delete cart immediately
         cartDetailRepository.deleteAll(cartDetails);
 
         return "Order placed successfully for user: " + user.getUsername();
