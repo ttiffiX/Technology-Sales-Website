@@ -73,11 +73,27 @@ const Order = () => {
     const handleConfirm = async () => {
         try {
             const response = await placeOrder(formData);
-            triggerToast("success", response.message);
-            setShowConfirmPopup(false);
-            navigate("/orders");
+
+            // Check if response has paymentUrl (VNPay payment)
+            if (response.paymentUrl) {
+                // VNPay payment - redirect to VNPay payment page
+                setShowConfirmPopup(false);
+                triggerToast("info", "Redirecting to VNPay payment...");
+                // Redirect to VNPay
+                setTimeout(() => {
+                    window.location.href = response.paymentUrl;
+                }, 500);
+            } else {
+                // CASH payment - show success and navigate to order history
+                triggerToast("success", response.message || "Order placed successfully");
+                setShowConfirmPopup(false);
+                // Navigate to order history
+                setTimeout(() => {
+                    navigate("/orderhistory");
+                }, 1000);
+            }
         } catch (err) {
-            triggerToast("error", err.message);
+            triggerToast("error", err.message || "Failed to place order");
             setShowConfirmPopup(false);
         }
     };

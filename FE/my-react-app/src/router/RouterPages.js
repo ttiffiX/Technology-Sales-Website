@@ -11,6 +11,7 @@ import Order from "../pages/order/Order";
 import ProductDetail from "../pages/productdetail/ProductDetail";
 import OrderHistory from "../pages/orderhistory/OrderHistory";
 import ProtectedRoute from "./ProtectedRoute";
+import PaymentResult from "../pages/paymentresult/PaymentResult";
 
 
 function RouterPages() {
@@ -47,6 +48,12 @@ function RouterPages() {
                         <OrderHistory/>
                     </ProtectedRoute>
                 }/>
+                <Route path="/orderhistory" element={
+                    <ProtectedRoute>
+                        <OrderHistory/>
+                    </ProtectedRoute>
+                }/>
+                <Route path="/payment-result" element={<PaymentResult/>}/>
             </Routes>
         </Router>
     );

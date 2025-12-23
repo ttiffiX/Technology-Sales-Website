@@ -87,9 +87,28 @@ export const usePlaceOrder = () => {
             };
 
             const response = await apiClient.post(BASE_URL, request);
-            return { success: true, message: response.data };
+
+            // BE returns Object for both VNPAY and CASH
+            // VNPAY: { paymentUrl: "...", txnRef: "...", orderId: ... }
+            // CASH: "Order placed successfully for user: username" (string)
+
+            if (typeof response.data === 'object' && response.data.paymentUrl) {
+                // VNPay payment response
+                return {
+                    success: true,
+                    paymentUrl: response.data.paymentUrl,
+                    txnRef: response.data.txnRef,
+                    orderId: response.data.orderId
+                };
+            } else {
+                // CASH payment response (string message)
+                return {
+                    success: true,
+                    message: typeof response.data === 'string' ? response.data : 'Order placed successfully'
+                };
+            }
         } catch (err) {
-            const errorMessage = err.response?.data.message || 'Failed to place order';
+            const errorMessage = err.response?.data.message || err.response?.data || 'Failed to place order';
             // console.error('Error placing order:', err);
             throw new Error(errorMessage);
         } finally {
