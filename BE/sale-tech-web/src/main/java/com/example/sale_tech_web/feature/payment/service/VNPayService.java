@@ -1,5 +1,6 @@
 package com.example.sale_tech_web.feature.payment.service;
 
+import com.example.sale_tech_web.feature.payment.config.PaymentConfig;
 import com.example.sale_tech_web.feature.payment.config.VNPayConfig;
 import com.example.sale_tech_web.feature.payment.dto.VNPayPaymentResponse;
 import com.example.sale_tech_web.feature.payment.util.VNPayUtil;
@@ -64,7 +65,7 @@ public class VNPayService {
             String vnp_CreateDate = formatter.format(cld.getTime());
             vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
 
-            cld.add(Calendar.MINUTE, 15); // Payment expires in 15 minutes
+            cld.add(Calendar.MINUTE, PaymentConfig.PAYMENT_TIMEOUT_MINUTES);
             String vnp_ExpireDate = formatter.format(cld.getTime());
             vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
 

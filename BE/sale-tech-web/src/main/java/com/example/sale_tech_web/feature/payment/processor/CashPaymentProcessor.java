@@ -26,14 +26,17 @@ public class CashPaymentProcessor implements PaymentProcessor {
 
     @Override
     public Payment createPayment(Order order, Map<String, Object> params) {
+        LocalDateTime now = LocalDateTime.now();
+
         Payment payment = Payment.builder()
                 .order(order)
-                .status(PaymentStatus.PENDING)  // Chờ giao hàng
+                .status(PaymentStatus.PENDING)
                 .provider(PaymentMethod.CASH)
                 .amount(order.getTotalPrice())
                 .content("Thanh toan tien mat cho don hang #" + order.getId())
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(now)
+                .updatedAt(now)
+                .expiresAt(null)
                 // Không cần: transactionId, rawResponse
                 .build();
 

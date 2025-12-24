@@ -175,6 +175,7 @@ CREATE TABLE invoice
     status         payment_status_enum,
     created_at     DATE,
     updated_at     DATE,
+    exipires_at     DATE,
     content        TEXT,
     amount         INT        NOT NULL,
     provider       VARCHAR(20),         -- 'VNPAY', 'PAYOS'

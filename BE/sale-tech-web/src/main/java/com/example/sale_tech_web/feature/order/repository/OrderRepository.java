@@ -2,6 +2,7 @@ package com.example.sale_tech_web.feature.order.repository;
 
 import com.example.sale_tech_web.feature.order.entity.orders.Order;
 import com.example.sale_tech_web.feature.order.enums.OrderStatus;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,7 +13,7 @@ import java.util.Optional;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
-
+    @EntityGraph(attributePaths = {"user", "payment"})
     @Query("SELECT o FROM Order o " +
             "WHERE o.user.id = :userId " +
             "AND (:status IS NULL OR o.status = :status) " +
