@@ -11,6 +11,7 @@ export const useGetOrders = (status = null) => {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [refetchTrigger, setRefetchTrigger] = useState(0);
 
     useEffect(() => {
         const fetchOrders = async () => {
@@ -29,9 +30,11 @@ export const useGetOrders = (status = null) => {
         };
 
         fetchOrders();
-    }, [status]);
+    }, [status, refetchTrigger]);
 
-    return { orders, loading, error, refetch: () => setLoading(true) };
+    const refetch = () => setRefetchTrigger(prev => prev + 1);
+
+    return { orders, loading, error, refetch };
 };
 
 /**

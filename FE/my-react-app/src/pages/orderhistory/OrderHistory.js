@@ -10,7 +10,7 @@ import {useGetCartItems} from "../../api/CartAPI";
 
 const OrderHistory = () => {
     const [statusFilter, setStatusFilter] = useState(null);
-    const {orders, loading, error} = useGetOrders(statusFilter);
+    const {orders, loading, error, refetch} = useGetOrders(statusFilter);
     const {cancelOrder, loading: cancelling} = useCancelOrder();
     const {triggerToast} = useToast();
 
@@ -37,13 +37,27 @@ const OrderHistory = () => {
 
     const handleConfirmCancel = async () => {
         try {
+            // Save current scroll position
+            const scrollPosition = window.scrollY;
+
             const response = await cancelOrder(orderToCancel.id);
-            triggerToast('success', response.message);
+
+            // Show success message (may include refund info)
+            triggerToast('success', response.message || 'Order cancelled successfully');
+
+            // Close modal
             setShowCancelConfirm(false);
             setOrderToCancel(null);
-            window.location.reload(); // Reload to refresh orders
+
+            // Refetch orders to update the list smoothly
+            await refetch();
+
+            // Restore scroll position after a short delay to ensure DOM is updated
+            setTimeout(() => {
+                window.scrollTo(0, scrollPosition);
+            }, 50);
         } catch (err) {
-            triggerToast('error', err.message);
+            triggerToast('error', err.message || 'Failed to cancel order');
         }
     };
 
