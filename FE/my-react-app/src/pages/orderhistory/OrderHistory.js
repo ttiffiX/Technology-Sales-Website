@@ -50,8 +50,9 @@ const OrderHistory = () => {
     const statusFilters = [
         {value: null, label: 'All Orders'},
         {value: 'PENDING', label: 'Pending'},
-        {value: 'APPROVED', label: 'Approved'},
-        {value: 'SUCCESS', label: 'Delivered'},
+        {value: 'APPROVED', label: 'Preparing'},
+        {value: 'SHIPPING', label: 'Shipping'},
+        {value: 'COMPLETED', label: 'Delivered'},
         {value: 'CANCELLED', label: 'Cancelled'},
         {value: 'REJECTED', label: 'Rejected'}
     ];

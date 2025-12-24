@@ -1,6 +1,6 @@
 package com.example.sale_tech_web.feature.order.dto;
 
-import com.example.sale_tech_web.feature.order.enums.PaymentMethod;
+import com.example.sale_tech_web.feature.payment.enums.PaymentMethod;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

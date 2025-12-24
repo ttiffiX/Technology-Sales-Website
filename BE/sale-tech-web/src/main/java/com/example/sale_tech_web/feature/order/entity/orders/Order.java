@@ -2,7 +2,8 @@ package com.example.sale_tech_web.feature.order.entity.orders;
 
 import com.example.sale_tech_web.feature.order.entity.orderdetails.OrderDetail;
 import com.example.sale_tech_web.feature.order.enums.OrderStatus;
-import com.example.sale_tech_web.feature.order.enums.PaymentMethod;
+import com.example.sale_tech_web.feature.payment.entity.Payment;
+import com.example.sale_tech_web.feature.payment.enums.PaymentMethod;
 import com.example.sale_tech_web.feature.users.entity.Users;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -69,5 +70,8 @@ public class Order {
 
     @OneToMany(mappedBy = "order", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderDetail> orderDetails = new ArrayList<>();
+
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Payment payment;
 }
 

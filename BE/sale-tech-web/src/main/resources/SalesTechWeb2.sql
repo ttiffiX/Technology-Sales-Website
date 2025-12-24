@@ -1,28 +1,40 @@
 -- Enums
+drop type user_role_enum;
 CREATE TYPE user_role_enum AS ENUM (
     'ADMIN',
     'USER',
     'PM'
-);
-
-CREATE TYPE order_status_enum AS ENUM (
-    'PENDING',
-    'APPROVED',
-    'REJECTED',
-    'CANCELLED',
-    'SUCCESS'
-);
-
-CREATE TYPE order_payment_method_enum AS ENUM (
-    'CASH',
-    'VNPAY'
     );
+drop type order_status_enum;
+CREATE TYPE order_status_enum AS ENUM (
+    'PENDING', -- Chờ PM duyệt (đã thanh toán hoặc chọn COD)
+    'APPROVED', -- PM đã đồng ý và đang chuẩn bị hàng
+    'SHIPPING', -- Đang giao hàng (nên thêm trạng thái này)
+    'REJECTED', -- PM từ chối đơn
+    'CANCELLED', -- User hủy
+    'COMPLETED' -- Giao hàng thành công
+    );
+
+drop type payment_status_enum cascade;
+CREATE TYPE payment_status_enum AS ENUM (
+    'PENDING', --Đang chờ thanh toán
+    'PAID', --Đã thanh toán
+    'FAILED', --Thanh toán thất bại
+    'REFUND' --Đã hoàn tiền
+    );
+
+-- drop type order_payment_method_enum;
+-- CREATE TYPE order_payment_method_enum AS ENUM (
+--     'CASH',
+--     'VNPAY'
+--     );
 
 --------------------------
 -- BẢNG CHÍNH (MASTER TABLES)
 --------------------------
 
 -- 1. Bảng User
+drop table users;
 CREATE TABLE users
 (
     id         SERIAL PRIMARY KEY,
@@ -38,6 +50,7 @@ CREATE TABLE users
 );
 
 -- 2. Bảng Categories
+drop table categories;
 CREATE TABLE categories
 (
     id   SERIAL PRIMARY KEY,
@@ -45,6 +58,7 @@ CREATE TABLE categories
 );
 
 -- 3. Bảng ProductAttributes
+drop table product_attributes;
 CREATE TABLE product_attributes
 (
     id        SERIAL PRIMARY KEY,
@@ -54,6 +68,7 @@ CREATE TABLE product_attributes
 );
 
 -- 4. Bảng Product
+drop table product;
 CREATE TABLE product
 (
     id            SERIAL PRIMARY KEY,
@@ -75,6 +90,7 @@ CREATE TABLE product
 --------------------------
 
 -- 5. Bảng CategoryAttributeMapping (Liên kết Categories với ProductAttributes)
+drop table category_attribute_mapping;
 CREATE TABLE category_attribute_mapping
 (
     id            SERIAL PRIMARY KEY,
@@ -90,6 +106,7 @@ CREATE TABLE category_attribute_mapping
 );
 
 -- 6. Bảng ProductAttributeValues (Lưu giá trị thuộc tính cho từng Product)
+drop table product_attribute_values;
 CREATE TABLE product_attribute_values
 (
     id           SERIAL PRIMARY KEY,
@@ -109,36 +126,39 @@ CREATE TABLE product_attribute_values
 --------------------------
 
 -- 7. Bảng Order
+drop table orders;
 CREATE TABLE orders
 (
-    id            SERIAL PRIMARY KEY,
-    user_id       INT,
-    customer_name VARCHAR(50),
-    phone         VARCHAR(50),
-    email         VARCHAR(50),
-    address       TEXT,
-    province      VARCHAR(20),
-    delivery_fee  INT,
-    total_price   INT,
-    created_at    DATE,
-    updated_at    DATE,
-    status        order_status_enum,
-    description   TEXT,
-    payment_method order_payment_method_enum,
+    id             SERIAL PRIMARY KEY,
+    user_id        INT,
+    customer_name  VARCHAR(50),
+    phone          VARCHAR(50),
+    email          VARCHAR(50),
+    address        TEXT,
+    province       VARCHAR(20),
+    delivery_fee   INT,
+    total_price    INT,
+    created_at     DATE,
+    updated_at     DATE,
+    status         order_status_enum,
+    description    TEXT,
+--     payment_method order_payment_method_enum,
+    payment_method VARCHAR(20), -- 'CASH', 'VNPAY'
     -- Khóa ngoại đến User
     CONSTRAINT fk_order_user FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
 -- 8. Bảng OrderDetail
+drop table order_detail;
 CREATE TABLE order_detail
 (
-    id         SERIAL PRIMARY KEY,
-    order_id   INT,
-    product_id INT,
+    id            SERIAL PRIMARY KEY,
+    order_id      INT,
+    product_id    INT,
     product_title VARCHAR(255) NOT NULL,
-    category_name  VARCHAR(100),
-    quantity   INT NOT NULL,
-    price      INT NOT NULL,
+    category_name VARCHAR(100),
+    quantity      INT          NOT NULL,
+    price         INT          NOT NULL,
     -- Khóa ngoại đến Order
     CONSTRAINT fk_od_order FOREIGN KEY (order_id) REFERENCES orders (id),
     -- Khóa ngoại đến Product
@@ -146,20 +166,25 @@ CREATE TABLE order_detail
 );
 
 -- 9. Bảng Invoice
+DROP table invoice;
 CREATE TABLE invoice
 (
     id             SERIAL PRIMARY KEY,
     order_id       INT UNIQUE NOT NULL, -- UNIQUE vì mỗi Order chỉ có 1 Invoice
-    transaction_id VARCHAR(50),
-    status         TEXT CHECK (status IN ('pending', 'refund', 'success', 'failed')),
+    transaction_id VARCHAR(255),
+    status         payment_status_enum,
     created_at     DATE,
+    updated_at     DATE,
     content        TEXT,
     amount         INT        NOT NULL,
+    provider       VARCHAR(20),         -- 'VNPAY', 'PAYOS'
+    raw_response   JSONB,
     -- Khóa ngoại đến Order
     CONSTRAINT fk_invoice_order FOREIGN KEY (order_id) REFERENCES orders (id)
 );
 
 -- 10. Bảng Cart
+drop table cart;
 CREATE TABLE cart
 (
     id         SERIAL PRIMARY KEY,
@@ -170,6 +195,7 @@ CREATE TABLE cart
 );
 
 -- 11. Bảng CartDetail
+drop table cart_detail;
 CREATE TABLE cart_detail
 (
     id          SERIAL PRIMARY KEY,

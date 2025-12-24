@@ -101,6 +101,7 @@ public class PaymentController {
             String vnp_OrderInfo = params.get("vnp_OrderInfo");
             String vnp_ResponseCode = params.get("vnp_ResponseCode");
             String vnp_TransactionStatus = params.get("vnp_TransactionStatus");
+            String vnp_TxnRef = params.get("vnp_TxnRef");
 
             Long orderId = paymentProcessingService.extractOrderId(vnp_OrderInfo);
             if (orderId == null) {
@@ -113,11 +114,11 @@ public class PaymentController {
 
             // 3. Process payment
             if ("00".equals(vnp_ResponseCode) && "00".equals(vnp_TransactionStatus)) {
-                paymentProcessingService.processSuccessfulPayment(orderId, amount);
+                paymentProcessingService.processSuccessfulPayment(orderId, amount, vnp_TxnRef);
                 response.put("RspCode", "00");
                 response.put("Message", "Confirm Success");
             } else {
-                paymentProcessingService.processFailedPayment(orderId);
+                paymentProcessingService.processFailedPayment(orderId, vnp_TxnRef);
                 response.put("RspCode", "00");
                 response.put("Message", "Confirm Success");
             }

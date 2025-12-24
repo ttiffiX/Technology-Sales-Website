@@ -5,6 +5,7 @@ import com.example.sale_tech_web.feature.order.dto.OrderDetailDTO;
 import com.example.sale_tech_web.feature.order.dto.PlaceOrderRequest;
 import com.example.sale_tech_web.feature.order.manager.OrderServiceInterface;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -50,7 +51,7 @@ public class OrderController {
 
     @PostMapping
     public ResponseEntity<Object> placeOrder(
-            @RequestBody PlaceOrderRequest request,
+            @Valid @RequestBody PlaceOrderRequest request,
             HttpServletRequest httpRequest
     ) {
         log.info("Place order - Customer: {}, Phone: {}, Payment: {}",

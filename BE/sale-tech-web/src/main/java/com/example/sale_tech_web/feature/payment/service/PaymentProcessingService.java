@@ -4,12 +4,18 @@ import com.example.sale_tech_web.feature.cart.repository.CartDetailRepository;
 import com.example.sale_tech_web.feature.order.entity.orders.Order;
 import com.example.sale_tech_web.feature.order.enums.OrderStatus;
 import com.example.sale_tech_web.feature.order.repository.OrderRepository;
+import com.example.sale_tech_web.feature.payment.entity.Payment;
+import com.example.sale_tech_web.feature.payment.enums.PaymentStatus;
+import com.example.sale_tech_web.feature.payment.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+
+import static org.springframework.http.HttpStatus.*;
 
 @Service
 @RequiredArgsConstructor
@@ -18,56 +24,74 @@ public class PaymentProcessingService {
 
     private final OrderRepository orderRepository;
     private final CartDetailRepository cartDetailRepository;
+    private final PaymentRepository paymentRepository;
 
-    /**
-     * Process successful payment
-     * - Verify order exists and amount matches
-     * - Update order status
-     * - Delete cart items
-     */
     @Transactional
-    public void processSuccessfulPayment(Long orderId, Long receivedAmount) {
+    public void processSuccessfulPayment(Long orderId, Long receivedAmount, String transactionId) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Order not found: " + orderId));
 
         // Verify amount
         long expectedAmount = order.getTotalPrice() * 100L;
         if (expectedAmount != receivedAmount) {
-            log.error("Amount mismatch - Expected: {}, Received: {}", expectedAmount, receivedAmount);
-            throw new IllegalArgumentException("Amount mismatch");
+            throw new ResponseStatusException(CONFLICT, "Payment amount mismatch for order " + orderId +
+                    ": expected " + expectedAmount + ", received " + receivedAmount);
         }
 
-        // Only process if PENDING (avoid duplicate)
+        // Find existing Payment (created in placeOrder)
+        Payment payment = paymentRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Payment not found for order: " + orderId));
+
+        // Check if already processed
+        if (payment.getStatus() == PaymentStatus.PAID) {
+            throw new ResponseStatusException(CONFLICT, "Payment for order " + orderId + " already processed as PAID");
+        }
+
+        // Update Payment to SUCCESS
+        payment.setStatus(PaymentStatus.PAID);
+        payment.setTransactionId(transactionId);
+        payment.setUpdatedAt(LocalDateTime.now());
+        paymentRepository.save(payment);
+
+        // Order stays PENDING - waiting for PM approval
         if (order.getStatus() != OrderStatus.PENDING) {
-            log.warn("Order {} already processed with status: {}", orderId, order.getStatus());
-            return;
+            log.warn("Order {} has unexpected status: {}", orderId, order.getStatus());
+            throw new ResponseStatusException(CONFLICT, "Order has unexpected status: " + order.getStatus());
         }
 
-        // Update order
-        order.setStatus(OrderStatus.APPROVED);
-        order.setUpdatedAt(LocalDateTime.now());
-        orderRepository.save(order);
-
-        // Delete cart
+        // Clear cart
         cartDetailRepository.deleteByUserId(order.getUser().getId());
 
-        log.info("Order {} updated to APPROVED and cart cleared", orderId);
+        log.info("VNPay payment SUCCESS for order {}, Payment updated, Order remains PENDING for PM approval", orderId);
     }
 
-    /**
-     * Process failed payment
-     */
     @Transactional
-    public void processFailedPayment(Long orderId) {
+    public void processFailedPayment(Long orderId, String transactionId) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Order not found: " + orderId));
 
+        // Find existing Payment (created in placeOrder)
+        Payment payment = paymentRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Payment not found for order: " + orderId));
+
+        // Check if already processed
+        if (payment.getStatus() == PaymentStatus.FAILED || payment.getStatus() == PaymentStatus.PAID) {
+            throw new ResponseStatusException(CONFLICT, "Payment for order " + orderId + " already processed with status: " + payment.getStatus());
+        }
+
+        // Update Payment to FAILED
+        payment.setStatus(PaymentStatus.FAILED);
+        payment.setTransactionId(transactionId);
+        payment.setUpdatedAt(LocalDateTime.now());
+        paymentRepository.save(payment);
+
+        // Cancel order if still PENDING
         if (order.getStatus() == OrderStatus.PENDING) {
             order.setStatus(OrderStatus.CANCELLED);
             order.setUpdatedAt(LocalDateTime.now());
             orderRepository.save(order);
-            log.info("Order {} updated to CANCELLED due to payment failure", orderId);
         }
+        log.info("Order {} cancelled due to VNPay payment failure", orderId);
     }
 
     /**

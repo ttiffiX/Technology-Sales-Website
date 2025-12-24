@@ -11,8 +11,9 @@ import com.example.sale_tech_web.feature.order.dto.PlaceOrderRequest;
 import com.example.sale_tech_web.feature.order.entity.orderdetails.OrderDetail;
 import com.example.sale_tech_web.feature.order.entity.orders.Order;
 import com.example.sale_tech_web.feature.order.enums.OrderStatus;
-import com.example.sale_tech_web.feature.order.enums.PaymentMethod;
 import com.example.sale_tech_web.feature.order.repository.OrderRepository;
+import com.example.sale_tech_web.feature.payment.enums.PaymentMethod;
+import com.example.sale_tech_web.feature.payment.manager.PaymentService;
 import com.example.sale_tech_web.feature.payment.service.VNPayService;
 import com.example.sale_tech_web.feature.product.entity.Product;
 import com.example.sale_tech_web.feature.users.entity.Users;
@@ -24,9 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+
 
 @Service
 @RequiredArgsConstructor
@@ -35,6 +35,7 @@ public class OrderService implements OrderServiceInterface {
     private final CartDetailRepository cartDetailRepository;
     private final UserRepository userRepository;
     private final VNPayService vnPayService;
+    private final PaymentService paymentService;
 
     @Override
     public List<OrderDTO> getOrderByUserId(String status) {
@@ -152,16 +153,26 @@ public class OrderService implements OrderServiceInterface {
         if (request.getPaymentMethod() == PaymentMethod.VNPAY) {
             // Create VNPay payment URL
             String orderInfo = "Thanh toan don hang #" + savedOrder.getId();
-            // Don't delete cart yet - will delete after successful payment
-            return vnPayService.createPayment(
+
+            // Create VNPay payment record with PENDING status
+            var vnpayResponse = vnPayService.createPayment(
                     savedOrder.getId(),
                     savedOrder.getTotalPrice(),
                     orderInfo,
                     httpRequest
             );
+
+            // Create Payment entity with txnRef
+            Map<String, Object> params = new HashMap<>();
+            params.put("txnRef", vnpayResponse.getTxnRef());
+            paymentService.createPayment(savedOrder, PaymentMethod.VNPAY, params);
+
+            // Don't delete cart yet - will delete after successful payment
+            return vnpayResponse;
         }
 
         // For CASH payment - delete cart immediately
+        paymentService.createPayment(order, PaymentMethod.CASH, null);
         cartDetailRepository.deleteAll(cartDetails);
 
         return "Order placed successfully for user: " + user.getUsername();
