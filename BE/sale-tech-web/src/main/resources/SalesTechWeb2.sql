@@ -20,7 +20,8 @@ CREATE TYPE payment_status_enum AS ENUM (
     'PENDING', --Đang chờ thanh toán
     'PAID', --Đã thanh toán
     'FAILED', --Thanh toán thất bại
-    'REFUND' --Đã hoàn tiền
+    'REFUND', --Đã hoàn tiền
+    'REFUND_FAILED' --Hoàn tiền thất bại
     );
 
 -- drop type order_payment_method_enum;

@@ -61,9 +61,12 @@ public class OrderController {
     }
 
     @PatchMapping("/{orderId}/cancel")
-    public ResponseEntity<String> cancelOrder(@PathVariable Long orderId) {
+    public ResponseEntity<String> cancelOrder(
+            @PathVariable Long orderId,
+            HttpServletRequest request
+    ) {
         log.info("Cancel order - Order ID: {}", orderId);
-        String result = orderServiceInterface.cancelOrder(orderId);
+        String result = orderServiceInterface.cancelOrder(orderId, request);
         return ResponseEntity.ok(result);
     }
 }

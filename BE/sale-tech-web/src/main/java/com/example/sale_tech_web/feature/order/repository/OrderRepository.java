@@ -21,7 +21,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             "ORDER BY o.createdAt DESC")
     List<Order> findByUserIdAndOptionalStatus(@Param("userId") Long userId, @Param("status") OrderStatus status);
 
-    @Query("SELECT o FROM Order o LEFT JOIN FETCH o.orderDetails WHERE o.id = :orderId AND o.user.id = :userId")
+    @Query("SELECT o FROM Order o LEFT JOIN FETCH o.orderDetails LEFT JOIN FETCH o.user WHERE o.id = :orderId AND o.user.id = :userId")
     Optional<Order> findByIdAndUserId(@Param("orderId") Long orderId, @Param("userId") Long userId);
 }
 

@@ -12,8 +12,13 @@ import com.example.sale_tech_web.feature.order.entity.orderdetails.OrderDetail;
 import com.example.sale_tech_web.feature.order.entity.orders.Order;
 import com.example.sale_tech_web.feature.order.enums.OrderStatus;
 import com.example.sale_tech_web.feature.order.repository.OrderRepository;
+import com.example.sale_tech_web.feature.payment.dto.VNPayRefundRequest;
+import com.example.sale_tech_web.feature.payment.dto.VNPayRefundResponse;
+import com.example.sale_tech_web.feature.payment.entity.Payment;
 import com.example.sale_tech_web.feature.payment.enums.PaymentMethod;
+import com.example.sale_tech_web.feature.payment.enums.PaymentStatus;
 import com.example.sale_tech_web.feature.payment.manager.PaymentService;
+import com.example.sale_tech_web.feature.payment.repository.PaymentRepository;
 import com.example.sale_tech_web.feature.payment.service.VNPayService;
 import com.example.sale_tech_web.feature.product.entity.Product;
 import com.example.sale_tech_web.feature.users.entity.Users;
@@ -25,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 
@@ -36,6 +42,7 @@ public class OrderService implements OrderServiceInterface {
     private final UserRepository userRepository;
     private final VNPayService vnPayService;
     private final PaymentService paymentService;
+    private final PaymentRepository paymentRepository;
 
     @Override
     public List<OrderDTO> getOrderByUserId(String status) {
@@ -59,8 +66,8 @@ public class OrderService implements OrderServiceInterface {
 
         return orders.stream().map(order -> {
             String paymentStatus = order.getPayment() != null
-                ? order.getPayment().getStatus().name()
-                : "UNKNOWN";
+                    ? order.getPayment().getStatus().name()
+                    : "UNKNOWN";
             return convertToDTO(order, paymentStatus);
         }).toList();
     }
@@ -183,7 +190,7 @@ public class OrderService implements OrderServiceInterface {
 
     @Override
     @Transactional
-    public String cancelOrder(Long orderId) {
+    public String cancelOrder(Long orderId, HttpServletRequest request) {
         Long userId = getUserIdFromToken();
 
         Order order = orderRepository.findByIdAndUserId(orderId, userId)
@@ -195,11 +202,70 @@ public class OrderService implements OrderServiceInterface {
                     "Only orders with PENDING status can be cancelled. Current status: " + order.getStatus());
         }
 
+        // Check if payment exists for this order
+        Payment payment = paymentRepository.findByOrderId(orderId).orElse(null);
+
+        String refundMessage = "";
+
+        // If payment exists and was successful with VNPay, process refund
+        if (payment != null && payment.getStatus() == PaymentStatus.PAID
+                && payment.getProvider() == PaymentMethod.VNPAY) {
+
+            try {
+                // Prepare refund request
+                VNPayRefundRequest refundRequest = VNPayRefundRequest.builder()
+                        .txnRef(payment.getTransactionId())
+                        .amount(Long.valueOf(payment.getAmount()))
+                        .transactionType("02") // "02" = Full refund, "03" = Partial refund
+                        .transactionDate(payment.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")))
+                        .transactionNo("") // VNPay transaction number if available
+                        .createBy(order.getUser().getUsername())
+                        .orderInfo("Hoan tien don hang #" + orderId)
+                        .build();
+
+                // Call VNPay refund API
+                VNPayRefundResponse refundResponse = vnPayService.processRefund(refundRequest, request);
+
+                // Check refund response
+                if ("00".equals(refundResponse.getResponseCode())) {
+                    // Refund successful
+                    payment.setStatus(PaymentStatus.REFUND);
+                    payment.setUpdatedAt(LocalDateTime.now());
+                    paymentRepository.save(payment);
+
+                    refundMessage = " and payment has been refunded successfully";
+                } else {
+                    // Refund failed
+                    refundMessage = " but refund failed: " + refundResponse.getMessage();
+
+                    // Still cancel the order but mark payment status accordingly
+                    payment.setStatus(PaymentStatus.REFUND_FAILED);
+                    payment.setUpdatedAt(LocalDateTime.now());
+                    paymentRepository.save(payment);
+                }
+
+            } catch (Exception e) {
+                refundMessage = " but refund encountered an error: " + e.getMessage();
+
+                // Mark payment as refund failed
+                payment.setStatus(PaymentStatus.REFUND_FAILED);
+                payment.setUpdatedAt(LocalDateTime.now());
+                paymentRepository.save(payment);
+            }
+        } else if (payment != null && payment.getStatus() == PaymentStatus.PENDING) {
+            // If payment is still pending, just mark it as cancelled
+            payment.setStatus(PaymentStatus.FAILED);
+            payment.setUpdatedAt(LocalDateTime.now());
+            paymentRepository.save(payment);
+            refundMessage = " and pending payment has been cancelled";
+        }
+
+        // Cancel the order
         order.setStatus(OrderStatus.CANCELLED);
         order.setUpdatedAt(LocalDateTime.now());
         orderRepository.save(order);
 
-        return "Order #" + orderId + " has been cancelled successfully";
+        return "Order #" + orderId + " has been cancelled successfully" + refundMessage;
     }
 
 

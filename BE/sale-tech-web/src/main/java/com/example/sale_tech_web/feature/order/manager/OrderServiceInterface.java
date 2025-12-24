@@ -14,6 +14,6 @@ public interface OrderServiceInterface {
 
     Object placeOrder(PlaceOrderRequest request, HttpServletRequest httpRequest);
 
-    String cancelOrder(Long orderId);
+    String cancelOrder(Long orderId, HttpServletRequest request);
 }
 
