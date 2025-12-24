@@ -18,6 +18,17 @@ export const PAYMENT_METHOD = {
 };
 
 /**
+ * Payment status constants
+ */
+export const PAYMENT_STATUS = {
+    PENDING: 'PENDING',
+    PAID: 'PAID',
+    FAILED: 'FAILED',
+    REFUND: 'REFUND',
+    UNKNOWN: 'UNKNOWN'
+};
+
+/**
  * Get status color
  * @param {string} status - Order status
  * @returns {string} Color hex code
@@ -50,24 +61,27 @@ export const getStatusText = (status) => {
 };
 
 /**
- * Get payment method text
- * @param {string} method - Payment method
- * @returns {string} Method text
- */
-export const getPaymentMethodText = (method) => {
-    const texts = {
-        CASH: 'Tiền mặt',
-        VNPAY: 'VNPay'
-    };
-    return texts[method] || method;
-};
-
-/**
  * Check if order can be cancelled
  * @param {string} status - Order status
  * @returns {boolean} True if can cancel
  */
 export const canCancelOrder = (status) => {
     return status === ORDER_STATUS.PENDING;
+};
+
+/**
+ * Get payment status color
+ * @param {string} status - Payment status
+ * @returns {string} Color hex code
+ */
+export const getPaymentStatusColor = (status) => {
+    const colors = {
+        PENDING: '#FFA500',
+        PAID: '#28a745',
+        FAILED: '#dc3545',
+        REFUND: '#6c757d',
+        UNKNOWN: '#6c757d'
+    };
+    return colors[status] || '#6c757d';
 };
 

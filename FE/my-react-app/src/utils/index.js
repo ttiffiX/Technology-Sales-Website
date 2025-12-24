@@ -61,9 +61,10 @@ export {
 export {
     ORDER_STATUS,
     PAYMENT_METHOD,
+    PAYMENT_STATUS,
     getStatusColor,
     getStatusText,
-    getPaymentMethodText,
+    getPaymentStatusColor,
     canCancelOrder
 } from './orderUtils';
 

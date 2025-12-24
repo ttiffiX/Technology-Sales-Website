@@ -44,6 +44,7 @@ public class PaymentTimeoutScheduler {
 
             if (expiredPayments.isEmpty()) {
                 log.info("No expired pending payments found");
+                log.info("----------------------------------------------------------------");
                 return;
             }
 

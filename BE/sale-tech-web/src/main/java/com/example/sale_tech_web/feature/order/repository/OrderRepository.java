@@ -13,8 +13,9 @@ import java.util.Optional;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
-    @EntityGraph(attributePaths = {"user", "payment"})
+    @EntityGraph(attributePaths = {"payment"})
     @Query("SELECT o FROM Order o " +
+            "LEFT JOIN FETCH o.payment " +
             "WHERE o.user.id = :userId " +
             "AND (:status IS NULL OR o.status = :status) " +
             "ORDER BY o.createdAt DESC")

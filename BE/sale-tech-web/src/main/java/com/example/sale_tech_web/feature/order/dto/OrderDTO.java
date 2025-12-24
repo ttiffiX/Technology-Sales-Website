@@ -22,5 +22,7 @@ public class OrderDTO {
     private Integer totalPrice;
     private LocalDateTime createdAt;
     private String status;
+    private String paymentMethod;
+    private String paymentStatus;
 }
 

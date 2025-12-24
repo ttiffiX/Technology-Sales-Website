@@ -57,9 +57,12 @@ public class OrderService implements OrderServiceInterface {
 
         orders = orderRepository.findByUserIdAndOptionalStatus(userId, orderStatus);
 
-        return orders.stream()
-                .map(this::convertToDTO)
-                .toList();
+        return orders.stream().map(order -> {
+            String paymentStatus = order.getPayment() != null
+                ? order.getPayment().getStatus().name()
+                : "UNKNOWN";
+            return convertToDTO(order, paymentStatus);
+        }).toList();
     }
 
     @Override
@@ -209,7 +212,7 @@ public class OrderService implements OrderServiceInterface {
         return userId;
     }
 
-    private OrderDTO convertToDTO(Order order) {
+    private OrderDTO convertToDTO(Order order, String paymentStatus) {
         return OrderDTO.builder()
                 .id(order.getId())
                 .customerName(order.getCustomerName())
@@ -221,6 +224,8 @@ public class OrderService implements OrderServiceInterface {
                 .totalPrice(order.getTotalPrice())
                 .createdAt(order.getCreatedAt())
                 .status(order.getStatus().name())
+                .paymentMethod(order.getPaymentMethod().name())
+                .paymentStatus(paymentStatus)
                 .build();
     }
 

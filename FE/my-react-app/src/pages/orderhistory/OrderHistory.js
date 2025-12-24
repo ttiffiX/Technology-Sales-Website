@@ -5,7 +5,7 @@ import Header from "../../components/header/Header";
 import {useGetOrders, useCancelOrder} from "../../api/OrderAPI";
 import {useToast} from "../../components/Toast/Toast";
 import OrderDetailModal from "./OrderDetailModal";
-import {formatDate, formatPrice, getStatusColor} from "../../utils";
+import {formatDate, formatPrice, getStatusColor, getPaymentStatusColor} from "../../utils";
 import {useGetCartItems} from "../../api/CartAPI";
 
 const OrderHistory = () => {
@@ -94,11 +94,21 @@ const OrderHistory = () => {
                                         <h3>Order #{order.id}</h3>
                                         <p className="order-date">{formatDate(order.createdAt)}</p>
                                     </div>
-                                    <div
-                                        className="order-status"
-                                        style={{backgroundColor: getStatusColor(order.status)}}
-                                    >
-                                        {order.status}
+                                    <div className="order-badges">
+                                        Order Status:
+                                        <div
+                                            className="order-status"
+                                            style={{backgroundColor: getStatusColor(order.status)}}
+                                        >
+                                            {order.status}
+                                        </div>
+                                        Payment Status:
+                                        <div
+                                            className="payment-status"
+                                            style={{backgroundColor: getPaymentStatusColor(order.paymentStatus)}}
+                                        >
+                                            {order.paymentStatus}
+                                        </div>
                                     </div>
                                 </div>
 
@@ -123,6 +133,10 @@ const OrderHistory = () => {
                                         <div className="detail-row">
                                             <span className="label">Delivery Fee:</span>
                                             <span>{formatPrice(order.deliveryFee)}</span>
+                                        </div>
+                                        <div className="detail-row">
+                                            <span className="label">Payment Method : </span>
+                                            <span className="payment-method">{order.paymentMethod}</span>
                                         </div>
                                     </div>
 
