@@ -17,7 +17,7 @@ import com.example.sale_tech_web.feature.payment.dto.VNPayRefundResponse;
 import com.example.sale_tech_web.feature.payment.entity.Payment;
 import com.example.sale_tech_web.feature.payment.enums.PaymentMethod;
 import com.example.sale_tech_web.feature.payment.enums.PaymentStatus;
-import com.example.sale_tech_web.feature.payment.manager.PaymentService;
+import com.example.sale_tech_web.feature.payment.manager.PaymentServiceInterface;
 import com.example.sale_tech_web.feature.payment.repository.PaymentRepository;
 import com.example.sale_tech_web.feature.payment.service.VNPayService;
 import com.example.sale_tech_web.feature.product.entity.Product;
@@ -41,7 +41,7 @@ public class OrderService implements OrderServiceInterface {
     private final CartDetailRepository cartDetailRepository;
     private final UserRepository userRepository;
     private final VNPayService vnPayService;
-    private final PaymentService paymentService;
+    private final PaymentServiceInterface paymentServiceInterface;
     private final PaymentRepository paymentRepository;
 
     @Override
@@ -175,14 +175,14 @@ public class OrderService implements OrderServiceInterface {
             // Create Payment entity with txnRef
             Map<String, Object> params = new HashMap<>();
             params.put("txnRef", vnpayResponse.getTxnRef());
-            paymentService.createPayment(savedOrder, PaymentMethod.VNPAY, params);
+            paymentServiceInterface.createPayment(savedOrder, PaymentMethod.VNPAY, params);
 
             // Don't delete cart yet - will delete after successful payment
             return vnpayResponse;
         }
 
         // For CASH payment - delete cart immediately
-        paymentService.createPayment(order, PaymentMethod.CASH, null);
+        paymentServiceInterface.createPayment(order, PaymentMethod.CASH, null);
         cartDetailRepository.deleteAll(cartDetails);
 
         return "Order placed successfully for user: " + user.getUsername();
