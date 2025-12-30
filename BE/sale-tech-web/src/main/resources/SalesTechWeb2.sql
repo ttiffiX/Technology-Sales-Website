@@ -117,9 +117,9 @@ CREATE TABLE product_attribute_values
     -- Khóa ngoại đến Product
     CONSTRAINT fk_pav_product FOREIGN KEY (product_id) REFERENCES product (id),
     -- Khóa ngoại đến ProductAttributes
-    CONSTRAINT fk_pav_attribute FOREIGN KEY (attribute_id) REFERENCES product_attributes (id),
-    -- Mỗi thuộc tính chỉ có một giá trị cho mỗi sản phẩm
-    UNIQUE (product_id, attribute_id)
+    CONSTRAINT fk_pav_attribute FOREIGN KEY (attribute_id) REFERENCES product_attributes (id)
+    -- NOTE: Removed UNIQUE constraint to allow multiple values for same attribute
+    -- This enables filtering for multi-value attributes (e.g., "Kiểu kết nối": Bluetooth, USB, etc.)
 );
 
 --------------------------
@@ -176,7 +176,7 @@ CREATE TABLE invoice
     status         payment_status_enum,
     created_at     DATE,
     updated_at     DATE,
-    exipires_at     DATE,
+    exipires_at    DATE,
     content        TEXT,
     amount         INT        NOT NULL,
     provider       VARCHAR(20),         -- 'VNPAY', 'PAYOS'
@@ -219,69 +219,363 @@ CREATE TABLE cart_detail
 INSERT INTO categories (name)
 VALUES ('Máy tính xách tay'),
        ('Điện thoại di động'),
-       ('Phụ kiện');
+       ('Bàn Phím'),
+       ('Chuột'),
+       ('Tai nghe');
+
+-- INSERT INTO product_attributes (name, unit, data_type)
+-- VALUES ('RAM', 'GB', 'Số nguyên'),
+--        ('Bộ nhớ trong', 'GB', 'Số nguyên'),
+--        ('Kích thước màn hình', 'inch', 'Số thực'),
+--        ('Độ phân giải', 'pixels', 'Văn bản'),
+--        ('Cổng kết nối', NULL, 'Văn bản'),
+--        ('Loại bàn phím', NULL, 'Văn bản'),
+--        ('Tốc độ phản hồi', 'ms', 'Số nguyên');
 
 INSERT INTO product_attributes (name, unit, data_type)
-VALUES ('RAM', 'GB', 'Số nguyên'),
-       ('Bộ nhớ trong', 'GB', 'Số nguyên'),
-       ('Kích thước màn hình', 'inch', 'Số thực'),
-       ('Độ phân giải', 'pixels', 'Văn bản'),
-       ('Cổng kết nối', NULL, 'Văn bản'),
-       ('Loại bàn phím', NULL, 'Văn bản'),
-       ('Tốc độ phản hồi', 'ms', 'Số nguyên');
+VALUES
+-- Nhóm Vi xử lý & Đồ họa
+('Công nghệ CPU', NULL, 'Text'),              -- ví dụ Intel Core i7
+('Tên đầy đủ CPU', NULL, 'Text'),             -- ví dụ Intel Core i7-13420H
+('Số nhân/Số luồng', NULL, 'Text'),
+('Card đồ họa (onboard)', NULL, 'Text'),      --ví dụ Intel UHD Graphics
+('Card đồ họa (rời)', NULL, 'Text'),          --ví dụ NVIDIA RTX 3050 4GB
+-- Nhóm Bộ nhớ & Lưu trữ
+('Dung lượng RAM', 'GB', 'Number'),
+('Dung lượng SSD', 'GB', 'Number'),
+('Dung lượng ROM', 'GB', 'Number'),
+-- Nhóm Màn hình
+('Kích thước màn hình', 'inch', 'Number'),
+('Độ phân giải', NULL, 'Text'),
+('Tần số quét', 'Hz', 'Number'),
+-- Nhóm khác
+('Trọng lượng', 'kg', 'Number'),
+('Hệ điều hành', NULL, 'Text'),               -- ví dụ Windows, macOS, iOS, Android (không thêm dạng ios 17 hay android 14)
+('Dung lượng Pin', NULL, 'Text'),
+-- Nhóm Phụ kiện (đặc thù)
+('Kiểu kết nối', NULL, 'Text'),               --bluetooth, usb, type-c, lightning, jack 3.5mm
+('Loại Switch', NULL, 'Text'),
+('LED', NULL, 'Text'),                        -- Có hoặc không
+('DPI', NULL, 'Text'),
+('Loại sản phẩm', NULL,
+ 'Text'),                                     -- có dây, không dây (chuột); có dây, không dây, cơ(bàn phím); in-ear, on-ear, Earbubs, over-ear (cho tai nghe)
+('Thời gian sử dụng pin', 'hours', 'Number'), -- cho tai nghe, bàn phím không dây hoặc chuốt không dây(nếu có)
+('Tính năng', NULL, 'Text');
+-- chống ồn, chống nước, rung, cảm ứng đa điểm, xoay 360 độ
 
--- Máy tính xách tay (ID=1)
+-- Laptop (Category 1)
 INSERT INTO category_attribute_mapping (category_id, attribute_id, is_filterable)
-VALUES (1, 1, TRUE),  -- RAM
-       (1, 2, FALSE), -- Bộ nhớ trong (SSD)
-       (1, 3, TRUE),  -- Kích thước màn hình
-       (1, 5, FALSE);
--- Cổng kết nối
+SELECT 1, id, TRUE
+FROM product_attributes
+WHERE name IN
+      ('Công nghệ CPU', 'Tên đầy đủ CPU', 'Số nhân/Số luồng', 'Card đồ họa (onboard)', 'Card đồ họa (rời)',
+       'Dung lượng RAM',
+       'Dung lượng SSD',
+       'Kích thước màn hình',
+       'Tần số quét', 'Độ phân giải', 'Trọng lượng', 'Hệ điều hành', 'Dung lượng Pin');
 
--- Điện thoại di động (ID=2)
+-- Điện thoại (Category 2 - Theo thông số bạn gửi thực chất là Laptop văn phòng, nhưng tôi sẽ map theo kiểu Smartphone phổ thông)
 INSERT INTO category_attribute_mapping (category_id, attribute_id, is_filterable)
-VALUES (2, 1, TRUE), -- RAM
-       (2, 2, TRUE), -- Bộ nhớ trong (ROM)
-       (2, 4, FALSE);
--- Độ phân giải
+SELECT 2, id, TRUE
+FROM product_attributes
+WHERE name IN
+      ('Công nghệ CPU', 'Tên đầy đủ CPU', 'Dung lượng RAM', 'Dung lượng ROM', 'Kích thước màn hình', 'Độ phân giải',
+       'Tần số quét',
+       'Trọng lượng', 'Hệ điều hành', 'Dung lượng Pin');
 
--- Phụ kiện (ID=3) - Ví dụ: Bàn phím
+-- Bàn phím (Category 3)
 INSERT INTO category_attribute_mapping (category_id, attribute_id, is_filterable)
-VALUES (3, 6, TRUE), -- Loại bàn phím
-       (3, 7, FALSE);
--- Tốc độ phản hồi
+SELECT 3, id, TRUE
+FROM product_attributes
+WHERE name IN ('Trọng lượng', 'Kiểu kết nối', 'Loại Switch', 'LED', 'Loại sản phẩm', 'Thời gian sử dụng pin');
 
--- Sản phẩm 1: Máy tính xách tay (Category ID: 1)
-INSERT INTO product (title, description, price, quantity, category_id, is_active, created_at)
-VALUES ('Laptop Gaming XYZ', 'Máy tính xách tay hiệu năng cao cho game thủ.', 25000000, 50, 1, TRUE, NOW());
+-- chuột (Category 4)
+INSERT INTO category_attribute_mapping (category_id, attribute_id, is_filterable)
+SELECT 4, id, TRUE
+FROM product_attributes
+WHERE name IN ('Trọng lượng', 'Kiểu kết nối', 'DPI', 'LED', 'Loại sản phẩm', 'Thời gian sử dụng pin', 'Tính năng');
 
--- Sản phẩm 2: Điện thoại di động (Category ID: 2)
-INSERT INTO product (title, description, price, quantity, category_id, is_active, created_at)
-VALUES ('Smartphone Flagship Alpha', 'Điện thoại cao cấp với camera siêu nét.', 18000000, 120, 2, TRUE, NOW());
+-- tai nghe (Category 5)
+INSERT INTO category_attribute_mapping (category_id, attribute_id, is_filterable)
+SELECT 5, id, TRUE
+FROM product_attributes
+WHERE name IN ('Trọng lượng', 'Kiểu kết nối', 'Loại sản phẩm', 'Thời gian sử dụng pin', 'Tính năng');
 
--- Sản phẩm 3: Phụ kiện (Category ID: 3)
-INSERT INTO product (title, description, price, quantity, category_id, is_active, created_at)
-VALUES ('Bàn phím cơ Blue Switch', 'Bàn phím cơ chất lượng cao, gõ êm.', 1500000, 200, 3, TRUE, NOW());
+-- -- Máy tính xách tay (ID=1)
+-- INSERT INTO category_attribute_mapping (category_id, attribute_id, is_filterable)
+-- VALUES (1, 1, TRUE),  -- RAM
+--        (1, 2, FALSE), -- Bộ nhớ trong (SSD)
+--        (1, 3, TRUE),  -- Kích thước màn hình
+--        (1, 5, FALSE); -- Cổng kết nối
+--
+-- -- Điện thoại di động (ID=2)
+-- INSERT INTO category_attribute_mapping (category_id, attribute_id, is_filterable)
+-- VALUES (2, 1, TRUE), -- RAM
+--        (2, 2, TRUE), -- Bộ nhớ trong (ROM)
+--        (2, 4, FALSE); -- Độ phân giải
+--
+-- -- Phụ kiện (ID=3) - Ví dụ: Bàn phím
+-- INSERT INTO category_attribute_mapping (category_id, attribute_id, is_filterable)
+-- VALUES (3, 6, TRUE), -- Loại bàn phím
+--        (3, 7, FALSE);-- Tốc độ phản hồi
 
--- Sản phẩm 4: Phụ kiện (Category ID: 3)
-INSERT INTO product (title, description, price, quantity, category_id, is_active, created_at)
-VALUES ('Chuột quang không dây M900', 'Chuột thiết kế công thái học, pin lâu.', 450000, 300, 3, TRUE, NOW());
 
--- Thuộc tính cho Laptop Gaming XYZ (Product ID: 1)
-INSERT INTO product_attribute_values (product_id, attribute_id, value)
-VALUES (1, 1, '16'),  -- RAM 16GB
-       (1, 2, '512'), -- Bộ nhớ trong 512GB
-       (1, 3, '15.6');
--- Kích thước màn hình 15.6 inch
+-- -- Sản phẩm 1: Máy tính xách tay (Category ID: 1)
+-- INSERT INTO product (title, description, price, quantity, category_id, is_active, created_at)
+-- VALUES ('Laptop Gaming XYZ', 'Máy tính xách tay hiệu năng cao cho game thủ.', 25000000, 50, 1, TRUE, NOW());
+--
+-- -- Sản phẩm 2: Điện thoại di động (Category ID: 2)
+-- INSERT INTO product (title, description, price, quantity, category_id, is_active, created_at)
+-- VALUES ('Smartphone Flagship Alpha', 'Điện thoại cao cấp với camera siêu nét.', 18000000, 120, 2, TRUE, NOW());
+--
+-- -- Sản phẩm 3: Phụ kiện (Category ID: 3)
+-- INSERT INTO product (title, description, price, quantity, category_id, is_active, created_at)
+-- VALUES ('Bàn phím cơ Blue Switch', 'Bàn phím cơ chất lượng cao, gõ êm.', 1500000, 200, 3, TRUE, NOW());
+--
+-- -- Sản phẩm 4: Phụ kiện (Category ID: 3)
+-- INSERT INTO product (title, description, price, quantity, category_id, is_active, created_at)
+-- VALUES ('Chuột quang không dây M900', 'Chuột thiết kế công thái học, pin lâu.', 450000, 300, 3, TRUE, NOW());
+--
+-- -- Thuộc tính cho Laptop Gaming XYZ (Product ID: 1)
+-- INSERT INTO product_attribute_values (product_id, attribute_id, value)
+-- VALUES (1, 1, '16'),  -- RAM 16GB
+--        (1, 2, '512'), -- Bộ nhớ trong 512GB
+--        (1, 3, '15.6');
+-- -- Kích thước màn hình 15.6 inch
+--
+-- -- Thuộc tính cho Smartphone Flagship Alpha (Product ID: 2)
+-- INSERT INTO product_attribute_values (product_id, attribute_id, value)
+-- VALUES (2, 1, '12'),  -- RAM 12GB
+--        (2, 2, '256'), -- Bộ nhớ trong 256GB
+--        (2, 4, '1440x3200');
+-- -- Độ phân giải
+--
+-- -- Thuộc tính cho Bàn phím cơ Blue Switch (Product ID: 3)
+-- INSERT INTO product_attribute_values (product_id, attribute_id, value)
+-- VALUES (3, 6, 'Blue Switch'), -- Loại bàn phím
+--        (3, 7, '1'); -- Tốc độ phản hồi 1ms
 
--- Thuộc tính cho Smartphone Flagship Alpha (Product ID: 2)
-INSERT INTO product_attribute_values (product_id, attribute_id, value)
-VALUES (2, 1, '12'),  -- RAM 12GB
-       (2, 2, '256'), -- Bộ nhớ trong 256GB
-       (2, 4, '1440x3200');
--- Độ phân giải
+-- Reset sequence để ID bắt đầu từ 1
+SELECT setval('product_id_seq', 1, false);
 
--- Thuộc tính cho Bàn phím cơ Blue Switch (Product ID: 3)
-INSERT INTO product_attribute_values (product_id, attribute_id, value)
-VALUES (3, 6, 'Blue Switch'), -- Loại bàn phím
-       (3, 7, '1'); -- Tốc độ phản hồi 1ms
+INSERT INTO product (title, description, price, quantity, category_id, is_active, created_at, image_url)
+VALUES
+-- LAPTOP (ID 1-5)
+('ASUS TUF Gaming A15', 'Laptop gaming bền bỉ, hiệu năng cao', 21990000, 50, 1, TRUE, NOW(), '1.png'),
+('MacBook Air M2', 'Mỏng nhẹ, pin cực lâu cho văn phòng', 26500000, 30, 1, TRUE, NOW(), '2.png'),
+('Dell XPS 13', 'Màn hình vô cực, đẳng cấp doanh nhân', 35000000, 15, 1, TRUE, NOW(), '3.png'),
+('HP Victus 16', 'Cấu hình mạnh, tản nhiệt tốt', 19500000, 25, 1, TRUE, NOW(), '4.png'),
+('Lenovo Legion 5', 'Vua của phân khúc laptop gaming tầm trung', 28900000, 12, 1, TRUE, NOW(), '5.png'),
+
+-- ĐIỆN THOẠI (ID 6-10)
+('iPhone 15 Pro Max', 'Titanium bền bỉ, camera siêu zoom', 31500000, 40, 2, TRUE, NOW(), '6.png'),
+('Samsung Galaxy S24 Ultra', 'AI Phone đỉnh cao, bút S-Pen tiện lợi', 27900000, 35, 2, TRUE, NOW(), '7.png'),
+('Xiaomi 14', 'Cấu hình khủng, sạc siêu nhanh', 17500000, 60, 2, TRUE, NOW(), '8.png'),
+('Oppo Reno 11 Pro', 'Chuyên gia chân dung, thiết kế đẹp', 13900000, 45, 2, TRUE, NOW(), '9.png'),
+('Google Pixel 8', 'Camera AI thông minh nhất', 18000000, 10, 2, TRUE, NOW(), '10.png'),
+
+-- PHỤ KIỆN (ID 11-15)
+('Chuột Logitech G502', 'Chuột gaming quốc dân', 1200000, 100, 4, TRUE, NOW(), '11.png'),
+('Bàn phím Akko 3068', 'Bàn phím cơ nhỏ gọn, switch gõ êm', 1850000, 50, 3, TRUE, NOW(), '12.png'),
+('Tai nghe HyperX Cloud II', 'Âm thanh 7.1 cho game thủ', 2100000, 75, 5, TRUE, NOW(), '13.png'),
+('Tai nghe Sony WH-1000XM5', 'Chống ồn chủ động tốt nhất', 7500000, 20, 5, TRUE, NOW(), '14.png'),
+('Apple Magic Mouse', 'Chuột đa điểm mượt mà cho Mac', 2200000, 40, 4, TRUE, NOW(), '15.png');
+
+
+
+WITH attrs AS (SELECT id, name FROM product_attributes)
+
+INSERT
+INTO product_attribute_values (product_id, attribute_id, value)
+VALUES
+-- ========================================================
+-- DANH MỤC 1: LAPTOP (ID 1-5)
+-- ========================================================
+
+-- 1. ASUS TUF Gaming A15
+(1, (SELECT id FROM attrs WHERE name = 'Công nghệ CPU'), 'AMD Ryzen 7'),
+(1, (SELECT id FROM attrs WHERE name = 'Tên đầy đủ CPU'), 'AMD Ryzen 7 7435HS'),
+(1, (SELECT id FROM attrs WHERE name = 'Số nhân/Số luồng'), '8 nhân / 16 luồng'),
+(1, (SELECT id FROM attrs WHERE name = 'Card đồ họa (onboard)'), 'AMD Radeon Graphics'),
+(1, (SELECT id FROM attrs WHERE name = 'Card đồ họa (rời)'), 'NVIDIA RTX 3050 4GB'),
+(1, (SELECT id FROM attrs WHERE name = 'Dung lượng RAM'), '16'),
+(1, (SELECT id FROM attrs WHERE name = 'Dung lượng SSD'), '512'),
+(1, (SELECT id FROM attrs WHERE name = 'Kích thước màn hình'), '15.6'),
+(1, (SELECT id FROM attrs WHERE name = 'Độ phân giải'), '1920 x 1080'),
+(1, (SELECT id FROM attrs WHERE name = 'Tần số quét'), '144'),
+(1, (SELECT id FROM attrs WHERE name = 'Hệ điều hành'), 'Windows'),
+(1, (SELECT id FROM attrs WHERE name = 'Trọng lượng'), '2.3'),
+(1, (SELECT id FROM attrs WHERE name = 'Dung lượng Pin'), '48Wh'),
+
+-- 2. MacBook Air M2
+(2, (SELECT id FROM attrs WHERE name = 'Công nghệ CPU'), 'Apple M2'),
+(2, (SELECT id FROM attrs WHERE name = 'Tên đầy đủ CPU'), 'Apple M2'),
+(2, (SELECT id FROM attrs WHERE name = 'Card đồ họa (onboard)'), 'Apple M2 8-core GPU'),
+(2, (SELECT id FROM attrs WHERE name = 'Dung lượng RAM'), '8'),
+(2, (SELECT id FROM attrs WHERE name = 'Dung lượng SSD'), '256'),
+(2, (SELECT id FROM attrs WHERE name = 'Kích thước màn hình'), '13.6'),
+(2, (SELECT id FROM attrs WHERE name = 'Độ phân giải'), '2560 x 1664'),
+(2, (SELECT id FROM attrs WHERE name = 'Tần số quét'), '60'),
+(2, (SELECT id FROM attrs WHERE name = 'Hệ điều hành'), 'macOS'),
+(2, (SELECT id FROM attrs WHERE name = 'Trọng lượng'), '1.24'),
+(2, (SELECT id FROM attrs WHERE name = 'Dung lượng Pin'), '52.6Wh'),
+
+-- 3. Dell XPS 13
+(3, (SELECT id FROM attrs WHERE name = 'Công nghệ CPU'), 'Intel Core i7'),
+(3, (SELECT id FROM attrs WHERE name = 'Tên đầy đủ CPU'), 'Intel Core i7-1250U'),
+(3, (SELECT id FROM attrs WHERE name = 'Số nhân/Số luồng'), '8 nhân / 16 luồng'),
+(3, (SELECT id FROM attrs WHERE name = 'Card đồ họa (onboard)'), 'Intel Iris Xe'),
+(3, (SELECT id FROM attrs WHERE name = 'Dung lượng RAM'), '16'),
+(3, (SELECT id FROM attrs WHERE name = 'Dung lượng SSD'), '512'),
+(3, (SELECT id FROM attrs WHERE name = 'Kích thước màn hình'), '13.4'),
+(3, (SELECT id FROM attrs WHERE name = 'Độ phân giải'), '1920 x 1200'),
+(3, (SELECT id FROM attrs WHERE name = 'Tần số quét'), '120'),
+(3, (SELECT id FROM attrs WHERE name = 'Hệ điều hành'), 'Windows'),
+(3, (SELECT id FROM attrs WHERE name = 'Trọng lượng'), '1.17'),
+(3, (SELECT id FROM attrs WHERE name = 'Dung lượng Pin'), '52.6Wh'),
+
+-- 4. HP Victus 16
+(4, (SELECT id FROM attrs WHERE name = 'Công nghệ CPU'), 'Intel Core i5'),
+(4, (SELECT id FROM attrs WHERE name = 'Tên đầy đủ CPU'), 'Intel Core i5-13500H'),
+(4, (SELECT id FROM attrs WHERE name = 'Số nhân/Số luồng'), '8 nhân / 16 luồng'),
+(4, (SELECT id FROM attrs WHERE name = 'Card đồ họa (rời)'), 'NVIDIA RTX 4050 6GB'),
+(4, (SELECT id FROM attrs WHERE name = 'Dung lượng RAM'), '16'),
+(4, (SELECT id FROM attrs WHERE name = 'Dung lượng SSD'), '512'),
+(4, (SELECT id FROM attrs WHERE name = 'Kích thước màn hình'), '16.1'),
+(4, (SELECT id FROM attrs WHERE name = 'Độ phân giải'), '1920 x 1080'),
+(4, (SELECT id FROM attrs WHERE name = 'Tần số quét'), '144'),
+(4, (SELECT id FROM attrs WHERE name = 'Hệ điều hành'), 'Windows'),
+(4, (SELECT id FROM attrs WHERE name = 'Trọng lượng'), '2.31'),
+(4, (SELECT id FROM attrs WHERE name = 'Dung lượng Pin'), '48Wh'),
+
+-- 5. Lenovo Legion 5
+(5, (SELECT id FROM attrs WHERE name = 'Công nghệ CPU'), 'AMD Ryzen 7'),
+(5, (SELECT id FROM attrs WHERE name = 'Tên đầy đủ CPU'), 'AMD Ryzen 7 7735H'),
+(5, (SELECT id FROM attrs WHERE name = 'Số nhân/Số luồng'), '8 nhân / 16 luồng'),
+(5, (SELECT id FROM attrs WHERE name = 'Card đồ họa (rời)'), 'NVIDIA RTX 4060 8GB'),
+(5, (SELECT id FROM attrs WHERE name = 'Dung lượng RAM'), '16'),
+(5, (SELECT id FROM attrs WHERE name = 'Dung lượng SSD'), '512'),
+(5, (SELECT id FROM attrs WHERE name = 'Kích thước màn hình'), '15.6'),
+(5, (SELECT id FROM attrs WHERE name = 'Độ phân giải'), '1920 x 1080'),
+(5, (SELECT id FROM attrs WHERE name = 'Tần số quét'), '165'),
+(5, (SELECT id FROM attrs WHERE name = 'Hệ điều hành'), 'Windows'),
+(5, (SELECT id FROM attrs WHERE name = 'Trọng lượng'), '2.4'),
+(5, (SELECT id FROM attrs WHERE name = 'Dung lượng Pin'), '60Wh'),
+
+-- ========================================================
+-- DANH MỤC 2: ĐIỆN THOẠI (ID 6-10)
+-- ========================================================
+
+-- 6. iPhone 15 Pro Max
+(6, (SELECT id FROM attrs WHERE name = 'Công nghệ CPU'), 'Apple A17'),
+(6, (SELECT id FROM attrs WHERE name = 'Tên đầy đủ CPU'), 'Apple A17 Pro'),
+(6, (SELECT id FROM attrs WHERE name = 'Dung lượng RAM'), '8'),
+(6, (SELECT id FROM attrs WHERE name = 'Dung lượng ROM'), '256'),
+(6, (SELECT id FROM attrs WHERE name = 'Kích thước màn hình'), '6.7'),
+(6, (SELECT id FROM attrs WHERE name = 'Độ phân giải'), '2796 x 1290'),
+(6, (SELECT id FROM attrs WHERE name = 'Tần số quét'), '120'),
+(6, (SELECT id FROM attrs WHERE name = 'Hệ điều hành'), 'iOS'),
+(6, (SELECT id FROM attrs WHERE name = 'Dung lượng Pin'), '4441 mAh'),
+(6, (SELECT id FROM attrs WHERE name = 'Trọng lượng'), '0.221'),
+
+-- 7. Samsung Galaxy S24 Ultra
+(7, (SELECT id FROM attrs WHERE name = 'Công nghệ CPU'), 'Snapdragon 8 Gen 3'),
+(7, (SELECT id FROM attrs WHERE name = 'Tên đầy đủ CPU'), 'Snapdragon 8 Gen 3'),
+(7, (SELECT id FROM attrs WHERE name = 'Dung lượng RAM'), '12'),
+(7, (SELECT id FROM attrs WHERE name = 'Dung lượng ROM'), '256'),
+(7, (SELECT id FROM attrs WHERE name = 'Kích thước màn hình'), '6.8'),
+(7, (SELECT id FROM attrs WHERE name = 'Độ phân giải'), '3000 x 1500'),
+(7, (SELECT id FROM attrs WHERE name = 'Tần số quét'), '120'),
+(7, (SELECT id FROM attrs WHERE name = 'Hệ điều hành'), 'Android'),
+(7, (SELECT id FROM attrs WHERE name = 'Dung lượng Pin'), '5000 mAh'),
+(7, (SELECT id FROM attrs WHERE name = 'Trọng lượng'), '0.221'),
+
+-- 8. Xiaomi 14
+(8, (SELECT id FROM attrs WHERE name = 'Công nghệ CPU'), 'Snapdragon 8 Gen 3'),
+(8, (SELECT id FROM attrs WHERE name = 'Tên đầy đủ CPU'), 'Snapdragon 8 Gen 3'),
+(8, (SELECT id FROM attrs WHERE name = 'Dung lượng RAM'), '12'),
+(8, (SELECT id FROM attrs WHERE name = 'Dung lượng ROM'), '256'),
+(8, (SELECT id FROM attrs WHERE name = 'Kích thước màn hình'), '6.36'),
+(8, (SELECT id FROM attrs WHERE name = 'Độ phân giải'), '1500 x 750'),
+(8, (SELECT id FROM attrs WHERE name = 'Tần số quét'), '60'),
+(8, (SELECT id FROM attrs WHERE name = 'Hệ điều hành'), 'Android'),
+(8, (SELECT id FROM attrs WHERE name = 'Dung lượng Pin'), '4610 mAh'),
+(8, (SELECT id FROM attrs WHERE name = 'Trọng lượng'), '0.221'),
+
+-- 9. Oppo Reno 11 Pro
+(9, (SELECT id FROM attrs WHERE name = 'Công nghệ CPU'), 'Dimensity 8200'),
+(9, (SELECT id FROM attrs WHERE name = 'Tên đầy đủ CPU'), 'Dimensity 8200'),
+(9, (SELECT id FROM attrs WHERE name = 'Dung lượng RAM'), '12'),
+(9, (SELECT id FROM attrs WHERE name = 'Dung lượng ROM'), '512'),
+(9, (SELECT id FROM attrs WHERE name = 'Kích thước màn hình'), '6.36'),
+(9, (SELECT id FROM attrs WHERE name = 'Độ phân giải'), '1500 x 750'),
+(9, (SELECT id FROM attrs WHERE name = 'Tần số quét'), '100'),
+(9, (SELECT id FROM attrs WHERE name = 'Hệ điều hành'), 'Android'),
+(9, (SELECT id FROM attrs WHERE name = 'Dung lượng Pin'), '4610 mAh'),
+(9, (SELECT id FROM attrs WHERE name = 'Trọng lượng'), '0.221'),
+
+-- 10. Google Pixel 8
+(10, (SELECT id FROM attrs WHERE name = 'Công nghệ CPU'), 'Google Tensor'),
+(10, (SELECT id FROM attrs WHERE name = 'Tên đầy đủ CPU'), 'Tensor G3'),
+(10, (SELECT id FROM attrs WHERE name = 'Dung lượng RAM'), '8'),
+(10, (SELECT id FROM attrs WHERE name = 'Dung lượng ROM'), '128'),
+(10, (SELECT id FROM attrs WHERE name = 'Kích thước màn hình'), '6.36'),
+(10, (SELECT id FROM attrs WHERE name = 'Độ phân giải'), '1500 x 750'),
+(10, (SELECT id FROM attrs WHERE name = 'Tần số quét'), '120'),
+(10, (SELECT id FROM attrs WHERE name = 'Hệ điều hành'), 'Android'),
+(10, (SELECT id FROM attrs WHERE name = 'Dung lượng Pin'), '4610 mAh'),
+(10, (SELECT id FROM attrs WHERE name = 'Trọng lượng'), '0.221'),
+
+-- ========================================================
+-- DANH MỤC 4: CHUỘT (ID 11, 15)
+-- ========================================================
+
+-- 11. Chuột Logitech G502 (Có dây)
+(11, (SELECT id FROM attrs WHERE name = 'Kiểu kết nối'), 'USB'),
+(11, (SELECT id FROM attrs WHERE name = 'DPI'), '25600'),
+(11, (SELECT id FROM attrs WHERE name = 'LED'), 'Có'),
+(11, (SELECT id FROM attrs WHERE name = 'Loại sản phẩm'), 'Có dây'),
+(11, (SELECT id FROM attrs WHERE name = 'Tính năng'), 'Cảm biến HERO 25K'),
+(11, (SELECT id FROM attrs WHERE name = 'Trọng lượng'), '0.121'),
+
+-- 15. Apple Magic Mouse (Không dây)
+(15, (SELECT id FROM attrs WHERE name = 'Kiểu kết nối'), 'Bluetooth'),
+(15, (SELECT id FROM attrs WHERE name = 'DPI'), '1300'),
+(15, (SELECT id FROM attrs WHERE name = 'LED'), 'Không'),
+(15, (SELECT id FROM attrs WHERE name = 'Loại sản phẩm'), 'Không dây'),
+(15, (SELECT id FROM attrs WHERE name = 'Tính năng'), 'Cảm ứng đa điểm'),
+(15, (SELECT id FROM attrs WHERE name = 'Trọng lượng'), '0.099'),
+(15, (SELECT id FROM attrs WHERE name = 'Thời gian sử dụng pin'), '720'), -- ~1 tháng
+
+-- ========================================================
+-- DANH MỤC 3: BÀN PHÍM (ID 12)
+-- ========================================================
+
+-- 12. Bàn phím Akko 3068 (Cơ, không dây)
+(12, (SELECT id FROM attrs WHERE name = 'Kiểu kết nối'), 'Bluetooth'),
+(12, (SELECT id FROM attrs WHERE name = 'Kiểu kết nối'), 'USB Receiver'),
+(12, (SELECT id FROM attrs WHERE name = 'Kiểu kết nối'), 'USB'),
+(12, (SELECT id FROM attrs WHERE name = 'Loại Switch'), 'Akko CS Blue'),
+(12, (SELECT id FROM attrs WHERE name = 'LED'), 'Có'),
+(12, (SELECT id FROM attrs WHERE name = 'Loại sản phẩm'), 'Bàn phím Cơ'),
+(12, (SELECT id FROM attrs WHERE name = 'Thời gian sử dụng pin'), '200'),
+(12, (SELECT id FROM attrs WHERE name = 'Trọng lượng'), '0.7'),
+
+-- ========================================================
+-- DANH MỤC 5: TAI NGHE (ID 13, 14)
+-- ========================================================
+
+-- 13. Tai nghe HyperX Cloud II (Có dây, Over-ear)
+(13, (SELECT id FROM attrs WHERE name = 'Kiểu kết nối'), 'USB Receiver'),
+(13, (SELECT id FROM attrs WHERE name = 'Kiểu kết nối'), 'Jack 3.5mm'),
+(13, (SELECT id FROM attrs WHERE name = 'Loại sản phẩm'), 'Over-ear'),
+(13, (SELECT id FROM attrs WHERE name = 'Tính năng'), 'Giả lập âm thanh vòm 7.1'),
+(13, (SELECT id FROM attrs WHERE name = 'Trọng lượng'), '0.32'),
+
+-- 14. Tai nghe Sony WH-1000XM5 (Không dây, Over-ear)
+(14, (SELECT id FROM attrs WHERE name = 'Kiểu kết nối'), 'Bluetooth'),
+(14, (SELECT id FROM attrs WHERE name = 'Kiểu kết nối'), 'Jack 3.5mm'),
+(14, (SELECT id FROM attrs WHERE name = 'Loại sản phẩm'), 'Over-ear'),
+(14, (SELECT id FROM attrs WHERE name = 'Tính năng'), 'Chống ồn chủ động (ANC)'),
+(14, (SELECT id FROM attrs WHERE name = 'Thời gian sử dụng pin'), '30'),
+(14, (SELECT id FROM attrs WHERE name = 'Trọng lượng'), '0.25');

@@ -196,23 +196,37 @@ public class ProductService implements ProductServiceInterface {
      * Convert Product entity to ProductDetailDTO (for detail view)
      */
     private ProductDetailDTO convertToDetailDTO(Product product) {
-        // Convert attributes to map
-        Map<String, String> attributesMap = new HashMap<>();
+        // Convert attributes to map - use LinkedHashMap to maintain order
+        // Group multiple values for same attribute (e.g., "Kiểu kết nối" can have multiple values)
+        Map<String, String> attributesMap = new LinkedHashMap<>();
+
         if (product.getAttributeValues() != null) {
-            for (ProductAttributeValue attrValue : product.getAttributeValues()) {
-                if (attrValue.getAttribute() != null) {
-                    String attrName = attrValue.getAttribute().getName();
-                    String unit = attrValue.getAttribute().getUnit();
-                    String value = attrValue.getValue();
+            // Group by attribute name and collect all values
+            Map<String, List<ProductAttributeValue>> groupedByAttribute = product.getAttributeValues().stream()
+                    .filter(attrValue -> attrValue.getAttribute() != null)
+                    .sorted(Comparator.comparing(av -> av.getAttribute().getId()))
+                    .collect(Collectors.groupingBy(
+                            av -> av.getAttribute().getName(),
+                            LinkedHashMap::new,
+                            Collectors.toList()
+                    ));
 
-                    // Format: "value unit" or just "value" if no unit
-                    String formattedValue = unit != null && !unit.isEmpty()
-                            ? value + " " + unit
-                            : value;
+            // For each attribute, combine all values
+            groupedByAttribute.forEach((attrName, attrValues) -> {
+                String unit = attrValues.get(0).getAttribute().getUnit();
 
-                    attributesMap.put(attrName, formattedValue);
-                }
-            }
+                // Collect and join all values for this attribute
+                String combinedValue = attrValues.stream()
+                        .map(ProductAttributeValue::getValue)
+                        .collect(Collectors.joining(", "));
+
+                // Format: "value unit" or just "value" if no unit
+                String formattedValue = unit != null && !unit.isEmpty()
+                        ? combinedValue + " " + unit
+                        : combinedValue;
+
+                attributesMap.put(attrName, formattedValue);
+            });
         }
 
         return ProductDetailDTO.builder()
