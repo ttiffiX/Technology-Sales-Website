@@ -10,6 +10,7 @@ import {
 } from "../../api/CartAPI";
 import {useToast} from "../Toast/Toast";
 import Loading from "../Loading/Loading";
+import {formatPrice, getImage} from "../../utils";
 
 function CartGrid({products, count}) {
     const {triggerToast} = useToast();
@@ -44,16 +45,6 @@ function CartGrid({products, count}) {
         }
     }, [products]);
 
-    const formatPrice = (price) => new Intl.NumberFormat('vi-VN').format(price) + ' đ';
-
-    const getImage = (imageName) => {
-        if (!imageName) return '';
-        try {
-            return require(`../../assets/images/${imageName}`);
-        } catch (error) {
-            return '';
-        }
-    };
 
     const refreshCart = async () => {
         try {

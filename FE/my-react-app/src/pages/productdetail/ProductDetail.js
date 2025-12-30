@@ -6,7 +6,8 @@ import Header from "../../components/header/Header";
 import { getProductDetail } from "../../api/ProductAPI";
 import { addCartItem, fetchCartItems } from "../../api/CartAPI";
 import { useToast } from "../../components/Toast/Toast";
-import {isAuthenticated} from "../../api/AuthAPI";
+import { isAuthenticated } from "../../api/AuthAPI";
+import {formatPrice, getImage} from "../../utils";
 
 function ProductDetail() {
     const { id } = useParams();
@@ -126,16 +127,18 @@ function ProductDetail() {
                 <div className="product-detail-content">
                     {/* Left side - Image */}
                     <div className="product-image-section">
-                        <div className="product-image">
-                            {product.imageUrl ? (
-                                <img src={product.imageUrl} alt={product.title} />
-                            ) : (
-                                <div className="no-image">No Image</div>
-                            )}
-                        </div>
+                            {/*<div className="product-image">*/}
+                            {/*    {product.imageUrl ? (*/}
+                            {/*        <img src={product.imageUrl} alt={product.title} />*/}
+                            {/*    ) : (*/}
+                            {/*        <div className="no-image">No Image</div>*/}
+                            {/*    )}*/}
+                            {/*</div>*/}
+                        <div className="product-image" style={{backgroundImage: `url(${getImage(product.imageUrl)})`}}></div>
                         {product.categoryName && (
                             <div className="category-tag">{product.categoryName}</div>
                         )}
+                        {/*<div className="product-image" style={{backgroundImage: `url(${getImage(product.imageUrl)})`}}></div>*/}
                     </div>
 
                     {/* Right side - Details */}
@@ -144,10 +147,7 @@ function ProductDetail() {
 
                         <div className="product-price-section">
                             <span className="product-price">
-                                {new Intl.NumberFormat('vi-VN', {
-                                    style: 'currency',
-                                    currency: 'VND'
-                                }).format(product.price)}
+                                {formatPrice(product.price)}
                             </span>
                             {product.quantitySold > 0 && (
                                 <span className="sold-count">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getFilterOptions } from '../../api/ProductAPI';
+import { formatPrice } from '../../utils';
 import './FilterSidebar.scss';
 
 function FilterSidebar({ categoryId, onFilterChange }) {
@@ -144,12 +145,6 @@ function FilterSidebar({ categoryId, onFilterChange }) {
         );
     }
 
-    const formatPrice = (price) => {
-        return new Intl.NumberFormat('vi-VN', {
-            style: 'currency',
-            currency: 'VND'
-        }).format(price);
-    };
 
     return (
         <>

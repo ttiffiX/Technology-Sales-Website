@@ -47,9 +47,12 @@
   position: relative;
 
   .product-image {
-    width: 100%;
+    width: 90%;
     aspect-ratio: 1;
-    background: $background-color;
+    //background: $background-color;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
     border: 2px solid $divider-color;
     border-radius: 16px;
     display: flex;

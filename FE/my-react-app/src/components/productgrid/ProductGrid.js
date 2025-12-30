@@ -1,24 +1,11 @@
 import React from 'react';
 import {useNavigate} from 'react-router-dom';
 import './ProductGrid.scss';
-import pic from '../../assets/icon/img.png';
+import {formatPrice, getImage} from '../../utils';
 
 function ProductGrid({products}) {
     const navigate = useNavigate();
 
-    // Format price
-    const formatPrice = (price) => {
-        return new Intl.NumberFormat('vi-VN').format(price) + ' đ';
-    };
-
-    const getImage = (imageName) => {
-        if (!imageName) return '';
-        try {
-            return require(`../../assets/images/${imageName}`);
-        } catch (error) {
-            return '';
-        }
-    };
 
     const handleProductClick = (productId) => {
         navigate(`/product/${productId}`);
@@ -46,8 +33,8 @@ function ProductGrid({products}) {
                     key={product.id}
                     onClick={() => handleProductClick(product.id)}
                 >
-                    {/*<div className="pic" style={{backgroundImage: `url(${getImage(product.imageUrl)})`}}></div>*/}
-                    <div className="pic" style={{backgroundImage: `url(${pic})`}}></div>
+                    <div className="pic" style={{backgroundImage: `url(${getImage(product.imageUrl)})`}}></div>
+                    {/*<div className="pic" style={{backgroundImage: `url(${pic})`}}></div>*/}
                     <div className="category-badge">{product.categoryName}</div>
                     <div className="techName">{product.title}</div>
                     <div className="price">{formatPrice(product.price)}</div>
