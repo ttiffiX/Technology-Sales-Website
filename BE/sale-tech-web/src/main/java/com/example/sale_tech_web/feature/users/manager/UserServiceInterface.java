@@ -11,4 +11,6 @@ public interface UserServiceInterface {
     String createUser(RegisterRequest registerRequest);
 
     String changePassword(ChangePassRequest changePassRequest);
+
+    String verifyEmail(String token);
 }

@@ -40,7 +40,7 @@ public class Users {
     private Role role;
 
     private String name;
-    private boolean isActive;
+    private boolean isActive = false;
     private LocalDateTime createdAt;
     private String imageUrl;
 

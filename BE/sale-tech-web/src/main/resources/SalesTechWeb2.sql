@@ -214,6 +214,18 @@ CREATE TABLE cart_detail
     UNIQUE (cart_id, product_id)
 );
 
+drop table email_verification_tokens;
+CREATE TABLE email_verification_tokens
+(
+    id         SERIAL PRIMARY KEY,
+    user_id    INT UNIQUE NOT NULL,
+    token      VARCHAR(255) NOT NULL,
+    expiry_date TIMESTAMP NOT NULL,
+    is_used    BOOLEAN DEFAULT FALSE,
+    -- Khóa ngoại đến User
+    CONSTRAINT fk_evt_user FOREIGN KEY (user_id) REFERENCES users (id)
+);
+
 
 -- DATA
 INSERT INTO categories (name)

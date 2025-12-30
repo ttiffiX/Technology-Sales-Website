@@ -31,7 +31,7 @@ public class WebSecurityConfig  {
                     .cors(cors -> {})
                     .authorizeHttpRequests(auth -> auth
                             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                            .requestMatchers("/auth/register", "/auth/login", "/product", "/product/**").permitAll()
+                            .requestMatchers("/auth/register", "/auth/login", "/auth/verify-email", "/product", "/product/**").permitAll()
                             .requestMatchers("/payment/vnpay/callback", "/payment/vnpay/ipn").permitAll()
                             .anyRequest().authenticated()
                     )

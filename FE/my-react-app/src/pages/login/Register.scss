@@ -3,28 +3,28 @@
 @import "../../styles/_base.scss";
 
 .register_register-container {
-  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
+  
   min-height: calc(100vh - 112px);
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 16px;
+  width: 100%;
+  background-color: $divider-color; // Màu nền của container
+
+  padding: 40px 16px;
   box-sizing: border-box;
-  -webkit-overflow-scrolling: touch;
-  background-color: $divider-color;
+  position: relative;
 
   .register_register-form {
     background-color: $background-color;
     padding: 2rem;
     border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); // Đổ bóng mềm mại hơn
     width: 100%;
     max-width: 400px;
     transition: all 0.3s ease;
-    border: 2px solid $divider-color;
-    margin: 24px 0; // tránh dính mép khi màn hình rất thấp
+    border: 1px solid rgba(0,0,0,0.05); // Border nhẹ nhàng hơn thay vì $divider-color dày
+    z-index: 2;
   }
 
   .register_register-title {
@@ -32,83 +32,90 @@
     font-size: 1.8rem;
     margin-bottom: 1.5rem;
     color: $primary-color;
+    font-weight: 700;
   }
 
   .register_input-group {
     display: flex;
     flex-direction: column;
     margin-bottom: 1.2rem;
-  }
 
-  .register_input-group label {
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: $primary-color;
-  }
+    label {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: $primary-color;
+      font-size: 0.9rem;
+    }
 
-  .register_input-group input {
-    padding: 10px;
-    border: 1px solid #ddd;
+    input {
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 1rem;
+      transition: all 0.2s;
+      width: 100%; // Đảm bảo input chiếm hết chiều ngang group
+      box-sizing: border-box;
 
-    &.error {
-      border-color: #e74c3c;
+      &:focus {
+        outline: none;
+        border-color: $primary-color;
+        box-shadow: 0 0 0 2px rgba($primary-color, 0.1);
+      }
+
+      &.error {
+        border-color: $error-color;
+      }
     }
   }
 
   .error-text {
-    color: #e74c3c;
+    color: $error-color;
     font-size: 12px;
     margin-top: 4px;
   }
 
-  border-radius: 5px;
-  font-size: 1rem;
-  transition: border-color 0.2s;
-  width: 90%;
-}
+  .register_register-error {
+    color: $error-color;
+    background-color: rgba($error-color, 0.1);
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
 
-.register_input-group input:focus {
-  outline: none;
-  border-color: $primary-color;
-}
+  .register_register-button {
+    width: 100%;
+    padding: 14px;
+    background-color: $primary-color;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 0.5rem;
 
-.register_register-error {
-  color: $error-color;
-  font-size: 0.9rem;
-  margin-bottom: 1rem;
-  text-align: center;
-}
+    &:hover {
+      background-color: darken($primary-color, 10%);
+      transform: translateY(-1px);
+    }
 
-.register_register-button {
-  width: 100%;
-  padding: 12px;
-  background-color: $primary-color;
-  border: none;
-  border-radius: 5px;
-  color: white;
-  font-weight: bold;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
+    &:active {
+      transform: translateY(0);
+    }
+  }
 }
-
-.register_register-button:hover {
-  background-color: $secondary-color;
-}
-
-.register_register-button:focus {
-  outline: none;
-}
-
 
 /* Responsive */
 @media (max-width: 768px) {
   .register_register-container {
-    padding: 12px;
+    padding: 20px 12px;
+    min-height: calc(100vh - 80px); // Giả sử mobile header thấp hơn
 
     .register_register-form {
-      padding: 1.25rem;
-      max-width: 420px;
+      padding: 1.5rem;
     }
 
     .register_register-title {
@@ -119,21 +126,12 @@
 
 @media (max-width: 480px) {
   .register_register-container {
-    padding: 12px;
+    align-items: flex-start; // Trên màn hình cực ngắn, cho form bắt đầu từ trên để không bị che
 
     .register_register-form {
-      padding: 1rem;
-      border-radius: 8px;
-    }
-
-    .register_input-group input {
-      font-size: 0.95rem;
-      padding: 10px;
-    }
-
-    .register_register-button {
-      padding: 12px;
-      font-size: 1rem;
+      padding: 1.2rem;
+      box-shadow: none; // Giảm tải cho mobile
+      border: none;
     }
   }
 }

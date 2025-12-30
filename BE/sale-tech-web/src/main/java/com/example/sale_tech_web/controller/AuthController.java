@@ -38,5 +38,12 @@ public class AuthController {
         String response = userServiceInterface.changePassword(changePassRequest);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/verify-email")
+    public ResponseEntity<?> verifyEmail(@RequestParam String token) {
+        log.info("Email verification attempt with token: {}", token);
+        String response = userServiceInterface.verifyEmail(token);
+        return ResponseEntity.ok(response);
+    }
 }
 
