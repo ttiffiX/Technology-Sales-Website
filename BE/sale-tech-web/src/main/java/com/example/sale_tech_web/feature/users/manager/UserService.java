@@ -1,5 +1,7 @@
 package com.example.sale_tech_web.feature.users.manager;
 
+import com.example.sale_tech_web.feature.jwt.SecurityUtils;
+import com.example.sale_tech_web.feature.users.dto.ChangePassRequest;
 import com.example.sale_tech_web.feature.users.dto.LogInRequest;
 import com.example.sale_tech_web.feature.users.dto.RegisterRequest;
 import com.example.sale_tech_web.feature.users.dto.LogInResponse;
@@ -82,5 +84,28 @@ public class UserService implements UserServiceInterface {
 
         cartRepository.save(cart);
         return "Register Successfully";
+    }
+
+    @Override
+    public String changePassword(ChangePassRequest changePassRequest) {
+        Long userId = SecurityUtils.getCurrentUserId();
+
+        if (userId == null) {
+            throw new ResponseStatusException(UNAUTHORIZED, "User is not authenticated");
+        }
+
+        Users users = userRepository.findById(userId).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
+
+        if (!passwordEncoder.matches(changePassRequest.getOldPassword(), users.getPassword())) {
+            throw new ResponseStatusException(CONFLICT, "Old password is incorrect");
+        }
+
+        if (!changePassRequest.getNewPassword().equals(changePassRequest.getConfirmPassword())) {
+            throw new ResponseStatusException(BAD_REQUEST, "New password and confirm new password do not match");
+        }
+
+        users.setPassword(passwordEncoder.encode(changePassRequest.getNewPassword()));
+        userRepository.save(users);
+        return "Password changed successfully";
     }
 }
