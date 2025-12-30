@@ -5,6 +5,7 @@ import {useGetCartItems} from "../../api/CartAPI";
 import {register, isAuthenticated} from "../../api/AuthAPI";
 import {useNavigate} from "react-router-dom";
 import {useToast} from "../../components/Toast/Toast";
+import {isValidEmail, isValidPhone, isValidPassword, passwordsMatch} from "../../utils";
 
 function Register() {
     const {totalQuantity} = useGetCartItems();
@@ -18,7 +19,7 @@ function Register() {
         password: '',
         confirmPassword: ''
     });
-    const [error, setError] = useState('');
+    const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -33,15 +34,59 @@ function Register() {
             ...prev,
             [name]: value
         }));
+        // Clear error for this field
+        if (errors[name]) {
+            setErrors(prev => ({
+                ...prev,
+                [name]: ''
+            }));
+        }
+    };
+
+    const validateForm = () => {
+        const newErrors = {};
+
+        if (!formData.username.trim()) {
+            newErrors.username = 'Username is required';
+        }
+
+        if (!formData.name.trim()) {
+            newErrors.name = 'Full name is required';
+        }
+
+        if (!formData.email.trim()) {
+            newErrors.email = 'Email is required';
+        } else if (!isValidEmail(formData.email)) {
+            newErrors.email = 'Invalid email format';
+        }
+
+        if (!formData.phone.trim()) {
+            newErrors.phone = 'Phone is required';
+        } else if (!isValidPhone(formData.phone)) {
+            newErrors.phone = 'Invalid phone number';
+        }
+
+        if (!formData.password) {
+            newErrors.password = 'Password is required';
+        } else if (!isValidPassword(formData.password)) {
+            newErrors.password = 'Password must be at least 6 characters';
+        }
+
+        if (!formData.confirmPassword) {
+            newErrors.confirmPassword = 'Please confirm your password';
+        } else if (!passwordsMatch(formData.password, formData.confirmPassword)) {
+            newErrors.confirmPassword = 'Passwords do not match';
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
+        setErrors({});
 
-        // Kiểm tra password và confirmPassword có khớp không
-        if (formData.password !== formData.confirmPassword) {
-            setError('Passwords do not match!');
+        if (!validateForm()) {
             return;
         }
 
@@ -51,16 +96,13 @@ function Register() {
             const result = await register(formData);
 
             if (result.success) {
-                // Đăng ký thành công
-                // alert('Registration Successful! Please login.');
                 triggerToast('success', 'Registration Successful! Please login.');
-                navigate('/login'); // Chuyển về trang login
+                navigate('/login');
             } else {
-                // Đăng ký thất bại
-                setError(result.message);
+                setErrors({ general: result.message });
             }
         } catch (err) {
-            setError('An error occurred. Please try again.');
+            setErrors({ general: 'An error occurred. Please try again.' });
         } finally {
             setLoading(false);
         }
@@ -73,7 +115,7 @@ function Register() {
                 <form className="register_register-form" onSubmit={handleSubmit}>
                     <h2 className="register_register-title">Register</h2>
 
-                    {error && <div className="register_register-error">{error}</div>}
+                    {errors.general && <div className="register_register-error">{errors.general}</div>}
 
                     <div className="register_input-group">
                         <label htmlFor="username">Username</label>
@@ -84,8 +126,9 @@ function Register() {
                             value={formData.username}
                             onChange={handleChange}
                             placeholder="Enter your username"
-                            required
+                            className={errors.username ? 'error' : ''}
                         />
+                        {errors.username && <span className="error-text">{errors.username}</span>}
                     </div>
 
                     <div className="register_input-group">
@@ -97,8 +140,9 @@ function Register() {
                             value={formData.name}
                             onChange={handleChange}
                             placeholder="Enter your full name"
-                            required
+                            className={errors.name ? 'error' : ''}
                         />
+                        {errors.name && <span className="error-text">{errors.name}</span>}
                     </div>
 
                     <div className="register_input-group">
@@ -110,8 +154,9 @@ function Register() {
                             value={formData.email}
                             onChange={handleChange}
                             placeholder="Enter your email"
-                            required
+                            className={errors.email ? 'error' : ''}
                         />
+                        {errors.email && <span className="error-text">{errors.email}</span>}
                     </div>
 
                     <div className="register_input-group">
@@ -123,8 +168,9 @@ function Register() {
                             value={formData.phone}
                             onChange={handleChange}
                             placeholder="Enter your phone number"
-                            required
+                            className={errors.phone ? 'error' : ''}
                         />
+                        {errors.phone && <span className="error-text">{errors.phone}</span>}
                     </div>
 
                     <div className="register_input-group">
@@ -135,9 +181,10 @@ function Register() {
                             name="password"
                             value={formData.password}
                             onChange={handleChange}
-                            placeholder="Enter your password"
-                            required
+                            placeholder="Enter your password (min 6 characters)"
+                            className={errors.password ? 'error' : ''}
                         />
+                        {errors.password && <span className="error-text">{errors.password}</span>}
                     </div>
 
                     <div className="register_input-group">
@@ -149,8 +196,9 @@ function Register() {
                             value={formData.confirmPassword}
                             onChange={handleChange}
                             placeholder="Confirm your password"
-                            required
+                            className={errors.confirmPassword ? 'error' : ''}
                         />
+                        {errors.confirmPassword && <span className="error-text">{errors.confirmPassword}</span>}
                     </div>
 
                     <button type="submit" className="register_register-button" disabled={loading}>

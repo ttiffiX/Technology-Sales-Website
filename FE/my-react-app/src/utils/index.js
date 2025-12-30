@@ -23,8 +23,12 @@ export {
 export {
     PHONE_REGEX,
     EMAIL_REGEX,
+    MIN_PASSWORD_LENGTH,
     isValidPhone,
     isValidEmail,
+    isValidPassword,
+    passwordsMatch,
+    isPasswordDifferent,
     formatPhoneNumber,
     sanitizeInput,
     isRequired,

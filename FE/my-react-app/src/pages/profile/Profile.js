@@ -3,9 +3,13 @@ import "./Profile.scss";  // Chúng ta sẽ tạo file SCSS sau
 import avatarIcon from "../../assets/icon/img.png";
 import Nav from "../../components/navigation/Nav";
 import {useGetCartItems} from "../../api/CartAPI";
+import ChangePasswordModal from "../../components/modal/changepass/ChangePasswordModal";
+import {useToast} from "../../components/Toast/Toast";
 
 const Profile = () => {
     const {totalQuantity} = useGetCartItems();
+    const {triggerToast} = useToast();
+
     // Giả sử bạn đã có các dữ liệu người dùng như avatar, tên, v.v. từ API hoặc qua props.
     const [user, setUser] = useState({
         avatar: avatarIcon,
@@ -21,6 +25,7 @@ const Profile = () => {
 
     const [isEditing, setIsEditing] = useState(false);
     const [editedUser, setEditedUser] = useState({...user});
+    const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
 
     const handleEditClick = () => {
         setIsEditing(true);
@@ -35,6 +40,18 @@ const Profile = () => {
     const handleChange = (e) => {
         const {name, value} = e.target;
         setEditedUser({...editedUser, [name]: value});
+    };
+
+    const handleChangePasswordClick = () => {
+        setIsChangePasswordModalOpen(true);
+    };
+
+    const handleCloseChangePasswordModal = () => {
+        setIsChangePasswordModalOpen(false);
+    };
+
+    const handlePasswordChangeSuccess = (message) => {
+        triggerToast('success', message || 'Password changed successfully!');
     };
 
     return (
@@ -151,10 +168,20 @@ const Profile = () => {
                     {!isEditing && (
                         <div className="buttons">
                             <button onClick={handleEditClick}>Edit</button>
+                            <button onClick={handleChangePasswordClick} className="btn-change-password">
+                                Change Password
+                            </button>
                         </div>
                     )}
                 </div>
             </div>
+
+            {/* Change Password Modal */}
+            <ChangePasswordModal
+                isOpen={isChangePasswordModalOpen}
+                onClose={handleCloseChangePasswordModal}
+                onSuccess={handlePasswordChangeSuccess}
+            />
         </div>
     );
 };

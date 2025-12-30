@@ -49,45 +49,57 @@
   .register_input-group input {
     padding: 10px;
     border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 1rem;
-    transition: border-color 0.2s;
-    width: 90%;
+
+    &.error {
+      border-color: #e74c3c;
+    }
   }
 
-  .register_input-group input:focus {
-    outline: none;
-    border-color: $primary-color;
+  .error-text {
+    color: #e74c3c;
+    font-size: 12px;
+    margin-top: 4px;
   }
 
-  .register_register-error {
-    color: $error-color;
-    font-size: 0.9rem;
-    margin-bottom: 1rem;
-    text-align: center;
-  }
-
-  .register_register-button {
-    width: 100%;
-    padding: 12px;
-    background-color: $primary-color;
-    border: none;
-    border-radius: 5px;
-    color: white;
-    font-weight: bold;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-
-  .register_register-button:hover {
-    background-color: $secondary-color;
-  }
-
-  .register_register-button:focus {
-    outline: none;
-  }
+  border-radius: 5px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+  width: 90%;
 }
+
+.register_input-group input:focus {
+  outline: none;
+  border-color: $primary-color;
+}
+
+.register_register-error {
+  color: $error-color;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.register_register-button {
+  width: 100%;
+  padding: 12px;
+  background-color: $primary-color;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.register_register-button:hover {
+  background-color: $secondary-color;
+}
+
+.register_register-button:focus {
+  outline: none;
+}
+
 
 /* Responsive */
 @media (max-width: 768px) {

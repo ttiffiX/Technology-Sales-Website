@@ -60,6 +60,27 @@ export const logout = () => {
     localStorage.removeItem('imageUrl');
 };
 
+// Hàm đổi mật khẩu
+export const changePassword = async (oldPassword, newPassword, confirmPassword) => {
+    try {
+        const response = await apiClient.patch('/auth/change-password', {
+            oldPassword,
+            newPassword,
+            confirmPassword,
+        });
+
+        return {
+            success: true,
+            message: response.data || 'Password changed successfully',
+        };
+    } catch (error) {
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to change password. Please try again.',
+        };
+    }
+};
+
 // Kiểm tra xem user đã đăng nhập chưa
 export const isAuthenticated = () => {
     return !!localStorage.getItem('token');
