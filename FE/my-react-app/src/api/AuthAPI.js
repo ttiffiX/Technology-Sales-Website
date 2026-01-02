@@ -47,7 +47,26 @@ export const register = async (userData) => {
     } catch (error) {
         return {
             success: false,
-            message: error.response?.data.message || 'Registration failed. Please try again.',
+            message: error.response?.data || 'Registration failed. Please try again.',
+        };
+    }
+};
+
+// Hàm xác minh email
+export const verifyEmail = async (token) => {
+    try {
+        const response = await apiClient.get('/auth/verify-email', {
+            params: { token }
+        });
+
+        return {
+            success: true,
+            message: response.data,
+        };
+    } catch (error) {
+        return {
+            success: false,
+            message: error.response?.data.message || 'Email verification failed. Token may be invalid or expired.',
         };
     }
 };

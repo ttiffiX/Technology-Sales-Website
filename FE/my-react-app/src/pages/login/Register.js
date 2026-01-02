@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useState} from "react";
 import Nav from "../../components/navigation/Nav";
 import './Register.scss';
 import {useGetCartItems} from "../../api/CartAPI";
@@ -29,7 +29,7 @@ function Register() {
     }, [navigate]);
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
+        const {name, value} = e.target;
         setFormData(prev => ({
             ...prev,
             [name]: value
@@ -69,7 +69,7 @@ function Register() {
         if (!formData.password) {
             newErrors.password = 'Password is required';
         } else if (!isValidPassword(formData.password)) {
-            newErrors.password = 'Password must be at least 6 characters';
+            newErrors.password = 'Password must be at least 8 characters';
         }
 
         if (!formData.confirmPassword) {
@@ -96,13 +96,23 @@ function Register() {
             const result = await register(formData);
 
             if (result.success) {
-                triggerToast('success', 'Registration Successful! Please login.');
-                navigate('/login');
+                triggerToast('success', 'Registration Successful! Please check your email to verify your account.');
+                // Navigate to waiting verification page with email
+                navigate('/waiting-verification', {
+                    state: { email: formData.email }
+                });
             } else {
-                setErrors({ general: result.message });
+                setErrors({general: result.message.message});
+                if (result.message.errors) {
+                    setErrors(prev => ({
+                        ...prev,
+                        ...result.message.errors
+                    }));
+                }
+
             }
         } catch (err) {
-            setErrors({ general: 'An error occurred. Please try again.' });
+            setErrors({general: 'An error occurred. Please try again.'});
         } finally {
             setLoading(false);
         }
@@ -110,7 +120,7 @@ function Register() {
 
     return (
         <>
-            <Nav count={totalQuantity} />
+            <Nav count={totalQuantity}/>
             <div className="register_register-container">
                 <form className="register_register-form" onSubmit={handleSubmit}>
                     <h2 className="register_register-title">Register</h2>
@@ -181,7 +191,7 @@ function Register() {
                             name="password"
                             value={formData.password}
                             onChange={handleChange}
-                            placeholder="Enter your password (min 6 characters)"
+                            placeholder="Enter your password"
                             className={errors.password ? 'error' : ''}
                         />
                         {errors.password && <span className="error-text">{errors.password}</span>}

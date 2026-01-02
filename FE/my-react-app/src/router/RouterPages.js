@@ -12,6 +12,8 @@ import ProductDetail from "../pages/productdetail/ProductDetail";
 import OrderHistory from "../pages/orderhistory/OrderHistory";
 import ProtectedRoute from "./ProtectedRoute";
 import PaymentResult from "../pages/paymentresult/PaymentResult";
+import VerifyEmail from "../pages/verifyemail/VerifyEmail";
+import WaitingVerification from "../pages/verifyemail/WaitingVerification";
 
 
 function RouterPages() {
@@ -24,6 +26,8 @@ function RouterPages() {
                 <Route path="/" element={<Home/>}/>
                 <Route path="/login" element={<Login/>}/>
                 <Route path="/register" element={<Register/>}/>
+                <Route path="/verify-email" element={<VerifyEmail/>}/>
+                <Route path="/waiting-verification" element={<WaitingVerification/>}/>
                 <Route path="/aboutme" element={<AboutMe/>}/>
                 <Route path="/product/:id" element={<ProductDetail/>}/>
 
