@@ -21,6 +21,7 @@ import com.example.sale_tech_web.feature.payment.manager.PaymentServiceInterface
 import com.example.sale_tech_web.feature.payment.repository.PaymentRepository;
 import com.example.sale_tech_web.feature.payment.service.VNPayService;
 import com.example.sale_tech_web.feature.product.entity.Product;
+import com.example.sale_tech_web.feature.product.repository.ProductRepository;
 import com.example.sale_tech_web.feature.users.entity.Users;
 import com.example.sale_tech_web.feature.users.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -43,6 +44,7 @@ public class OrderService implements OrderServiceInterface {
     private final VNPayService vnPayService;
     private final PaymentServiceInterface paymentServiceInterface;
     private final PaymentRepository paymentRepository;
+    private final ProductRepository productRepository;
 
     @Override
     public List<OrderDTO> getOrderByUserId(String status) {
@@ -130,18 +132,10 @@ public class OrderService implements OrderServiceInterface {
 
         int tempTotalPrice = 0;
         List<OrderDetail> orderDetails = new ArrayList<>();
+        List<Product> productsToUpdate = new ArrayList<>();
 
         for (CartDetail cartDetail : cartDetails) {
-            Product product = cartDetail.getProduct();
-
-            if (!product.getIsActive()) {
-                throw new ResponseStatusException(CONFLICT, "Product is no longer available");
-            }
-
-            if (product.getQuantity() == null || product.getQuantity() < cartDetail.getQuantity()) {
-                throw new ResponseStatusException(CONFLICT, "Insufficient stock. Available quantity: " +
-                        (product.getQuantity() != null ? product.getQuantity() : 0));
-            }
+            Product product = getProduct(cartDetail);
 
             OrderDetail orderDetail = OrderDetail.builder()
                     .order(order)
@@ -153,10 +147,12 @@ public class OrderService implements OrderServiceInterface {
                     .build();
 
             orderDetails.add(orderDetail);
+            productsToUpdate.add(product);
             tempTotalPrice += cartDetail.getProduct().getPrice() * cartDetail.getQuantity();
         }
         order.setOrderDetails(orderDetails);
         order.setTotalPrice(tempTotalPrice + order.getDeliveryFee());
+        productRepository.saveAll(productsToUpdate);
         Order savedOrder = orderRepository.save(order);
 
         // Check payment method
@@ -260,6 +256,16 @@ public class OrderService implements OrderServiceInterface {
             refundMessage = " and pending payment has been cancelled";
         }
 
+        //revert product quantities
+        List<Product> productsToUpdate = new ArrayList<>();
+        for (OrderDetail orderDetail : order.getOrderDetails()) {
+            Product product = orderDetail.getProduct();
+            product.setQuantity(product.getQuantity() + orderDetail.getQuantity());
+            product.setQuantitySold(product.getQuantitySold() - orderDetail.getQuantity());
+            productsToUpdate.add(product);
+        }
+        productRepository.saveAll(productsToUpdate);
+
         // Cancel the order
         order.setStatus(OrderStatus.CANCELLED);
         order.setUpdatedAt(LocalDateTime.now());
@@ -276,6 +282,23 @@ public class OrderService implements OrderServiceInterface {
             throw new ResponseStatusException(UNAUTHORIZED, "User not authenticated");
         }
         return userId;
+    }
+
+    private static Product getProduct(CartDetail cartDetail) {
+        Product product = cartDetail.getProduct();
+
+        if (!product.getIsActive()) {
+            throw new ResponseStatusException(CONFLICT, "Product is no longer available");
+        }
+
+        if (product.getQuantity() == null || product.getQuantity() < cartDetail.getQuantity()) {
+            throw new ResponseStatusException(CONFLICT, "Insufficient stock. Available quantity: " +
+                    (product.getQuantity() != null ? product.getQuantity() : 0));
+        }
+
+        product.setQuantity(product.getQuantity() - cartDetail.getQuantity());
+        product.setQuantitySold(product.getQuantitySold() + cartDetail.getQuantity());
+        return product;
     }
 
     private OrderDTO convertToDTO(Order order, String paymentStatus) {

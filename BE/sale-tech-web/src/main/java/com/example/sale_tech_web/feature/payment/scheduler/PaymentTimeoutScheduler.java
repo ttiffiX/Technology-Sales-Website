@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Scheduled job to automatically cancel expired PENDING payments
+ * Scheduled job to automatically cancel expired PENDING payments and restore inventory
  * Runs every 5 minutes (configurable via PaymentConfig.PAYMENT_CLEANUP_CRON)
  */
 @Component
@@ -27,14 +27,14 @@ public class PaymentTimeoutScheduler {
     private final PaymentProcessingService paymentProcessingService;
 
     /**
-     * Automatically cancel expired PENDING payments
+     * Automatically cancel expired PENDING payments and restore product inventory
      * Scheduled to run based on PaymentConfig.PAYMENT_CLEANUP_CRON
      */
     @Scheduled(cron = PaymentConfig.PAYMENT_CLEANUP_CRON)
     @Transactional
     public void cancelExpiredPayments() {
         log.info("----------------------------------------------------------------");
-        log.info("Starting scheduled job: cancelExpiredPayments");
+        log.info("Starting scheduled job: cancelExpiredPayments (with inventory restoration)");
 
         try {
             List<Payment> expiredPayments = paymentRepository.findExpiredPendingPayments(
@@ -58,7 +58,7 @@ public class PaymentTimeoutScheduler {
                     Long orderId = payment.getOrder().getId();
                     paymentProcessingService.processFailedPayment(orderId, null);
                     successCount++;
-                    log.info("Auto-cancelled expired payment for order {}, expiresAt: {}",
+                    log.info("Auto-cancelled expired payment for order {}, inventory restored, expiresAt: {}",
                             orderId, payment.getExpiresAt());
                 } catch (Exception e) {
                     failCount++;

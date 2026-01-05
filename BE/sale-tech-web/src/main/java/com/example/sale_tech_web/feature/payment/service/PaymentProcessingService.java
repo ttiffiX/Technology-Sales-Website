@@ -1,12 +1,15 @@
 package com.example.sale_tech_web.feature.payment.service;
 
 import com.example.sale_tech_web.feature.cart.repository.CartDetailRepository;
+import com.example.sale_tech_web.feature.order.entity.orderdetails.OrderDetail;
 import com.example.sale_tech_web.feature.order.entity.orders.Order;
 import com.example.sale_tech_web.feature.order.enums.OrderStatus;
 import com.example.sale_tech_web.feature.order.repository.OrderRepository;
 import com.example.sale_tech_web.feature.payment.entity.Payment;
 import com.example.sale_tech_web.feature.payment.enums.PaymentStatus;
 import com.example.sale_tech_web.feature.payment.repository.PaymentRepository;
+import com.example.sale_tech_web.feature.product.entity.Product;
+import com.example.sale_tech_web.feature.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.springframework.http.HttpStatus.*;
 
@@ -25,6 +30,7 @@ public class PaymentProcessingService {
     private final OrderRepository orderRepository;
     private final CartDetailRepository cartDetailRepository;
     private final PaymentRepository paymentRepository;
+    private final ProductRepository productRepository;
 
     @Transactional
     public void processSuccessfulPayment(Long orderId, Long receivedAmount, String transactionId) {
@@ -73,6 +79,17 @@ public class PaymentProcessingService {
         // Find existing Payment (created in placeOrder)
         Payment payment = paymentRepository.findByOrderId(orderId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Payment not found for order: " + orderId));
+
+        // Restore inventory for each product (since payment failed)
+        List<Product> productsToUpdate = new ArrayList<>();
+        for (OrderDetail orderDetail : order.getOrderDetails()) {
+            Product product = orderDetail.getProduct();
+            product.setQuantity(product.getQuantity() + orderDetail.getQuantity());
+            product.setQuantitySold(product.getQuantitySold() - orderDetail.getQuantity());
+            productsToUpdate.add(product);
+        }
+        productRepository.saveAll(productsToUpdate);
+
 
         // Check if already processed
         if (payment.getStatus() == PaymentStatus.FAILED || payment.getStatus() == PaymentStatus.PAID) {
