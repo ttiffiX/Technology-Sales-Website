@@ -1,13 +1,13 @@
 import React from "react";
 import './AboutMe.scss'
 import Nav from "../../components/navigation/Nav";
-import {getTotalQuantity} from "../../api/CartAPI";
+import {useCart} from "../../contexts/CartContext";
 
 function AboutMe() {
-    const {totalQuantity} = getTotalQuantity();
+    const {cartCount} = useCart();
     return (
         <>
-            <Nav count={totalQuantity}/>
+            <Nav count={cartCount}/>
             <div className="AboutMe_title">Hello, i'm Sang</div>
         </>
 

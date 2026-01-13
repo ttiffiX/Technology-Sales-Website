@@ -2,12 +2,12 @@ import React, {useEffect, useState} from "react";
 import Nav from "../../components/navigation/Nav";
 import './Login.scss'
 import {Link, useNavigate} from "react-router-dom";
-import {getTotalQuantity} from "../../api/CartAPI";
+import {useCart} from "../../contexts/CartContext";
 import {login, isAuthenticated} from "../../api/AuthAPI";
 import {useToast} from "../../components/Toast/Toast";
 
 function Login() {
-    const {totalQuantity} = getTotalQuantity();
+    const {cartCount} = useCart();
     const navigate = useNavigate();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -47,7 +47,7 @@ function Login() {
 
     return (
         <>
-            <Nav count={totalQuantity}/>
+            <Nav count={cartCount}/>
             <div className="login_login-container">
                 <form className="login_login-form" onSubmit={handleSubmit}>
                     <h2 className="login_login-title">Login</h2>

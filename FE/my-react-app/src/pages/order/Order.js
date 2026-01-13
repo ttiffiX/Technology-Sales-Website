@@ -7,6 +7,7 @@ import {useToast} from "../../components/Toast/Toast";
 import {usePlaceOrder} from "../../api/OrderAPI";
 import {useNavigate} from "react-router-dom";
 import {formatPrice, getImage, isValidPhone, PROVINCES} from "../../utils";
+import {useCart} from "../../contexts/CartContext";
 
 const Order = () => {
     const {triggerToast} = useToast();
@@ -14,6 +15,12 @@ const Order = () => {
     const {placeOrder, loading} = usePlaceOrder();
     const [showConfirmPopup, setShowConfirmPopup] = useState(false);
     const navigate = useNavigate();
+    const {cartCount, updateCartCount} = useCart();
+
+    // Update context cart count when cart items change
+    useEffect(() => {
+        updateCartCount(totalQuantity);
+    }, [totalQuantity, updateCartCount]);
 
     // Form data matching BE PlaceOrderRequest
     const [formData, setFormData] = useState({
@@ -128,7 +135,7 @@ const Order = () => {
                 </div>
             )}
 
-            <Nav count={totalQuantity}/>
+            <Nav count={cartCount}/>
             <Header title="Place Order" modeDisplay="order"/>
 
             {selectedCartItems.length > 0 ? (

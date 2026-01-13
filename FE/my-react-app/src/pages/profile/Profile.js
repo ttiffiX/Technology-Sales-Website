@@ -2,12 +2,12 @@ import React, {useState} from "react";
 import "./Profile.scss";  // Chúng ta sẽ tạo file SCSS sau
 import avatarIcon from "../../assets/icon/img.png";
 import Nav from "../../components/navigation/Nav";
-import {getTotalQuantity} from "../../api/CartAPI";
+import {useCart} from "../../contexts/CartContext";
 import ChangePasswordModal from "../../components/modal/changepass/ChangePasswordModal";
 import {useToast} from "../../components/Toast/Toast";
 
 const Profile = () => {
-    const {totalQuantity} = getTotalQuantity();
+    const {cartCount} = useCart();
     const {triggerToast} = useToast();
 
     // Giả sử bạn đã có các dữ liệu người dùng như avatar, tên, v.v. từ API hoặc qua props.
@@ -56,7 +56,7 @@ const Profile = () => {
 
     return (
         <div>
-            <Nav count={totalQuantity}/>
+            <Nav count={cartCount}/>
             <div className="profile-container">
                 <div className="profile-left">
                     <div className="avatar">

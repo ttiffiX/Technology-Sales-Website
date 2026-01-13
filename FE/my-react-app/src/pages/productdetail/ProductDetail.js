@@ -4,35 +4,22 @@ import './ProductDetail.scss';
 import Nav from "../../components/navigation/Nav";
 import Header from "../../components/header/Header";
 import { getProductDetail } from "../../api/ProductAPI";
-import { addCartItem, getTotalQuantity } from "../../api/CartAPI";
+import { addCartItem } from "../../api/CartAPI";
 import { useToast } from "../../components/Toast/Toast";
 import { isAuthenticated } from "../../api/AuthAPI";
 import {formatPrice, getImage} from "../../utils";
+import {useCart} from "../../contexts/CartContext";
 
 function ProductDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
     const { triggerToast } = useToast();
+    const { cartCount, incrementCartCount, refreshCartCount } = useCart();
 
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [count, setCount] = useState(0);
     const [addingToCart, setAddingToCart] = useState(false);
-
-    // Load cart count on mount
-    useEffect(() => {
-        const loadCart = async () => {
-            try {
-                const totalQuantity = await getTotalQuantity();
-                setCount(totalQuantity);
-            } catch (err) {
-                // Ignore error if user not logged in
-                console.log('Cart not loaded:', err);
-            }
-        };
-        loadCart();
-    }, []);
 
     // Fetch product details
     useEffect(() => {
@@ -67,12 +54,17 @@ function ProductDetail() {
             const response = await addCartItem(product.id);
             triggerToast('success', response || 'Added to cart successfully');
 
-            // Refresh cart count
-            const totalQuantity = await getTotalQuantity();
-            setCount(totalQuantity);
+            // Optimistic update: increment cart count immediately
+            incrementCartCount();
+
+            // Refresh cart count in background to ensure sync
+            refreshCartCount();
         } catch (err) {
             console.error('Error adding to cart:', err);
             triggerToast('error', err || 'Failed to add to cart');
+
+            // If error, refresh to get correct count
+            refreshCartCount();
         } finally {
             setAddingToCart(false);
         }
@@ -85,7 +77,7 @@ function ProductDetail() {
     if (loading) {
         return (
             <div className="MyApp">
-                <Nav count={count} />
+                <Nav count={cartCount} />
                 <Header title="Product Detail" modeDisplay="normal" />
                 <div className="product-detail-container">
                     <div className="loading">Loading product detail...</div>
@@ -97,7 +89,7 @@ function ProductDetail() {
     if (error || !product) {
         return (
             <div className="MyApp">
-                <Nav count={count} />
+                <Nav count={cartCount} />
                 <Header title="Product Detail" modeDisplay="normal" />
                 <div className="product-detail-container">
                     <div className="error">{error || 'Product not found'}</div>
@@ -109,7 +101,7 @@ function ProductDetail() {
 
     return (
         <div className="MyApp">
-            <Nav count={count} />
+            <Nav count={cartCount} />
             <Header title="Product Detail" modeDisplay="normal" />
 
             <div className="product-detail-container">

@@ -8,13 +8,12 @@ import Nav from "../../components/navigation/Nav";
 import Header from "../../components/header/Header";
 import FilterSidebar from "../../components/filtersidebar/FilterSidebar";
 import useFetchProducts, { filterProducts, searchProducts, getAllCategories } from "../../api/ProductAPI";
-import {getTotalQuantity} from "../../api/CartAPI";
+import {useCart} from "../../contexts/CartContext";
 
 function Home() {
     const [searchParams, setSearchParams] = useSearchParams();
     const {products: allProducts, loading: initialLoading, error: initialError} = useFetchProducts();
-    const [count, setCount] = useState(0);
-    const {totalQuantity} = getTotalQuantity();
+    const {cartCount} = useCart();
 
     // State for filtering
     const [selectedCategoryId, setSelectedCategoryId] = useState(null);
@@ -26,9 +25,6 @@ function Home() {
     const [searchKeyword, setSearchKeyword] = useState('');
     const [currentFilters, setCurrentFilters] = useState({});
 
-    useEffect(() => {
-        setCount(totalQuantity);
-    }, [totalQuantity]);
 
     // Load all products initially
     useEffect(() => {
@@ -225,7 +221,7 @@ function Home() {
 
     return (
         <div className={"MyApp"}>
-            <Nav count={count}/>
+            <Nav count={cartCount}/>
 
             <Header
                 title="Product"

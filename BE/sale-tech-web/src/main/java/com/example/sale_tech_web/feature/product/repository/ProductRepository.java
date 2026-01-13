@@ -1,6 +1,7 @@
 package com.example.sale_tech_web.feature.product.repository;
 
 import com.example.sale_tech_web.feature.product.entity.Product;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,6 +16,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByCategoryIdAndIsActiveTrue(Long categoryId);
 
     // Find all active products
+    @EntityGraph(attributePaths = {
+            "category"
+    })
     List<Product> findByIsActiveTrue();
 
     // Search products by title

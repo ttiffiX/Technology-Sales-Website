@@ -1,27 +1,29 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect} from "react";
 import Nav from "../../components/navigation/Nav";
 import Header from "../../components/header/Header";
 import CartGrid from "../../components/cartgrid/CartGrid";
 import {useGetCartItems} from "../../api/CartAPI";
+import {useCart} from "../../contexts/CartContext";
 
 function Cart(){
-    const { cartItems,totalQuantity, loading, error } = useGetCartItems();
-    const [count, setCount] = useState(0);
+    const { cartItems, totalQuantity, loading, error } = useGetCartItems();
+    const { cartCount, updateCartCount } = useCart();
 
+    // Update context cart count when cart items change
     useEffect(() => {
-        setCount(totalQuantity);
-    }, [totalQuantity]);
+        updateCartCount(totalQuantity);
+    }, [totalQuantity, updateCartCount]);
 
     if (loading) return <p>Loading...</p>;
     if (error) return <p>{error}</p>;
     return(
         <>
-            <Nav count={count}/>
+            <Nav count={cartCount}/>
             <Header
                 title="Cart"
                 modeDisplay={"cart"}
             />
-            <CartGrid products={cartItems} count={setCount}/>
+            <CartGrid products={cartItems} count={updateCartCount}/>
         </>
     )
 }

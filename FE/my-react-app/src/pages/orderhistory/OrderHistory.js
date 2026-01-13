@@ -6,7 +6,7 @@ import {useGetOrders, useCancelOrder} from "../../api/OrderAPI";
 import {useToast} from "../../components/Toast/Toast";
 import OrderDetailModal from "./OrderDetailModal";
 import {formatDate, formatPrice, getStatusColor, getPaymentStatusColor} from "../../utils";
-import {getTotalQuantity} from "../../api/CartAPI";
+import {useCart} from "../../contexts/CartContext";
 
 const OrderHistory = () => {
     const [statusFilter, setStatusFilter] = useState(null);
@@ -18,7 +18,7 @@ const OrderHistory = () => {
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [showCancelConfirm, setShowCancelConfirm] = useState(false);
     const [orderToCancel, setOrderToCancel] = useState(null);
-    const {totalQuantity} = getTotalQuantity();
+    const {cartCount} = useCart();
 
 
     const handleViewDetails = (orderId) => {
@@ -73,7 +73,7 @@ const OrderHistory = () => {
 
     return (
         <>
-            <Nav count={totalQuantity}/>
+            <Nav count={cartCount}/>
             <Header title="Order History" modeDisplay="orderhistory"/>
 
             <div className="orderHistory">

@@ -60,6 +60,30 @@ export const getTotalQuantity = async () => {
     }
 };
 
+// Hook to get total quantity only (for Nav count)
+export const useCartTotalQuantity = () => {
+    const [totalQuantity, setTotalQuantity] = useState(0);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchCount = async () => {
+            try {
+                const count = await getTotalQuantity();
+                setTotalQuantity(count);
+            } catch (err) {
+                // Ignore error if user not logged in
+                console.log('Cart count not loaded:', err);
+                setTotalQuantity(0);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchCount();
+    }, []);
+
+    return { totalQuantity, loading };
+};
+
 // Update cart item quantity (delta change)
 export const updateCartQuantity = async (productId, delta) => {
     try {

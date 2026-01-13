@@ -1,14 +1,14 @@
 import React, {useEffect, useState} from "react";
 import Nav from "../../components/navigation/Nav";
 import './Register.scss';
-import {getTotalQuantity} from "../../api/CartAPI";
+import {useCart} from "../../contexts/CartContext";
 import {register, isAuthenticated} from "../../api/AuthAPI";
 import {useNavigate} from "react-router-dom";
 import {useToast} from "../../components/Toast/Toast";
 import {isValidEmail, isValidPhone, isValidPassword, passwordsMatch} from "../../utils";
 
 function Register() {
-    const {totalQuantity} = getTotalQuantity();
+    const {cartCount} = useCart();
     const navigate = useNavigate();
     const {triggerToast} = useToast();
     const [formData, setFormData] = useState({
@@ -120,7 +120,7 @@ function Register() {
 
     return (
         <>
-            <Nav count={totalQuantity}/>
+            <Nav count={cartCount}/>
             <div className="register_register-container">
                 <form className="register_register-form" onSubmit={handleSubmit}>
                     <h2 className="register_register-title">Register</h2>
