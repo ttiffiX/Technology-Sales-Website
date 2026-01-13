@@ -2,14 +2,12 @@ import React, {useEffect, useState, useCallback, useRef} from 'react';
 import './CartGrid.scss';
 import {useNavigate} from "react-router-dom";
 import {
-    fetchCartItems,
     removeCartItem,
     updateCartQuantity,
     toggleProductSelection,
     toggleAllProducts
 } from "../../api/CartAPI";
 import {useToast} from "../Toast/Toast";
-import Loading from "../Loading/Loading";
 import {formatPrice, getImage} from "../../utils";
 
 function CartGrid({products, count}) {
@@ -22,7 +20,6 @@ function CartGrid({products, count}) {
     const [selectAll, setSelectAll] = useState(false);
     const [inputValues, setInputValues] = useState({});
     const [updatingProducts, setUpdatingProducts] = useState(new Set());
-    const [isLoading, setIsLoading] = useState(false);
 
     const updateTimers = useRef({});
     const clickTimers = useRef({});
@@ -45,41 +42,38 @@ function CartGrid({products, count}) {
         }
     }, [products]);
 
+    // Update cart state from API response
+    const updateCartFromResponse = useCallback((cartData) => {
+        const {cartDetailDTO, totalQuantity} = cartData;
+        setLocalProducts(cartDetailDTO);
+        count(totalQuantity);
 
-    const refreshCart = async () => {
-        try {
-            setIsLoading(true);
-            const {cartDetailDTO, totalQuantity} = await fetchCartItems();
-            setLocalProducts(cartDetailDTO);
-            count(totalQuantity);
-
-            if (cartDetailDTO.length > 0) {
-                setSelectAll(cartDetailDTO.every(p => p.selected));
-                const newValues = {};
-                cartDetailDTO.forEach(p => {
-                    newValues[p.cartDetailId] = p.quantity;
-                });
-                setInputValues(newValues);
-            } else {
-                setSelectAll(false);
-                setInputValues({});
-            }
-        } catch (err) {
-            console.error(err.response?.data || 'Failed to refresh cart');
-        } finally {
-            setIsLoading(false);
+        if (cartDetailDTO.length > 0) {
+            setSelectAll(cartDetailDTO.every(p => p.selected));
+            const newValues = {};
+            cartDetailDTO.forEach(p => {
+                newValues[p.cartDetailId] = p.quantity;
+            });
+            setInputValues(newValues);
+        } else {
+            setSelectAll(false);
+            setInputValues({});
         }
-    };
+    }, [count]);
 
     const handleQuantitySubmit = useCallback(async (productId, newQuantity, cartDetailId) => {
         setUpdatingProducts(prev => new Set(prev).add(cartDetailId));
         try {
-            await updateCartQuantity(productId, newQuantity);
-            await refreshCart();
+            const cartData = await updateCartQuantity(productId, newQuantity);
+            updateCartFromResponse(cartData);
             triggerToast('success', 'Quantity updated');
         } catch (err) {
             triggerToast('error', err);
-            await refreshCart(); // Refresh to restore correct state
+            // Revert to original value from products prop
+            const originalProduct = products.find(p => p.cartDetailId === cartDetailId);
+            if (originalProduct) {
+                setInputValues(prev => ({...prev, [cartDetailId]: originalProduct.quantity}));
+            }
         } finally {
             setUpdatingProducts(prev => {
                 const next = new Set(prev);
@@ -87,7 +81,7 @@ function CartGrid({products, count}) {
                 return next;
             });
         }
-    }, []);
+    }, [updateCartFromResponse, triggerToast, products]);
 
     const handleQuantityChange = (cartDetail, check) => {
         const cartDetailId = cartDetail.cartDetailId;
@@ -170,8 +164,8 @@ function CartGrid({products, count}) {
 
     const handleConfirmRemove = async () => {
         try {
-            await removeCartItem(productToDelete.productList.id);
-            await refreshCart();
+            const cartData = await removeCartItem(productToDelete.productList.id);
+            updateCartFromResponse(cartData);
             triggerToast('success', 'Item removed');
         } catch (err) {
             triggerToast('error', err);
@@ -183,8 +177,8 @@ function CartGrid({products, count}) {
 
     const handleDelete = async (productId) => {
         try {
-            await removeCartItem(productId);
-            await refreshCart();
+            const cartData = await removeCartItem(productId);
+            updateCartFromResponse(cartData);
             triggerToast('success', 'Item deleted');
         } catch (err) {
             triggerToast('error', err);
@@ -193,8 +187,8 @@ function CartGrid({products, count}) {
 
     const handleToggleSelect = async (cartDetail) => {
         try {
-            await toggleProductSelection(cartDetail.productList.id);
-            await refreshCart();
+            const cartData = await toggleProductSelection(cartDetail.productList.id);
+            updateCartFromResponse(cartData);
         } catch (err) {
             triggerToast('error', err);
         }
@@ -203,8 +197,8 @@ function CartGrid({products, count}) {
     const handleToggleAll = async () => {
         try {
             const next = !selectAll;
-            await toggleAllProducts(next);
-            await refreshCart();
+            const cartData = await toggleAllProducts(next);
+            updateCartFromResponse(cartData);
         } catch (err) {
             triggerToast('error', err);
         }
@@ -227,7 +221,6 @@ function CartGrid({products, count}) {
 
     return (
         <>
-            <Loading isLoading={isLoading}/>
 
             {localProducts.length === 0 && (
                 <div className="empty-cart-message">

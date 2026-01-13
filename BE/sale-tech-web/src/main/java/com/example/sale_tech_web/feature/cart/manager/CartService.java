@@ -39,7 +39,7 @@ public class CartService implements CartServiceInterface {
 
         // 2. Lấy Cart với tất cả relationships trong 1 query (JOIN FETCH)
         // Không cần query User riêng, không cần query CartDetails riêng, không cần query Products riêng
-        Cart cart = cartRepository.findByUserIdWithDetails(userId)
+        Cart cart = cartRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Cart not found"));
 
         // 3. Lấy CartDetails từ relationship (đã được load bởi JOIN FETCH)
@@ -116,7 +116,7 @@ public class CartService implements CartServiceInterface {
         }
 
         //Get or create cart for user
-        Cart cart = cartRepository.findByUserIdWithDetails(userId)
+        Cart cart = cartRepository.findWithCartDetailListByUserId(userId)
                 .orElseGet(() -> {
                     Users user = userRepository.findById(userId)
                             .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
@@ -166,21 +166,21 @@ public class CartService implements CartServiceInterface {
         }
 
         if (quantity > CartConfig.MAX_QUANTITY_PER_ITEM) {
-            throw new ResponseStatusException(BAD_REQUEST, "Maximum quantity per product is 10");
+            throw new ResponseStatusException(BAD_REQUEST, "Maximum quantity per product is " + CartConfig.MAX_QUANTITY_PER_ITEM);
         }
 
         // 2. Get current user from JWT
         Long userId = getUserIdFromToken();
 
         // 3. Get user's cart
-        Cart cart = getUserCart(userId);
+        Cart cart = cartRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Cart not found"));
 
         // 4. Find cart detail for this product
-        CartDetail cartDetail = getCartDetail(cart.getId(), productId);
+        CartDetail cartDetail = getCartDetail(cart, productId);
 
         // 5. Check product availability and stock
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Product not found"));
+        Product product = cartDetail.getProduct();
 
         // Check if product is active
         if (product.getIsActive() != null && !product.getIsActive()) {
@@ -195,7 +195,6 @@ public class CartService implements CartServiceInterface {
 
         // 6. Update quantity
         cartDetail.setQuantity(quantity);
-        cartDetailRepository.save(cartDetail);
 
         // 7. Update cart timestamp
         cart.setUpdatedAt(LocalDateTime.now());
@@ -215,11 +214,12 @@ public class CartService implements CartServiceInterface {
         Cart cart = getUserCart(userId);
 
         // 3. Find cart detail for this product
-        CartDetail cartDetail = getCartDetail(cart.getId(), productId);
+        CartDetail cartDetail = getCartDetail(cart, productId);
 
         // 4. Remove product from cart
         // Note: We keep the cart even if it becomes empty (better UX)
         // The cart will be reused when user adds new products
+        cart.getCartDetailList().remove(cartDetail);
         cartDetailRepository.delete(cartDetail);
 
         // 5. Update cart timestamp
@@ -240,7 +240,7 @@ public class CartService implements CartServiceInterface {
         Cart cart = getUserCart(userId);
 
         // 3. Find cart detail for this product
-        CartDetail cartDetail = getCartDetail(cart.getId(), productId);
+        CartDetail cartDetail = getCartDetail(cart, productId);
 
         // 4. Toggle selection status
         Boolean currentStatus = cartDetail.getIsSelected();
@@ -263,7 +263,7 @@ public class CartService implements CartServiceInterface {
         Cart cart = getUserCart(userId);
 
         // 3. Get all cart details
-        List<CartDetail> cartDetails = cartDetailRepository.findByCartId(cart.getId());
+        List<CartDetail> cartDetails = cart.getCartDetailList();
 
         // 4. Update all cart details
         cartDetails.forEach(cartDetail -> cartDetail.setIsSelected(selectAll));
@@ -286,14 +286,15 @@ public class CartService implements CartServiceInterface {
     }
 
     private Cart getUserCart(Long userId) {
-        return cartRepository.findByUserId(userId)
+        return cartRepository.findWithCartDetailListByUserId(userId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Cart not found"));
     }
 
-    private CartDetail getCartDetail(Long cartId, Long productId) {
-        return cartDetailRepository
-                .findByCartIdAndProductId(cartId, productId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Product not found in cart"));
+    private CartDetail getCartDetail(Cart cart, Long productId) {
+        return cart.getCartDetailList().stream()
+                .filter(item -> item.getProduct().getId().equals(productId))
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Cart item not found"));
     }
 
 }
