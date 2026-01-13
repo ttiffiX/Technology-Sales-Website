@@ -71,7 +71,7 @@ function CartGrid({products, count}) {
         }
     };
 
-    const handleQuantityChange = useCallback(async (productId, newQuantity, cartDetailId) => {
+    const handleQuantitySubmit = useCallback(async (productId, newQuantity, cartDetailId) => {
         setUpdatingProducts(prev => new Set(prev).add(cartDetailId));
         try {
             await updateCartQuantity(productId, newQuantity);
@@ -89,35 +89,22 @@ function CartGrid({products, count}) {
         }
     }, []);
 
-    const handleIncrease = (cartDetail) => {
-        const cartDetailId = cartDetail.cartDetailId;
-        const newQty = (inputValues[cartDetailId] || cartDetail.quantity) + 1;
-
-        // Update local state immediately
-        setInputValues(prev => ({...prev, [cartDetailId]: newQty}));
-
-        // Clear existing timer
-        if (clickTimers.current[cartDetailId]) {
-            clearTimeout(clickTimers.current[cartDetailId]);
-        }
-
-        // Set new timer - call API after 1 second of no clicks
-        clickTimers.current[cartDetailId] = setTimeout(() => {
-            handleQuantityChange(cartDetail.productList.id, newQty, cartDetailId);
-        }, 1000);
-    };
-
-    const handleDecrease = (cartDetail) => {
+    const handleQuantityChange = (cartDetail, check) => {
         const cartDetailId = cartDetail.cartDetailId;
         const currentQty = inputValues[cartDetailId] || cartDetail.quantity;
+        let newQty;
 
-        if (currentQty <= 1) {
-            setProductToDelete(cartDetail);
-            setShowConfirmPopup(true);
-            return;
+        if (check) {
+            newQty = currentQty + 1;
+        } else {
+            if (currentQty <= 1) {
+                setProductToDelete(cartDetail);
+                setShowConfirmPopup(true);
+                return;
+            }
+
+            newQty = currentQty - 1;
         }
-
-        const newQty = currentQty - 1;
 
         // Update local state immediately
         setInputValues(prev => ({...prev, [cartDetailId]: newQty}));
@@ -129,7 +116,7 @@ function CartGrid({products, count}) {
 
         // Set new timer - call API after 1 second of no clicks
         clickTimers.current[cartDetailId] = setTimeout(() => {
-            handleQuantityChange(cartDetail.productList.id, newQty, cartDetailId);
+            handleQuantitySubmit(cartDetail.productList.id, newQty, cartDetailId);
         }, 1000);
     };
 
@@ -176,7 +163,7 @@ function CartGrid({products, count}) {
         // If valid and different, update after delay
         if (numValue !== currentQuantity) {
             updateTimers.current[cartDetailId] = setTimeout(() => {
-                handleQuantityChange(productId, numValue, cartDetailId);
+                handleQuantitySubmit(productId, numValue, cartDetailId);
             }, 1000);
         }
     };
@@ -240,7 +227,7 @@ function CartGrid({products, count}) {
 
     return (
         <>
-            <Loading isLoading={isLoading} />
+            <Loading isLoading={isLoading}/>
 
             {localProducts.length === 0 && (
                 <div className="empty-cart-message">
@@ -317,7 +304,7 @@ function CartGrid({products, count}) {
                             <div className="cart-actions">
                                 <button
                                     className="quantity-btn"
-                                    onClick={() => handleDecrease(cd)}
+                                    onClick={() => handleQuantityChange(cd, 0)}
                                     disabled={updatingProducts.has(cd.cartDetailId)}
                                 >
                                     -
@@ -346,7 +333,7 @@ function CartGrid({products, count}) {
 
                                 <button
                                     className="quantity-btn"
-                                    onClick={() => handleIncrease(cd)}
+                                    onClick={() => handleQuantityChange(cd, 1)}
                                     disabled={updatingProducts.has(cd.cartDetailId)}
                                 >
                                     +

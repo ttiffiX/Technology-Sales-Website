@@ -1,5 +1,6 @@
 package com.example.sale_tech_web.feature.cart.manager;
 
+import com.example.sale_tech_web.feature.cart.config.CartConfig;
 import com.example.sale_tech_web.feature.cart.entity.Cart;
 import com.example.sale_tech_web.feature.cart.dto.CartDetailDTO;
 import com.example.sale_tech_web.feature.cart.entity.CartDetail;
@@ -56,9 +57,7 @@ public class CartService implements CartServiceInterface {
 
 
         // 6. Tính tổng số lượng cho tất cả và giá cho các sản phẩm ĐƯỢC CHỌN
-        int totalQuantity = cartItems.stream()
-                .mapToInt(CartDetail::getQuantity)
-                .sum();
+        int totalQuantity = cartItems.size();
 
         int totalPrice = cartItems.stream()
                 .filter(item -> item.getIsSelected() != null && item.getIsSelected())
@@ -101,10 +100,9 @@ public class CartService implements CartServiceInterface {
     @Override
     @Transactional
     public String addProductToCart(Long productId) {
-        // 1. Get current user from JWT
         Long userId = getUserIdFromToken();
 
-        // 2. Validate product exists and is in stock
+        // Validate product exists and is in stock
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Product not found"));
 
@@ -117,8 +115,8 @@ public class CartService implements CartServiceInterface {
             throw new ResponseStatusException(CONFLICT, "Product is out of stock");
         }
 
-        // 3. Get or create cart for user
-        Cart cart = cartRepository.findByUserId(userId)
+        //Get or create cart for user
+        Cart cart = cartRepository.findByUserIdWithDetails(userId)
                 .orElseGet(() -> {
                     Users user = userRepository.findById(userId)
                             .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
@@ -130,15 +128,19 @@ public class CartService implements CartServiceInterface {
                     return cartRepository.save(newCart);
                 });
 
-        // 4. Check if product already exists in cart
-        CartDetail existingCartDetail = cartDetailRepository
-                .findByCartIdAndProductId(cart.getId(), productId).orElse(null);
+        List<CartDetail> cartItems = cart.getCartDetailList();
 
-        if (existingCartDetail != null) {
+        if (cartItems.size() + 1 > CartConfig.MAX_CART_ITEMS) {
+            throw new ResponseStatusException(BAD_REQUEST, "Cart has reached maximum total quantity of " + CartConfig.MAX_CART_ITEMS);
+        }
+        boolean exists = cartItems.stream()
+                .anyMatch(item -> item.getProduct().getId().equals(productId));
+
+        if (exists) {
             throw new ResponseStatusException(CONFLICT, "Product already exists in cart. Use change quantity instead.");
         }
 
-        // 5. Add new product to cart
+        //Add new product to cart
         CartDetail cartDetail = CartDetail.builder()
                 .cart(cart)
                 .product(product)
@@ -146,9 +148,9 @@ public class CartService implements CartServiceInterface {
                 .addedAt(LocalDateTime.now())
                 .build();
 
-        cartDetailRepository.save(cartDetail);
+        cartItems.add(cartDetail);
 
-        // 6. Update cart timestamp
+        //Update cart timestamp
         cart.setUpdatedAt(LocalDateTime.now());
         cartRepository.save(cart);
 
@@ -163,7 +165,7 @@ public class CartService implements CartServiceInterface {
             throw new ResponseStatusException(BAD_REQUEST, "Quantity must be greater than 0. Use remove function to delete item.");
         }
 
-        if (quantity > 10) {
+        if (quantity > CartConfig.MAX_QUANTITY_PER_ITEM) {
             throw new ResponseStatusException(BAD_REQUEST, "Maximum quantity per product is 10");
         }
 

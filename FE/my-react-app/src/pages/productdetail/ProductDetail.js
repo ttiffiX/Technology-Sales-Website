@@ -63,13 +63,6 @@ function ProductDetail() {
 
         setAddingToCart(true);
         try {
-            // Check current cart quantity
-            const { totalQuantity } = await fetchCartItems();
-            if (totalQuantity >= 10) {
-                triggerToast('error', 'Maximum 10 items in cart');
-                return;
-            }
-
             // Add to cart
             const response = await addCartItem(product.id);
             triggerToast('success', response || 'Added to cart successfully');
