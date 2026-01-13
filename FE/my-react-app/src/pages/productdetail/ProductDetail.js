@@ -4,7 +4,7 @@ import './ProductDetail.scss';
 import Nav from "../../components/navigation/Nav";
 import Header from "../../components/header/Header";
 import { getProductDetail } from "../../api/ProductAPI";
-import { addCartItem, fetchCartItems } from "../../api/CartAPI";
+import { addCartItem, getTotalQuantity } from "../../api/CartAPI";
 import { useToast } from "../../components/Toast/Toast";
 import { isAuthenticated } from "../../api/AuthAPI";
 import {formatPrice, getImage} from "../../utils";
@@ -24,7 +24,7 @@ function ProductDetail() {
     useEffect(() => {
         const loadCart = async () => {
             try {
-                const { totalQuantity } = await fetchCartItems();
+                const totalQuantity = await getTotalQuantity();
                 setCount(totalQuantity);
             } catch (err) {
                 // Ignore error if user not logged in
@@ -68,8 +68,8 @@ function ProductDetail() {
             triggerToast('success', response || 'Added to cart successfully');
 
             // Refresh cart count
-            const updated = await fetchCartItems();
-            setCount(updated.totalQuantity);
+            const totalQuantity = await getTotalQuantity();
+            setCount(totalQuantity);
         } catch (err) {
             console.error('Error adding to cart:', err);
             triggerToast('error', err || 'Failed to add to cart');

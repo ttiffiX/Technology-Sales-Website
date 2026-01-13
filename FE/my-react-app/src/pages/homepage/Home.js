@@ -8,13 +8,13 @@ import Nav from "../../components/navigation/Nav";
 import Header from "../../components/header/Header";
 import FilterSidebar from "../../components/filtersidebar/FilterSidebar";
 import useFetchProducts, { filterProducts, searchProducts, getAllCategories } from "../../api/ProductAPI";
-import {useGetCartItems} from "../../api/CartAPI";
+import {getTotalQuantity} from "../../api/CartAPI";
 
 function Home() {
     const [searchParams, setSearchParams] = useSearchParams();
     const {products: allProducts, loading: initialLoading, error: initialError} = useFetchProducts();
     const [count, setCount] = useState(0);
-    const {totalQuantity} = useGetCartItems();
+    const {totalQuantity} = getTotalQuantity();
 
     // State for filtering
     const [selectedCategoryId, setSelectedCategoryId] = useState(null);

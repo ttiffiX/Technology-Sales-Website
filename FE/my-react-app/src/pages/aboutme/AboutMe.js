@@ -1,10 +1,10 @@
 import React from "react";
 import './AboutMe.scss'
 import Nav from "../../components/navigation/Nav";
-import {useGetCartItems} from "../../api/CartAPI";
+import {getTotalQuantity} from "../../api/CartAPI";
 
 function AboutMe() {
-    const {totalQuantity} = useGetCartItems();
+    const {totalQuantity} = getTotalQuantity();
     return (
         <>
             <Nav count={totalQuantity}/>

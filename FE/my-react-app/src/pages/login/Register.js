@@ -1,14 +1,14 @@
 import React, {useEffect, useState} from "react";
 import Nav from "../../components/navigation/Nav";
 import './Register.scss';
-import {useGetCartItems} from "../../api/CartAPI";
+import {getTotalQuantity} from "../../api/CartAPI";
 import {register, isAuthenticated} from "../../api/AuthAPI";
 import {useNavigate} from "react-router-dom";
 import {useToast} from "../../components/Toast/Toast";
 import {isValidEmail, isValidPhone, isValidPassword, passwordsMatch} from "../../utils";
 
 function Register() {
-    const {totalQuantity} = useGetCartItems();
+    const {totalQuantity} = getTotalQuantity();
     const navigate = useNavigate();
     const {triggerToast} = useToast();
     const [formData, setFormData] = useState({

@@ -2,12 +2,12 @@ import React, {useEffect, useState} from "react";
 import Nav from "../../components/navigation/Nav";
 import './Login.scss'
 import {Link, useNavigate} from "react-router-dom";
-import {useGetCartItems} from "../../api/CartAPI";
+import {getTotalQuantity} from "../../api/CartAPI";
 import {login, isAuthenticated} from "../../api/AuthAPI";
 import {useToast} from "../../components/Toast/Toast";
 
 function Login() {
-    const {totalQuantity} = useGetCartItems();
+    const {totalQuantity} = getTotalQuantity();
     const navigate = useNavigate();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');

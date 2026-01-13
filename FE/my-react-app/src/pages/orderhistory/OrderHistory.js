@@ -6,7 +6,7 @@ import {useGetOrders, useCancelOrder} from "../../api/OrderAPI";
 import {useToast} from "../../components/Toast/Toast";
 import OrderDetailModal from "./OrderDetailModal";
 import {formatDate, formatPrice, getStatusColor, getPaymentStatusColor} from "../../utils";
-import {useGetCartItems} from "../../api/CartAPI";
+import {getTotalQuantity} from "../../api/CartAPI";
 
 const OrderHistory = () => {
     const [statusFilter, setStatusFilter] = useState(null);
@@ -18,7 +18,7 @@ const OrderHistory = () => {
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [showCancelConfirm, setShowCancelConfirm] = useState(false);
     const [orderToCancel, setOrderToCancel] = useState(null);
-    const {totalQuantity} = useGetCartItems();
+    const {totalQuantity} = getTotalQuantity();
 
 
     const handleViewDetails = (orderId) => {

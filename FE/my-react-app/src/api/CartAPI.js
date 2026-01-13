@@ -50,6 +50,16 @@ export const fetchCartItems = async () => {
     return response.data;
 };
 
+// Get total quantity only (lightweight API call)
+export const getTotalQuantity = async () => {
+    try {
+        const response = await apiClient.get('/cart/total-quantity');
+        return response.data;
+    } catch (error) {
+        throw error.response?.data.message || error.message;
+    }
+};
+
 // Update cart item quantity (delta change)
 export const updateCartQuantity = async (productId, delta) => {
     try {

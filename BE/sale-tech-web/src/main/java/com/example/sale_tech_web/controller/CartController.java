@@ -23,6 +23,13 @@ public class CartController {
         return ResponseEntity.ok(cart);
     }
 
+    @GetMapping("/total-quantity")
+    public ResponseEntity<Integer> getTotalQuantity() {
+        log.info("Get cart total quantity for current user");
+        int totalQuantity = cartServiceInterface.getTotalQuantity();
+        return ResponseEntity.ok(totalQuantity);
+    }
+
     @PostMapping()
     public ResponseEntity<String> addToCart(@RequestBody Map<String, Object> payload) {
         Long productId = Long.valueOf((Integer) payload.get("productId"));

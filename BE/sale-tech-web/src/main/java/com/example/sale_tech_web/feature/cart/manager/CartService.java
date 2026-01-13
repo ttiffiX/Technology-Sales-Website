@@ -98,6 +98,21 @@ public class CartService implements CartServiceInterface {
     }
 
     @Override
+    public int getTotalQuantity() {
+        // 1. Lấy userId từ JWT token
+        Long userId = getUserIdFromToken();
+
+        // 2. Lấy Cart - chỉ cần count, không cần load relationships
+        Cart cart = getUserCart(userId);
+
+        // 3. Lấy CartDetails từ relationship
+        List<CartDetail> cartItems = cart.getCartDetailList();
+
+        // 4. Return số lượng items trong giỏ hàng
+        return cartItems.size();
+    }
+
+    @Override
     @Transactional
     public String addProductToCart(Long productId) {
         Long userId = getUserIdFromToken();
