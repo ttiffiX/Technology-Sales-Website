@@ -1,6 +1,7 @@
 package com.example.sale_tech_web.feature.product.manager;
 
 import static org.springframework.http.HttpStatus.*;
+
 import com.example.sale_tech_web.feature.product.dto.*;
 import com.example.sale_tech_web.feature.product.entity.*;
 import com.example.sale_tech_web.feature.product.repository.*;
@@ -50,7 +51,7 @@ public class ProductService implements ProductServiceInterface {
      * Get product detail by ID with full information
      */
     public ProductDetailDTO getProductById(Long productId) {
-        Product product = productRepository.findById(productId)
+        Product product = productRepository.findByIdWithDetails(productId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Product not found"));
         return convertToDetailDTO(product);
     }
@@ -66,12 +67,28 @@ public class ProductService implements ProductServiceInterface {
         List<CategoryAttributeMapping> mappings = categoryAttributeMappingRepository
                 .findFilterableAttributesByCategory(categoryId);
 
-        // For each attribute, get all distinct values
+        //Get ALL attribute values for this category in ONE query
+        List<ProductAttributeValue> allAttributeValues = productAttributeValueRepository
+                .findAllByCategory(categoryId);
+
+        // Group attribute values by attributeId and get distinct values
+        Map<Long, List<String>> attributeValuesMap = allAttributeValues.stream()
+                .collect(Collectors.groupingBy(
+                        pav -> pav.getAttribute().getId(),
+                        Collectors.mapping(
+                                ProductAttributeValue::getValue,
+                                Collectors.collectingAndThen(
+                                        Collectors.toSet(),
+                                        set -> set.stream().sorted().collect(Collectors.toList())
+                                )
+                        )
+                ));
+
+        // Build filter attributes DTOs - only for filterable attributes
         List<FilterAttributeDTO> filterAttributes = mappings.stream()
                 .map(mapping -> {
                     ProductAttribute attr = mapping.getAttribute();
-                    List<String> values = productAttributeValueRepository
-                            .findDistinctValuesByAttributeAndCategory(attr.getId(), categoryId);
+                    List<String> values = attributeValuesMap.getOrDefault(attr.getId(), List.of());
 
                     return FilterAttributeDTO.builder()
                             .attributeId(attr.getId())
@@ -91,11 +108,12 @@ public class ProductService implements ProductServiceInterface {
 
     /**
      * Filter products by dynamic attributes and sort by price (asc/desc)
-     * @param categoryId Category ID (required)
+     *
+     * @param categoryId       Category ID (required)
      * @param attributeFilters Map<attributeId, List<values>> - ví dụ: {1: ["8", "16"], 3: ["15.6"]}
-     * @param minPrice Minimum price (optional)
-     * @param maxPrice Maximum price (optional)
-     * @param sort Sort direction: price_asc | price_desc (default price_asc if null/invalid)
+     * @param minPrice         Minimum price (optional)
+     * @param maxPrice         Maximum price (optional)
+     * @param sort             Sort direction: price_asc | price_desc (default price_asc if null/invalid)
      */
     public List<ProductListDTO> filterByAttributes(Long categoryId,
                                                    Map<Long, List<String>> attributeFilters,
@@ -105,6 +123,9 @@ public class ProductService implements ProductServiceInterface {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Product> query = cb.createQuery(Product.class);
         Root<Product> product = query.from(Product.class);
+
+        // Eager fetch category to prevent N+1
+        product.fetch("category", JoinType.LEFT);
 
         List<Predicate> predicates = new ArrayList<>();
 
@@ -132,11 +153,11 @@ public class ProductService implements ProductServiceInterface {
                     Root<ProductAttributeValue> attrValue = subquery.from(ProductAttributeValue.class);
                     subquery.select(attrValue.get("product").get("id"));
                     subquery.where(
-                        cb.and(
-                            cb.equal(attrValue.get("product").get("id"), product.get("id")),
-                            cb.equal(attrValue.get("attribute").get("id"), attributeId),
-                            attrValue.get("value").in(values)
-                        )
+                            cb.and(
+                                    cb.equal(attrValue.get("product").get("id"), product.get("id")),
+                                    cb.equal(attrValue.get("attribute").get("id"), attributeId),
+                                    attrValue.get("value").in(values)
+                            )
                     );
                     predicates.add(cb.exists(subquery));
                 }
@@ -213,7 +234,7 @@ public class ProductService implements ProductServiceInterface {
 
             // For each attribute, combine all values
             groupedByAttribute.forEach((attrName, attrValues) -> {
-                String unit = attrValues.get(0).getAttribute().getUnit();
+                String unit = attrValues.getFirst().getAttribute().getUnit();
 
                 // Collect and join all values for this attribute
                 String combinedValue = attrValues.stream()

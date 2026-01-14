@@ -1,6 +1,7 @@
 package com.example.sale_tech_web.feature.product.repository;
 
 import com.example.sale_tech_web.feature.product.entity.CategoryAttributeMapping;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,6 +13,9 @@ import java.util.List;
 public interface CategoryAttributeMappingRepository extends JpaRepository<CategoryAttributeMapping, Long> {
 
     // Get all filterable attributes for a category
+    @EntityGraph(attributePaths = {
+            "attribute"
+    })
     @Query("SELECT cam FROM CategoryAttributeMapping cam WHERE cam.category.id = :categoryId AND cam.isFilterable = true")
     List<CategoryAttributeMapping> findFilterableAttributesByCategory(@Param("categoryId") Long categoryId);
 }

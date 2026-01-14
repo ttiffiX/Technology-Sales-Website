@@ -10,14 +10,10 @@ import java.util.List;
 
 @Repository
 public interface ProductAttributeValueRepository extends JpaRepository<ProductAttributeValue, Long> {
-
-    // Get distinct values for a specific attribute in a category
-    @Query("SELECT DISTINCT pav.value FROM ProductAttributeValue pav " +
-           "WHERE pav.attribute.id = :attributeId " +
-           "AND pav.product.category.id = :categoryId " +
+    @Query("SELECT pav FROM ProductAttributeValue pav " +
+           "JOIN FETCH pav.attribute " +
+           "WHERE pav.product.category.id = :categoryId " +
            "AND pav.product.isActive = true " +
-           "ORDER BY pav.value")
-    List<String> findDistinctValuesByAttributeAndCategory(@Param("attributeId") Long attributeId,
-                                                           @Param("categoryId") Long categoryId);
+           "ORDER BY pav.attribute.id, pav.value")
+    List<ProductAttributeValue> findAllByCategory(@Param("categoryId") Long categoryId);
 }
-
