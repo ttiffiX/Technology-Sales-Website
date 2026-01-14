@@ -52,6 +52,7 @@
       font-size: 13px;
       color: #666;
       transition: all 0.2s;
+      margin-right: 40px;
 
       &:hover {
         background: $hover-color;
@@ -311,7 +312,6 @@
 
     &:hover {
       color: $text-in-header-color;
-      transform: rotate(90deg);
     }
   }
 

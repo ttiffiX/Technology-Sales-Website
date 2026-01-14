@@ -150,7 +150,7 @@ function FilterSidebar({ categoryId, onFilterChange }) {
         <>
             {/* Toggle button for mobile */}
             <button className="filter-toggle-btn" onClick={() => setIsOpen(!isOpen)}>
-                <span className="filter-icon">⚙️</span>
+                {/*<span className="filter-icon">⚙️</span>*/}
                 Filters
             </button>
 
