@@ -6,6 +6,7 @@ A full-stack e-commerce application that allows users to shop for technology pro
 
 - [Overview](#overview)
 - [Technologies](#technologies)
+- [Project Structure](#project-structure)
 - [System Requirements](#system-requirements)
 - [Installation](#installation)
 - [Configuration](#configuration)
@@ -27,6 +28,274 @@ Technology Sales Website is a modern e-commerce platform built with a separated 
 
 ### Payment Gateway
 - VNPay
+
+## Project Structure
+
+### Backend Structure
+
+```
+BE/sale-tech-web/
+├── src/
+│   ├── main/
+│   │   ├── java/com/example/sale_tech_web/
+│   │   │   ├── SaleTechWebApplication.java
+│   │   │   ├── config/
+│   │   │   │   ├── AuthTokenFilter.java
+│   │   │   │   └── WebSecurityConfig.java
+│   │   │   ├── controller/
+│   │   │   │   ├── AuthController.java
+│   │   │   │   ├── CartController.java
+│   │   │   │   ├── OrderController.java
+│   │   │   │   ├── PaymentController.java
+│   │   │   │   ├── ProductController.java
+│   │   │   │   ├── exception/
+│   │   │   │   │   ├── ErrorResponse.java
+│   │   │   │   │   └── ExceptionController.java
+│   │   │   │   ├── request/
+│   │   │   │   └── response/
+│   │   │   ├── feature/
+│   │   │   │   ├── cart/
+│   │   │   │   │   ├── config/
+│   │   │   │   │   │   └── CartConfig.java
+│   │   │   │   │   ├── dto/
+│   │   │   │   │   │   ├── CartDetailDTO.java
+│   │   │   │   │   │   └── CartDTO.java
+│   │   │   │   │   ├── entity/
+│   │   │   │   │   │   ├── Cart.java
+│   │   │   │   │   │   └── CartDetail.java
+│   │   │   │   │   ├── manager/
+│   │   │   │   │   │   ├── CartService.java
+│   │   │   │   │   │   └── CartServiceInterface.java
+│   │   │   │   │   └── repository/
+│   │   │   │   │       ├── CartDetailRepository.java
+│   │   │   │   │       └── CartRepository.java
+│   │   │   │   ├── email/
+│   │   │   │   │   ├── entity/
+│   │   │   │   │   │   └── EmailVerificationToken.java
+│   │   │   │   │   ├── manager/
+│   │   │   │   │   │   └── EmailService.java
+│   │   │   │   │   └── repository/
+│   │   │   │   │       └── EmailVerificationTokenRepository.java
+│   │   │   │   ├── jwt/
+│   │   │   │   │   ├── JwtUtils.java
+│   │   │   │   │   └── SecurityUtils.java
+│   │   │   │   ├── order/
+│   │   │   │   │   ├── dto/
+│   │   │   │   │   │   ├── OrderDetailDTO.java
+│   │   │   │   │   │   ├── OrderDTO.java
+│   │   │   │   │   │   ├── OrderResponse.java
+│   │   │   │   │   │   └── PlaceOrderRequest.java
+│   │   │   │   │   ├── entity/
+│   │   │   │   │   │   ├── orderdetails/
+│   │   │   │   │   │   │   └── OrderDetail.java
+│   │   │   │   │   │   └── orders/
+│   │   │   │   │   │       └── Order.java
+│   │   │   │   │   ├── enums/
+│   │   │   │   │   │   └── OrderStatus.java
+│   │   │   │   │   ├── manager/
+│   │   │   │   │   │   ├── OrderService.java
+│   │   │   │   │   │   └── OrderServiceInterface.java
+│   │   │   │   │   └── repository/
+│   │   │   │   │       ├── OrderDetailRepository.java
+│   │   │   │   │       └── OrderRepository.java
+│   │   │   │   ├── payment/
+│   │   │   │   │   ├── config/
+│   │   │   │   │   │   ├── PaymentConfig.java
+│   │   │   │   │   │   └── VNPayConfig.java
+│   │   │   │   │   ├── dto/
+│   │   │   │   │   │   ├── VNPayPaymentResponse.java
+│   │   │   │   │   │   ├── VNPayRefundRequest.java
+│   │   │   │   │   │   └── VNPayRefundResponse.java
+│   │   │   │   │   ├── entity/
+│   │   │   │   │   │   └── Payment.java
+│   │   │   │   │   ├── enums/
+│   │   │   │   │   │   ├── PaymentMethod.java
+│   │   │   │   │   │   └── PaymentStatus.java
+│   │   │   │   │   ├── manager/
+│   │   │   │   │   │   ├── PaymentService.java
+│   │   │   │   │   │   └── PaymentServiceInterface.java
+│   │   │   │   │   ├── processor/
+│   │   │   │   │   │   ├── CashPaymentProcessor.java
+│   │   │   │   │   │   ├── PaymentProcessor.java
+│   │   │   │   │   │   └── VNPayPaymentProcessor.java
+│   │   │   │   │   ├── repository/
+│   │   │   │   │   │   └── PaymentRepository.java
+│   │   │   │   │   ├── scheduler/
+│   │   │   │   │   │   └── PaymentTimeoutScheduler.java
+│   │   │   │   │   ├── service/
+│   │   │   │   │   │   ├── PaymentProcessingService.java
+│   │   │   │   │   │   └── VNPayService.java
+│   │   │   │   │   └── util/
+│   │   │   │   │       └── VNPayUtil.java
+│   │   │   │   ├── product/
+│   │   │   │   │   ├── dto/
+│   │   │   │   │   │   ├── AdvancedFilterRequest.java
+│   │   │   │   │   │   ├── CategoryDTO.java
+│   │   │   │   │   │   ├── CategoryFilterOptionsDTO.java
+│   │   │   │   │   │   ├── FilterAttributeDTO.java
+│   │   │   │   │   │   ├── ProductDetailDTO.java
+│   │   │   │   │   │   └── ProductListDTO.java
+│   │   │   │   │   ├── entity/
+│   │   │   │   │   │   ├── Category.java
+│   │   │   │   │   │   ├── CategoryAttributeMapping.java
+│   │   │   │   │   │   ├── Product.java
+│   │   │   │   │   │   ├── ProductAttribute.java
+│   │   │   │   │   │   └── ProductAttributeValue.java
+│   │   │   │   │   ├── manager/
+│   │   │   │   │   │   ├── ProductService.java
+│   │   │   │   │   │   └── ProductServiceInterface.java
+│   │   │   │   │   └── repository/
+│   │   │   │   │       ├── CategoryAttributeMappingRepository.java
+│   │   │   │   │       ├── CategoryRepository.java
+│   │   │   │   │       ├── ProductAttributeValueRepository.java
+│   │   │   │   │       └── ProductRepository.java
+│   │   │   │   └── users/
+│   │   │   │       ├── dto/
+│   │   │   │       │   ├── ChangePassRequest.java
+│   │   │   │       │   ├── LogInRequest.java
+│   │   │   │       │   ├── LogInResponse.java
+│   │   │   │       │   └── RegisterRequest.java
+│   │   │   │       ├── entity/
+│   │   │   │       │   └── Users.java
+│   │   │   │       ├── enums/
+│   │   │   │       │   └── Role.java
+│   │   │   │       ├── manager/
+│   │   │   │       │   ├── UserService.java
+│   │   │   │       │   └── UserServiceInterface.java
+│   │   │   │       └── repository/
+│   │   │   │           └── UserRepository.java
+│   │   │   └── utils/
+│   │   └── resources/
+│   │       ├── application.properties
+│   │       ├── SalesTechWeb.sql
+│   │       └── SalesTechWeb2.sql
+│   └── test/
+│       └── java/com/example/sale_tech_web/
+│           └── SaleTechWebApplicationTests.java
+├── pom.xml
+├── mvnw
+└── mvnw.cmd
+```
+
+### Frontend Structure
+
+```
+FE/my-react-app/
+├── src/
+│   ├── App.js
+│   ├── App.scss
+│   ├── index.js
+│   ├── reportWebVitals.js
+│   ├── api/
+│   │   ├── apiClient.js
+│   │   ├── AuthAPI.js
+│   │   ├── CartAPI.js
+│   │   ├── OrderAPI.js
+│   │   ├── PaymentAPI.js
+│   │   └── ProductAPI.js
+│   ├── assets/
+│   │   ├── icon/
+│   │   │   └── img.png
+│   │   └── images/
+│   │       └── [product images]
+│   ├── components/
+│   │   ├── CartProducts.js
+│   │   ├── Products.js
+│   │   ├── cartgrid/
+│   │   │   ├── CartGrid.js
+│   │   │   └── CartGrid.scss
+│   │   ├── filtersidebar/
+│   │   │   ├── FilterSidebar.js
+│   │   │   └── FilterSidebar.scss
+│   │   ├── header/
+│   │   │   ├── Header.js
+│   │   │   └── Header.scss
+│   │   ├── Loading/
+│   │   │   ├── Loading.js
+│   │   │   └── Loading.scss
+│   │   ├── modal/
+│   │   │   └── changepass/
+│   │   │       ├── ChangePasswordModal.js
+│   │   │       └── ChangePasswordModal.scss
+│   │   ├── navigation/
+│   │   │   ├── Nav.js
+│   │   │   └── Nav.scss
+│   │   ├── paymentProcess/
+│   │   │   ├── PaymentFailed.js
+│   │   │   ├── PaymentLoading.js
+│   │   │   └── PaymentSuccess.js
+│   │   ├── productgrid/
+│   │   │   ├── ProductGrid.js
+│   │   │   └── ProductGrid.scss
+│   │   ├── searchbar/
+│   │   │   ├── SearchBar.js
+│   │   │   └── SearchBar.scss
+│   │   └── Toast/
+│   │       └── Toast.js
+│   ├── contexts/
+│   │   └── CartContext.js
+│   ├── pages/
+│   │   ├── aboutme/
+│   │   │   ├── AboutMe.js
+│   │   │   └── AboutMe.scss
+│   │   ├── Cart/
+│   │   │   ├── Cart.js
+│   │   │   └── Cart.scss
+│   │   ├── homepage/
+│   │   │   ├── Home.js
+│   │   │   └── Home.scss
+│   │   ├── login/
+│   │   │   ├── Login.js
+│   │   │   ├── Login.scss
+│   │   │   ├── Register.js
+│   │   │   └── Register.scss
+│   │   ├── order/
+│   │   │   ├── Order.js
+│   │   │   └── Order.scss
+│   │   ├── orderhistory/
+│   │   │   ├── OrderDetailModal.js
+│   │   │   ├── OrderDetailModal.scss
+│   │   │   ├── OrderHistory.js
+│   │   │   └── OrderHistory.scss
+│   │   ├── paymentresult/
+│   │   │   ├── PaymentResult.js
+│   │   │   └── PaymentResult.scss
+│   │   ├── productdetail/
+│   │   │   ├── ProductDetail.js
+│   │   │   └── ProductDetail.scss
+│   │   ├── profile/
+│   │   │   ├── Profile.js
+│   │   │   └── Profile.scss
+│   │   └── verifyemail/
+│   │       ├── VerifyEmail.js
+│   │       ├── VerifyEmail.scss
+│   │       ├── WaitingVerification.js
+│   │       └── WaitingVerification.scss
+│   ├── router/
+│   │   ├── ProtectedRoute.js
+│   │   └── RouterPages.js
+│   ├── styles/
+│   │   ├── index.scss
+│   │   ├── _base.scss
+│   │   ├── _mixins.scss
+│   │   └── _variables.scss
+│   └── utils/
+│       ├── currencyUtils.js
+│       ├── dateUtils.js
+│       ├── imageUtils.js
+│       ├── index.js
+│       ├── orderUtils.js
+│       ├── provinceUtils.js
+│       ├── stringUtils.js
+│       └── validationUtils.js
+├── public/
+│   ├── index.html
+│   ├── indexIcon.png
+│   ├── manifest.json
+│   └── robots.txt
+├── package.json
+└── README.md
+```
 
 ## System Requirements
 
