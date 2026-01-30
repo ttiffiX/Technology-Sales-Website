@@ -15,6 +15,12 @@ public class AccountCleanupConfig {
     public static final int UNVERIFIED_ACCOUNT_MAX_AGE_HOURS = 24;
 
     /**
+     * Thời gian chờ giữa các lần gửi lại email xác thực (60 giây)
+     * Người dùng phải chờ 60 giây trước khi có thể request gửi lại email
+     */
+    public static final int RESEND_VERIFICATION_COOLDOWN_SECONDS = 60;
+
+    /**
      * Scheduled job interval cho việc xóa tài khoản chưa xác thực hết hạn (cron format)
      * Chạy mỗi 6 giờ một lần
      */

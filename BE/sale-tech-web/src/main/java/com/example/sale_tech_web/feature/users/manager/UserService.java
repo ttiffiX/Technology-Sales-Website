@@ -24,6 +24,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import static org.springframework.http.HttpStatus.*;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -103,6 +104,7 @@ public class UserService implements UserServiceInterface {
                 .user(users)
                 .expiryDate(LocalDateTime.now().plusMinutes(AccountCleanupConfig.EMAIL_VERIFICATION_TOKEN_EXPIRY_MINUTES))
                 .isUsed(false)
+                .lastSent(LocalDateTime.now())
                 .build();
         emailVerificationTokenRepository.save(verificationToken);
 
@@ -159,6 +161,7 @@ public class UserService implements UserServiceInterface {
         return "Email verified successfully! You can now login.";
     }
 
+    @Override
     @Transactional
     public String resendVerificationEmail(String email) {
         Users user = userRepository.findByEmail(email)
@@ -179,10 +182,22 @@ public class UserService implements UserServiceInterface {
         EmailVerificationToken verificationToken = emailVerificationTokenRepository.findByUserId(user.getId())
                 .orElse(new EmailVerificationToken());
 
+        // Kiểm tra rate limiting - chỉ cho phép gửi lại sau 60 giây
+        if (verificationToken.getLastSent() != null) {
+            LocalDateTime cooldownExpiry = verificationToken.getLastSent()
+                    .plusSeconds(AccountCleanupConfig.RESEND_VERIFICATION_COOLDOWN_SECONDS);
+            if (LocalDateTime.now().isBefore(cooldownExpiry)) {
+                long secondsRemaining = Duration.between(LocalDateTime.now(), cooldownExpiry).getSeconds();
+                throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,
+                        String.format("Please wait %d seconds before requesting another verification email", secondsRemaining));
+            }
+        }
+
         verificationToken.setUser(user);
         verificationToken.setToken(UUID.randomUUID().toString());
         verificationToken.setExpiryDate(LocalDateTime.now().plusMinutes(AccountCleanupConfig.EMAIL_VERIFICATION_TOKEN_EXPIRY_MINUTES));
         verificationToken.setUsed(false);
+        verificationToken.setLastSent(LocalDateTime.now());
 
         emailVerificationTokenRepository.save(verificationToken);
 

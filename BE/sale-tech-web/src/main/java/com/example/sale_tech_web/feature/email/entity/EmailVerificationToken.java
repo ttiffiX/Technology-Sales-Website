@@ -32,5 +32,8 @@ public class EmailVerificationToken {
 
     @Column(nullable = false)
     private boolean isUsed = false;
+
+    @Column(name = "last_sent")
+    private LocalDateTime lastSent;
 }
 
