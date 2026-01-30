@@ -45,5 +45,12 @@ public class AuthController {
         String response = userServiceInterface.verifyEmail(token);
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<?> resendVerificationEmail(@RequestParam String email) {
+        log.info("Resend verification email request for: {}", email);
+        String response = userServiceInterface.resendVerificationEmail(email);
+        return ResponseEntity.ok(response);
+    }
 }
 

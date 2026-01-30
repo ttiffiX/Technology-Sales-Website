@@ -1,5 +1,6 @@
 package com.example.sale_tech_web.feature.users.manager;
 
+import com.example.sale_tech_web.feature.email.config.AccountCleanupConfig;
 import com.example.sale_tech_web.feature.email.entity.EmailVerificationToken;
 import com.example.sale_tech_web.feature.email.manager.EmailService;
 import com.example.sale_tech_web.feature.email.repository.EmailVerificationTokenRepository;
@@ -15,6 +16,7 @@ import com.example.sale_tech_web.feature.users.enums.Role;
 import com.example.sale_tech_web.feature.users.repository.UserRepository;
 import com.example.sale_tech_web.feature.jwt.JwtUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -99,7 +101,7 @@ public class UserService implements UserServiceInterface {
         EmailVerificationToken verificationToken = EmailVerificationToken.builder()
                 .token(token)
                 .user(users)
-                .expiryDate(LocalDateTime.now().plusMinutes(30))
+                .expiryDate(LocalDateTime.now().plusMinutes(AccountCleanupConfig.EMAIL_VERIFICATION_TOKEN_EXPIRY_MINUTES))
                 .isUsed(false)
                 .build();
         emailVerificationTokenRepository.save(verificationToken);
@@ -144,7 +146,7 @@ public class UserService implements UserServiceInterface {
         }
 
         if (LocalDateTime.now().isAfter(verificationToken.getExpiryDate())) {
-            throw new ResponseStatusException(CONFLICT, "Token has expired");
+            throw new ResponseStatusException(HttpStatus.GONE, "TOKEN EXPIRED");
         }
 
         Users user = verificationToken.getUser();
@@ -152,8 +154,41 @@ public class UserService implements UserServiceInterface {
         userRepository.save(user);
 
         verificationToken.setUsed(true);
-        emailVerificationTokenRepository.save(verificationToken);
+        emailVerificationTokenRepository.delete(verificationToken);
 
         return "Email verified successfully! You can now login.";
+    }
+
+    @Transactional
+    public String resendVerificationEmail(String email) {
+        Users user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
+
+        if (user.isActive()) {
+            throw new ResponseStatusException(CONFLICT, "Email already verified");
+        }
+
+        // Kiểm tra account đã quá 24h chưa
+        LocalDateTime cutoffTime = LocalDateTime.now()
+                .minusHours(AccountCleanupConfig.UNVERIFIED_ACCOUNT_MAX_AGE_HOURS);
+        if (user.getCreatedAt().isBefore(cutoffTime)) {
+            throw new ResponseStatusException(HttpStatus.GONE,
+                    "Account registration expired. Please register again.");
+        }
+
+        EmailVerificationToken verificationToken = emailVerificationTokenRepository.findByUserId(user.getId())
+                .orElse(new EmailVerificationToken());
+
+        verificationToken.setUser(user);
+        verificationToken.setToken(UUID.randomUUID().toString());
+        verificationToken.setExpiryDate(LocalDateTime.now().plusMinutes(AccountCleanupConfig.EMAIL_VERIFICATION_TOKEN_EXPIRY_MINUTES));
+        verificationToken.setUsed(false);
+
+        emailVerificationTokenRepository.save(verificationToken);
+
+        // Gửi email mới
+        emailService.sendVerificationEmail(user.getEmail(), verificationToken.getToken());
+
+        return "Verification email has been resent. Please check your inbox.";
     }
 }

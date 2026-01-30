@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static com.example.sale_tech_web.utils.Color.*;
+
 /**
  * Scheduled job to automatically cancel expired PENDING payments and restore inventory
  * Runs every 5 minutes (configurable via PaymentConfig.PAYMENT_CLEANUP_CRON)
@@ -33,8 +35,8 @@ public class PaymentTimeoutScheduler {
     @Scheduled(cron = PaymentConfig.PAYMENT_CLEANUP_CRON)
     @Transactional
     public void cancelExpiredPayments() {
-        log.info("----------------------------------------------------------------");
-        log.info("Starting scheduled job: cancelExpiredPayments (with inventory restoration)");
+        System.out.println(RED + "----------------------------------------------------------------" + RESET);
+        System.out.println("Starting scheduled job: Cancel Expired Payments (with inventory restoration)");
 
         try {
             List<Payment> expiredPayments = paymentRepository.findExpiredPendingPayments(
@@ -43,12 +45,12 @@ public class PaymentTimeoutScheduler {
             );
 
             if (expiredPayments.isEmpty()) {
-                log.info("No expired pending payments found");
-                log.info("----------------------------------------------------------------");
+                System.out.println("No expired pending payments found");
+                System.out.println(RED + "----------------------------------------------------------------" + RESET);
                 return;
             }
 
-            log.info("Found {} expired pending payments to cancel", expiredPayments.size());
+            System.out.println("Found " + expiredPayments.size() + " expired pending payments to cancel");
 
             int successCount = 0;
             int failCount = 0;
@@ -58,8 +60,7 @@ public class PaymentTimeoutScheduler {
                     Long orderId = payment.getOrder().getId();
                     paymentProcessingService.processFailedPayment(orderId, null);
                     successCount++;
-                    log.info("Auto-cancelled expired payment for order {}, inventory restored, expiresAt: {}",
-                            orderId, payment.getExpiresAt());
+                    System.out.println("Auto-cancelled expired payment for order " + orderId + ", inventory restored, expiresAt: " + payment.getExpiresAt());
                 } catch (Exception e) {
                     failCount++;
                     log.error("Error cancelling payment for order {}",
@@ -67,11 +68,11 @@ public class PaymentTimeoutScheduler {
                 }
             }
 
-            log.info("Scheduled job completed: {} succeeded, {} failed", successCount, failCount);
-            log.info("----------------------------------------------------------------");
+            System.out.println("Scheduled job completed: " + successCount + " succeeded, " + failCount + " failed");
+            System.out.println(RED + "----------------------------------------------------------------" + RESET);
         } catch (Exception e) {
-            log.error("Error in cancelExpiredPayments scheduled job", e);
-            log.info("----------------------------------------------------------------");
+            log.error("Error in Cancel Expired Payments scheduled job", e);
+            System.out.println(RED + "----------------------------------------------------------------" + RESET);
         }
     }
 }

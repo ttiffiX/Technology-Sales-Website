@@ -13,4 +13,6 @@ public interface UserServiceInterface {
     String changePassword(ChangePassRequest changePassRequest);
 
     String verifyEmail(String token);
+
+    String resendVerificationEmail(String email);
 }

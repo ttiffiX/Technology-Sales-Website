@@ -1,5 +1,7 @@
 package com.example.sale_tech_web.feature.users.entity;
 
+import com.example.sale_tech_web.feature.cart.entity.Cart;
+import com.example.sale_tech_web.feature.order.entity.orders.Order;
 import com.example.sale_tech_web.feature.users.enums.Role;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -9,6 +11,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -44,4 +47,9 @@ public class Users {
     private LocalDateTime createdAt;
     private String imageUrl;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Cart cart;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Order> order;
 }
