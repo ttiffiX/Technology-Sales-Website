@@ -66,7 +66,7 @@
         justify-content: space-between;
         align-items: center;
         padding: 1.25rem 1.5rem;
-        background: $primary-color;
+        background: #495057;
         border-bottom: 1px solid #e9ecef;
 
         .order-info {
@@ -152,7 +152,7 @@
 
       .order-actions {
         padding: 1rem 1.5rem;
-        background: $primary-color;
+        background: #495057;
         border-top: 1px solid #e9ecef;
         display: flex;
         gap: 1rem;
@@ -173,7 +173,7 @@
             //box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 
             &:hover {
-              background: $secondary-color;
+              background: $primary-color;
               color: white;
             }
           }
