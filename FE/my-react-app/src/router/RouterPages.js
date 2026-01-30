@@ -4,6 +4,7 @@ import Home from "../pages/homepage/Home";
 import {BrowserRouter as Router, Routes, Route} from 'react-router-dom';
 import Login from "../pages/login/Login";
 import Register from "../pages/login/Register";
+import ForgotPassword from "../pages/login/ForgotPassword";
 import AboutMe from "../pages/aboutme/AboutMe";
 import Cart from "../pages/Cart/Cart";
 import Profile from "../pages/profile/Profile";
@@ -14,6 +15,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import PaymentResult from "../pages/paymentresult/PaymentResult";
 import VerifyEmail from "../pages/verifyemail/VerifyEmail";
 import WaitingVerification from "../pages/verifyemail/WaitingVerification";
+import VerificationHelp from "../pages/verifyemail/VerificationHelp";
 
 
 function RouterPages() {
@@ -26,8 +28,10 @@ function RouterPages() {
                 <Route path="/" element={<Home/>}/>
                 <Route path="/login" element={<Login/>}/>
                 <Route path="/register" element={<Register/>}/>
+                <Route path="/forgot-password" element={<ForgotPassword/>}/>
                 <Route path="/verify-email" element={<VerifyEmail/>}/>
                 <Route path="/waiting-verification" element={<WaitingVerification/>}/>
+                <Route path="/verification-help" element={<VerificationHelp/>}/>
                 <Route path="/aboutme" element={<AboutMe/>}/>
                 <Route path="/product/:id" element={<ProductDetail/>}/>
 

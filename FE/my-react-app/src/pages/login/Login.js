@@ -32,10 +32,12 @@ function Login() {
             if (result.success) {
                 // Đăng nhập thành công
                 // alert('Login Successful!');
+                // alert('Login Successful!');
                 triggerToast('success', 'Login Successful!');
                 navigate('/'); // Chuyển về trang chủ
             } else {
                 // Đăng nhập thất bại
+                setError(result.message);
                 setError(result.message);
             }
         } catch (err) {
@@ -81,6 +83,11 @@ function Login() {
                     <button type="submit" className="login_login-button" disabled={loading}>
                         {loading ? 'Logging in...' : 'Submit'}
                     </button>
+
+                    <div className="login_helper-links">
+                        <Link to="/forgot-password" className="login_helper-link">Forgot Password?</Link>
+                        <Link to="/verification-help" className="login_helper-link">Issues with verification?</Link>
+                    </div>
 
                     <div className="login_register-link">
                         <p>Don't have an account? <Link to="/register" className="login_register-button">Sign up

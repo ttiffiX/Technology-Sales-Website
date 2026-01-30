@@ -67,6 +67,27 @@ export const verifyEmail = async (token) => {
         return {
             success: false,
             message: error.response?.data.message || 'Email verification failed. Token may be invalid or expired.',
+            status: error.response?.status,
+        };
+    }
+};
+
+// Hàm gửi lại email xác thực
+export const resendVerificationEmail = async (email) => {
+    try {
+        const response = await apiClient.post('/auth/resend-verification', null, {
+            params: { email }
+        });
+
+        return {
+            success: true,
+            message: response.data,
+        };
+    } catch (error) {
+        return {
+            success: false,
+            message: error.response?.data.message || 'Failed to resend verification email. Please try again.',
+            status: error.response?.status,
         };
     }
 };

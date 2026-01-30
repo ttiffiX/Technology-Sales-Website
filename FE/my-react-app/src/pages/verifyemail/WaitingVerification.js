@@ -1,11 +1,15 @@
 import React, {useEffect, useState} from 'react';
 import {useNavigate, useLocation} from 'react-router-dom';
+import {resendVerificationEmail} from '../../api/AuthAPI';
 import './WaitingVerification.scss';
 
 const WaitingVerification = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [email, setEmail] = useState('');
+    const [isResending, setIsResending] = useState(false);
+    const [resendCooldown, setResendCooldown] = useState(0);
+    const [message, setMessage] = useState({ text: '', type: '' }); // type: 'success' or 'error'
 
     useEffect(() => {
         if (location.state?.email) {
@@ -14,6 +18,57 @@ const WaitingVerification = () => {
             navigate('/register');
         }
     }, [location, navigate]);
+
+    // Countdown timer effect
+    useEffect(() => {
+        if (resendCooldown > 0) {
+            const timer = setTimeout(() => {
+                setResendCooldown(resendCooldown - 1);
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [resendCooldown]);
+
+    const handleResendEmail = async () => {
+        if (resendCooldown > 0 || isResending || !email) {
+            return;
+        }
+
+        setIsResending(true);
+        setMessage({ text: '', type: '' });
+
+        try {
+            const result = await resendVerificationEmail(email);
+
+            if (result.success) {
+                setMessage({
+                    text: result.message || 'Verification email has been resent! Please check your inbox.',
+                    type: 'success'
+                });
+                setResendCooldown(60); // 60 seconds cooldown
+            } else {
+                // Display error from backend
+                setMessage({
+                    text: result.message || 'Unable to resend email. Please try again later.',
+                    type: 'error'
+                });
+
+                // If rate limit error, set cooldown
+                if (result.status === 429) {
+                    const match = result.message.match(/(\d+)\s*seconds/);
+                    const seconds = match ? parseInt(match[1]) : 60;
+                    setResendCooldown(seconds);
+                }
+            }
+        } catch (error) {
+            setMessage({
+                text: 'Connection error occurred. Please try again later.',
+                type: 'error'
+            });
+        } finally {
+            setIsResending(false);
+        }
+    };
 
     const handleGoToLogin = () => {
         navigate('/login');
@@ -32,49 +87,67 @@ const WaitingVerification = () => {
                         </svg>
                     </div>
 
-                    <h2>Xác Thực Email</h2>
+                    <h2>Email Verification</h2>
                     <p className="main-message">
-                        Một email xác thực đã được gửi đến <strong>{email}</strong>
+                        A verification email has been sent to <strong>{email}</strong>
                     </p>
                     <p className="instruction">
-                        Vui lòng kiểm tra hộp thư của bạn và nhấp vào liên kết xác thực để kích hoạt tài khoản.
+                        Please check your inbox and click the verification link to activate your account.
                     </p>
 
                     <div className="steps-container">
                         <div className="step">
                             <div className="step-number">1</div>
                             <div className="step-content">
-                                <h4>Kiểm tra email</h4>
-                                <p>Mở hộp thư của bạn</p>
+                                <h4>Check Email</h4>
+                                <p>Open your inbox</p>
                             </div>
                         </div>
                         <div className="step">
                             <div className="step-number">2</div>
                             <div className="step-content">
-                                <h4>Click vào link</h4>
-                                <p>Nhấp vào liên kết xác thực</p>
+                                <h4>Click Link</h4>
+                                <p>Click the verification link</p>
                             </div>
                         </div>
                         <div className="step">
                             <div className="step-number">3</div>
                             <div className="step-content">
-                                <h4>Hoàn tất</h4>
-                                <p>Quay lại để đăng nhập</p>
+                                <h4>Complete</h4>
+                                <p>Return to login</p>
                             </div>
                         </div>
                     </div>
 
+                    {message.text && (
+                        <div className={`message ${message.type}`}>
+                            {message.text}
+                        </div>
+                    )}
+
                     <div className="action-buttons">
+                        <button
+                            className="btn btn-secondary"
+                            onClick={handleResendEmail}
+                            disabled={resendCooldown > 0 || isResending || !email}
+                        >
+                            {isResending
+                                ? 'Sending...'
+                                : resendCooldown > 0
+                                    ? `Resend (${resendCooldown}s)`
+                                    : 'Resend Verification Email'}
+                        </button>
                         <button
                             className="btn btn-primary"
                             onClick={handleGoToLogin}
                         >
-                            Đã xác thực? Đăng nhập ngay
+                            Already Verified? Login Now
                         </button>
                     </div>
 
                     <div className="note">
-                        <p><small>Sau khi xác thực email, bạn có thể đăng nhập vào hệ thống.</small></p>
+                        <p><small>After verifying your email, you can login to the system.</small></p>
+                        <p><small>Verification email is valid for 30 minutes. Unverified accounts will be deleted after 24 hours.</small></p>
                     </div>
                 </div>
             </div>
