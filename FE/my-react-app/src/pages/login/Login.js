@@ -52,36 +52,56 @@ function Login() {
             <Nav count={cartCount}/>
             <div className="login_login-container">
                 <form className="login_login-form" onSubmit={handleSubmit}>
-                    <h2 className="login_login-title">Login</h2>
+                    <div className="login_form-header">
+                        <h2 className="login_login-title">Welcome Back</h2>
+                        <p className="login_subtitle">Sign in to your account</p>
+                    </div>
 
                     {error && <div className="login_login-error">{error}</div>}
 
                     <div className="login_input-group">
-                        <label htmlFor="username">Username</label>
+                        <label htmlFor="username">
+                            <svg className="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.23 1.23 0 00.41 1.412A9.957 9.957 0 0010 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 00-13.074.003z" />
+                            </svg>
+                            Username
+                        </label>
                         <input
                             type="text"
                             id="username"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
-                            placeholder="Enter your username"
+                            placeholder="Enter username"
                             required
                         />
                     </div>
 
                     <div className="login_input-group">
-                        <label htmlFor="password">Password</label>
+                        <label htmlFor="password">
+                            <svg className="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
+                            </svg>
+                            Password
+                        </label>
                         <input
                             type="password"
                             id="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Enter your password"
+                            placeholder="Enter password"
                             required
                         />
                     </div>
 
                     <button type="submit" className="login_login-button" disabled={loading}>
-                        {loading ? 'Logging in...' : 'Submit'}
+                        {loading ? (
+                            <>
+                                <span className="spinner"></span>
+                                Logging in...
+                            </>
+                        ) : (
+                            'Sign In'
+                        )}
                     </button>
 
                     <div className="login_helper-links">
