@@ -6,7 +6,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: calc(100vh - 112px);
+  min-height: calc(100vh - 80px);
   width: 100%;
   background-color: $divider-color; // Màu nền của container
 
@@ -31,6 +31,7 @@
       margin-bottom: 2rem;
 
       .register_register-title {
+        font-family: $font-family-header;
         font-size: 2rem;
         margin-bottom: 0.5rem;
         background: linear-gradient(135deg, $primary-color, $secondary-color);
@@ -41,6 +42,7 @@
       }
 
       .register_subtitle {
+        font-family: $font-family-main;
         color: #718096;
         font-size: 0.95rem;
         margin: 0;
@@ -59,6 +61,7 @@
       flex-direction: column;
 
       label {
+        font-family: $font-family-main;
         font-weight: 600;
         margin-bottom: 0.5rem;
         color: #2d3748;
@@ -75,6 +78,7 @@
       }
 
       input {
+        font-family: $font-family-main;
         padding: 12px 16px;
         border: 2px solid #e2e8f0;
         border-radius: 10px;
@@ -102,6 +106,7 @@
       }
 
       .error-text {
+        font-family: $font-family-main;
         color: $error-color;
         font-size: 0.8rem;
         margin-top: 4px;
@@ -116,6 +121,7 @@
     }
 
     .register_register-error {
+      font-family: $font-family-main;
       color: $error-color;
       background-color: rgba($error-color, 0.1);
       padding: 12px 16px;
@@ -127,6 +133,7 @@
     }
 
     .register_register-button {
+      font-family: $font-family-main;
       width: 100%;
       padding: 14px;
       background: linear-gradient(135deg, $primary-color, $secondary-color);
@@ -172,6 +179,7 @@
     }
 
     .register_login-link {
+      font-family: $font-family-main;
       text-align: center;
       margin-top: 1.5rem;
       font-size: 0.9rem;

@@ -8,7 +8,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: calc(100vh - 112px);
+  min-height: calc(100vh - 80px);
   overflow-y: auto;
   overflow-x: hidden;
   padding: 40px 16px;
@@ -31,6 +31,7 @@
       margin-bottom: 2rem;
 
       .login_login-title {
+        font-family: $font-family-header;
         font-size: 2rem;
         margin-bottom: 0.5rem;
         background: linear-gradient(135deg, $primary-color, $secondary-color);
@@ -41,6 +42,7 @@
       }
 
       .login_subtitle {
+        font-family: $font-family-main;
         color: #718096;
         font-size: 0.95rem;
         margin: 0;
@@ -53,6 +55,7 @@
       margin-bottom: 1.5rem;
 
       label {
+        font-family: $font-family-main;
         font-weight: 600;
         margin-bottom: 0.5rem;
         color: #2d3748;
@@ -69,6 +72,7 @@
       }
 
       input {
+        font-family: $font-family-main;
         padding: 12px 16px;
         border: 2px solid #e2e8f0;
         border-radius: 10px;
@@ -91,6 +95,7 @@
     }
 
     .login_login-error {
+      font-family: $font-family-main;
       color: $error-color;
       background-color: rgba($error-color, 0.1);
       padding: 12px 16px;
@@ -109,6 +114,7 @@
     }
 
     .login_login-button {
+      font-family: $font-family-main;
       width: 100%;
       padding: 14px;
       background: linear-gradient(135deg, $primary-color, $secondary-color);
@@ -165,6 +171,7 @@
       flex-wrap: wrap;
 
       .login_helper-link {
+        font-family: $font-family-main;
         color: $primary-color;
         font-size: 0.85rem;
         text-decoration: none;
@@ -193,6 +200,7 @@
     }
 
     .login_register-link {
+      font-family: $font-family-main;
       text-align: center;
       margin-top: 1.5rem;
       padding-top: 1.5rem;

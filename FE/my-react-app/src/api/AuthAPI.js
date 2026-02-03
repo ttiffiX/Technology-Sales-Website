@@ -100,6 +100,26 @@ export const logout = () => {
     localStorage.removeItem('imageUrl');
 };
 
+// Hàm quên mật khẩu
+export const forgotPassword = async (email) => {
+    try {
+        const response = await apiClient.post('/auth/forgot-password', null, {
+            params: { email }
+        });
+
+        return {
+            success: true,
+            message: response.data,
+        };
+    } catch (error) {
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to reset password. Please try again.',
+            status: error.response?.status,
+        };
+    }
+};
+
 // Hàm đổi mật khẩu
 export const changePassword = async (oldPassword, newPassword, confirmPassword) => {
     try {
