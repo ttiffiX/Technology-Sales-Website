@@ -20,7 +20,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<LogInResponse> login(@RequestBody LogInRequest logInRequest) {
-        log.info("Login attempt for user: {}", logInRequest.getUsername());
+        log.info("Login attempt for user: {}", logInRequest.getUsernameOrEmail());
         LogInResponse response = userServiceInterface.login(logInRequest);
         return ResponseEntity.ok(response);
     }

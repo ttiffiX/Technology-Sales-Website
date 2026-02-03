@@ -41,9 +41,11 @@ public class UserService implements UserServiceInterface {
 
     @Override
     public LogInResponse login(LogInRequest logInRequest) {
-        Users users = userRepository.findByUsername(logInRequest.getUsername()).orElseThrow(() -> new ResponseStatusException(CONFLICT, "Invalid username or password"));
+        Users users = userRepository.findByUsernameOrEmail(logInRequest.getUsernameOrEmail())
+                .orElseThrow(() -> new ResponseStatusException(UNAUTHORIZED, "Invalid account or password"));
+
         if (!passwordEncoder.matches(logInRequest.getPassword(), users.getPassword())) {
-            throw new ResponseStatusException(CONFLICT, "Invalid username or password");
+            throw new ResponseStatusException(UNAUTHORIZED, "Invalid account or password");
         }
 
         if (!users.isActive()) {

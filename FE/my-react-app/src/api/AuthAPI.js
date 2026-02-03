@@ -1,10 +1,10 @@
 import apiClient from './apiClient';
 
 // Hàm đăng nhập
-export const login = async (username, password) => {
+export const login = async (usernameOrEmail, password) => {
     try {
         const response = await apiClient.post('/auth/login', {
-            username,
+            usernameOrEmail,
             password,
         });
 
