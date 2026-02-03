@@ -15,4 +15,6 @@ public interface UserServiceInterface {
     String verifyEmail(String token);
 
     String resendVerificationEmail(String email);
+
+    String forgotPassword(String email);
 }

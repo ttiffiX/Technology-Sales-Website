@@ -24,6 +24,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import static org.springframework.http.HttpStatus.*;
 
+import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -205,5 +206,55 @@ public class UserService implements UserServiceInterface {
         emailService.sendVerificationEmail(user.getEmail(), verificationToken.getToken());
 
         return "Verification email has been resent. Please check your inbox.";
+    }
+
+    @Override
+    @Transactional
+    public String forgotPassword(String email) {
+        Users user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "No account found with this email address"));
+
+        if (!user.isActive()) {
+            throw new ResponseStatusException(CONFLICT, "Email is not verified. Please verify your email first.");
+        }
+
+        // Generate random temporary password (8 characters with numbers, letters, and special chars)
+        String tempPassword = generateRandomPassword();
+
+        user.setPassword(passwordEncoder.encode(tempPassword));
+        userRepository.save(user);
+
+        // Send email with new password
+        emailService.sendPasswordResetEmail(user.getEmail(), tempPassword);
+
+        return "A temporary password has been sent to your email address. Please check your inbox.";
+    }
+
+    private String generateRandomPassword() {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%^&+=!";
+        StringBuilder password = new StringBuilder();
+        SecureRandom random = new SecureRandom();
+
+        // Ensure password has at least one of each required type
+        password.append("ABCDEFGHIJKLMNOPQRSTUVWXYZ".charAt(random.nextInt(26))); // Upper
+        password.append("abcdefghijklmnopqrstuvwxyz".charAt(random.nextInt(26))); // Lower
+        password.append("0123456789".charAt(random.nextInt(10))); // Digit
+        password.append("@#$%^&+=!".charAt(random.nextInt(9))); // Special
+
+        // Fill remaining 4 characters randomly
+        for (int i = 0; i < 4; i++) {
+            password.append(chars.charAt(random.nextInt(chars.length())));
+        }
+
+        // Shuffle the password
+        char[] passwordArray = password.toString().toCharArray();
+        for (int i = passwordArray.length - 1; i > 0; i--) {
+            int j = random.nextInt(i + 1);
+            char temp = passwordArray[i];
+            passwordArray[i] = passwordArray[j];
+            passwordArray[j] = temp;
+        }
+
+        return new String(passwordArray);
     }
 }

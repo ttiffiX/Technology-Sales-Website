@@ -52,5 +52,12 @@ public class AuthController {
         String response = userServiceInterface.resendVerificationEmail(email);
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestParam String email) {
+        log.info("Forgot password request for: {}", email);
+        String response = userServiceInterface.forgotPassword(email);
+        return ResponseEntity.ok(response);
+    }
 }
 
