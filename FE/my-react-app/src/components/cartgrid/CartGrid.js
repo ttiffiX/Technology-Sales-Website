@@ -204,6 +204,10 @@ function CartGrid({products, count}) {
         }
     };
 
+    const handleProductClick = (productId) => {
+        navigate(`/product/${productId}`);
+    }
+
     const selectedTotalPrice = localProducts
         .filter(p => p.selected)
         .reduce((sum, item) => sum + item.productList.price * item.quantity, 0);
@@ -291,7 +295,12 @@ function CartGrid({products, count}) {
                         />
 
                         <div className="cart-content">
-                            <div className="cart-techName">{cd.productList.title}</div>
+                            <div
+                                className="cart-techName"
+                                onClick={() => handleProductClick(cd.productList.id)}
+                            >
+                                {cd.productList.title}
+                            </div>
                             <div className="cart-price">{formatPrice(cd.productList.price)}</div>
 
                             <div className="cart-actions">

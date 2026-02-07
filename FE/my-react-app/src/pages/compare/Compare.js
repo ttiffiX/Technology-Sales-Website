@@ -39,6 +39,10 @@ function Compare() {
         fetchCompareData();
     }, [selectedProducts, categoryId, navigate]);
 
+    const handleProductClick = (productId) => {
+        navigate(`/product/${productId}`);
+    }
+
     const handleBack = () => {
         navigate(-1);
     };
@@ -85,7 +89,11 @@ function Compare() {
                                 <th className="attribute-column">Products</th>
                                 {compareData.products.map(product => (
                                     <th key={product.id} className="product-column">
-                                        <div className="product-header">
+                                        <div
+                                            className="product-header"
+                                            onClick={() => handleProductClick(product.id)}
+                                            style={{cursor: 'pointer'}}
+                                        >
                                             <div
                                                 className="product-image"
                                                 style={{backgroundImage: `url(${getImage(product.imageUrl)})`}}

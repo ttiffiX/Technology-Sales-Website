@@ -192,6 +192,13 @@
     text-align: left;
     line-height: 1.4;
     margin: 0;
+    cursor: pointer;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: $primary-color;
+      text-decoration: underline;
+    }
 
     @media (max-width: 768px) {
       font-size: 16px;
