@@ -111,9 +111,9 @@
   }
 
   .compareBtn {
-    margin-top: 16px;
+    margin-top: auto;
     width: 80%;
-    background: $secondary-color;
+    background: $primary-color;
     color: $background-color;
     border: none;
     border-radius: 8px;
@@ -129,6 +129,22 @@
 
     &:active {
       transform: translateY(0);
+    }
+
+    &.active {
+      background: $active-color;
+      color: white;
+    }
+
+    &.disabled {
+      background: #ccc;
+      color: #666;
+      cursor: not-allowed;
+
+      &:hover {
+        background: #ccc;
+        transform: none;
+      }
     }
   }
 
@@ -148,7 +164,8 @@
   .sold-count {
     font-size: 13px;
     color: #666;
-    margin-top: 4px;
+    margin-top: 8px;
+    margin-bottom: 8px;
     font-style: italic;
   }
 }

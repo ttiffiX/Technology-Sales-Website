@@ -2,19 +2,24 @@ import React from 'react';
 import {useNavigate} from 'react-router-dom';
 import './ProductGrid.scss';
 import {formatPrice, getImage} from '../../utils';
+import {useCompare} from '../../contexts/CompareContext';
 
-function ProductGrid({products}) {
+function ProductGrid({products, categoryId}) {
     const navigate = useNavigate();
+    const {addToCompare, compareProducts} = useCompare();
 
 
     const handleProductClick = (productId) => {
         navigate(`/product/${productId}`);
     };
 
-    const handleCompareClick = (e, productId) => {
+    const handleCompareClick = (e, product) => {
         e.stopPropagation(); // Prevent navigation when clicking compare
-        // TODO: Implement compare logic when API is ready
-        console.log('Compare product:', productId);
+        addToCompare(product, categoryId);
+    };
+
+    const isInCompare = (productId) => {
+        return compareProducts.some(p => p.id === productId);
     };
 
     if (!products || products.length === 0) {
@@ -41,12 +46,16 @@ function ProductGrid({products}) {
                     {product.quantitySold > 0 && (
                         <div className="sold-count">Sold: {product.quantitySold}</div>
                     )}
-                    <button
-                        className="compareBtn"
-                        onClick={(e) => handleCompareClick(e, product.id)}
-                    >
-                        Compare
-                    </button>
+                    {/* Only show compare button when category is selected */}
+                    {categoryId && (
+                        <button
+                            className={`compareBtn ${isInCompare(product.id) ? 'active' : ''} ${compareProducts.length >= 3 && !isInCompare(product.id) ? 'disabled' : ''}`}
+                            onClick={(e) => handleCompareClick(e, product)}
+                            disabled={compareProducts.length >= 3 && !isInCompare(product.id)}
+                        >
+                            {isInCompare(product.id) ? '✓ Selected' : 'Compare'}
+                        </button>
+                    )}
                 </div>
             ))}
         </div>

@@ -7,19 +7,18 @@
   padding: 40px 96px;
 
   .back-btn {
-    background: none;
-    border: 1px solid $border-color;
+    background: $primary-color;
     padding: 10px 20px;
     border-radius: 8px;
     cursor: pointer;
     font-size: 14px;
     font-weight: 500;
-    color: $text-in-header-color;
+    color: white;
     margin-bottom: 30px;
     transition: all 0.2s;
 
     &:hover {
-      background: $hover-color;
+      background: $secondary-color;
     }
   }
 

@@ -5,25 +5,28 @@ import RouterPages from "./router/RouterPages";
 import {ToastProvider} from "./components/Toast/Toast";
 import {ToastContainer} from "react-toastify";
 import {CartProvider} from "./contexts/CartContext";
+import {CompareProvider} from "./contexts/CompareContext";
 
 function App() {
     return (
         <CartProvider>
-            <ToastProvider>
-                <RouterPages/>
-                <ToastContainer
-                    position="top-left"
-                    autoClose={2000}
-                    hideProgressBar={false}
-                    newestOnTop={false}
-                    closeOnClick
-                    rtl={false}
-                    pauseOnFocusLoss
-                    draggable
-                    pauseOnHover
-                    theme="light"
-                />
-            </ToastProvider>
+            <CompareProvider>
+                <ToastProvider>
+                    <RouterPages/>
+                    <ToastContainer
+                        position="top-left"
+                        autoClose={2000}
+                        hideProgressBar={false}
+                        newestOnTop={false}
+                        closeOnClick
+                        rtl={false}
+                        pauseOnFocusLoss
+                        draggable
+                        pauseOnHover
+                        theme="light"
+                    />
+                </ToastProvider>
+            </CompareProvider>
         </CartProvider>
     );
 }

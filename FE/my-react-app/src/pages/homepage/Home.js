@@ -9,6 +9,7 @@ import Header from "../../components/header/Header";
 import FilterSidebar from "../../components/filtersidebar/FilterSidebar";
 import useFetchProducts, { filterProducts, searchProducts, getAllCategories } from "../../api/ProductAPI";
 import {useCart} from "../../contexts/CartContext";
+import CompareBar from "../../components/comparebar/CompareBar";
 
 function Home() {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -248,9 +249,12 @@ function Home() {
                 <div className={`products-container ${selectedCategoryId ? 'with-sidebar' : 'full-width'}`}>
                     {loading && <div className="loading-overlay">Loading...</div>}
                     {error && <div className="error-message">{error}</div>}
-                    <ProductGrid products={products}/>
+                    <ProductGrid products={products} categoryId={selectedCategoryId}/>
                 </div>
             </div>
+
+            {/* Compare Bar */}
+            <CompareBar />
         </div>
     );
 }

@@ -16,6 +16,7 @@ import PaymentResult from "../pages/paymentresult/PaymentResult";
 import VerifyEmail from "../pages/verifyemail/VerifyEmail";
 import WaitingVerification from "../pages/verifyemail/WaitingVerification";
 import VerificationHelp from "../pages/verifyemail/VerificationHelp";
+import Compare from "../pages/compare/Compare";
 
 
 function RouterPages() {
@@ -34,6 +35,7 @@ function RouterPages() {
                 <Route path="/verification-help" element={<VerificationHelp/>}/>
                 <Route path="/aboutme" element={<AboutMe/>}/>
                 <Route path="/product/:id" element={<ProductDetail/>}/>
+                <Route path="/compare" element={<Compare/>}/>
 
                 {/* Protected Routes - Require Authentication */}
                 <Route path="/cart" element={

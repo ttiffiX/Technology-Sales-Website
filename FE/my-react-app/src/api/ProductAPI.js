@@ -109,4 +109,20 @@ export const getProductDetail = async (productId) => {
     }
 };
 
+/**
+ * Compare products
+ */
+export const compareProducts = async (categoryId, productIds) => {
+    try {
+        const response = await apiClient.post('/product/compare', {
+            categoryId,
+            productIds
+        });
+        return response.data;
+    } catch (error) {
+        // console.error('Failed to compare products:', error);
+        throw error;
+    }
+};
+
 export default useFetchProducts;

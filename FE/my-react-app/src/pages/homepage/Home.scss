@@ -1,7 +1,8 @@
 .home-content {
   display: flex;
   gap: 24px;
-  padding: 20px 96px;
+  // Space for CompareBar
+  padding: 20px 96px 100px;
   max-width: 1920px;
   margin: 0 auto;
 
@@ -53,7 +54,7 @@
 /* Responsive */
 @media (max-width: 1200px) {
   .home-content {
-    padding: 20px 40px;
+    padding: 20px 40px 100px;
 
     .sidebar-container {
       flex: 0 0 240px;
@@ -65,7 +66,7 @@
 @media (max-width: 968px) {
   .home-content {
     flex-direction: column;
-    padding: 16px;
+    padding: 16px 16px 100px;
 
     .sidebar-container {
       flex: 1;

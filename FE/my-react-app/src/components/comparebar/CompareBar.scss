@@ -1,0 +1,267 @@
+@import "../../styles/_mixins.scss";
+@import "../../styles/_variables.scss";
+@import "../../styles/_base.scss";
+
+.compare-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  transition: transform 0.3s ease;
+
+  &.minimized {
+    .compare-bar-content {
+      display: none;
+    }
+  }
+
+  .compare-bar-header {
+    padding: 6px 16px;
+    background: $background-color;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+
+    h3 {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .minimize-btn {
+      background: none;
+      border: none;
+      font-size: 14px;
+      cursor: pointer;
+      color: #666;
+      padding: 2px 4px;
+      transition: color 0.2s;
+
+      &:hover {
+        color: #333;
+      }
+    }
+  }
+
+  .compare-bar-content {
+    padding: 8px 16px;
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .compare-products {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    flex: 1;
+  }
+
+  .compare-slot {
+    border: 1px dashed #dee2e6;
+    border-radius: 6px;
+    padding: 6px;
+    position: relative;
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+    transition: border-color 0.2s;
+
+    &.filled {
+      border: 1px solid $primary-color;
+      background: white;
+    }
+
+    &.empty {
+      .empty-slot-text {
+        color: #999;
+        font-size: 11px;
+      }
+    }
+
+    .remove-btn {
+      position: absolute;
+      top: 3px;
+      right: 3px;
+      background: $nav-button-color;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      font-size: 11px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s;
+      z-index: 10;
+
+      &:hover {
+        background: darken($nav-button-color, 10%);
+      }
+    }
+
+    .product-image {
+      width: 100%;
+      height: 55px;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      margin-bottom: 4px;
+    }
+
+    .product-name {
+      font-size: 11px;
+      font-weight: 500;
+      color: #333;
+      text-align: center;
+      margin-bottom: 3px;
+      line-height: 1.2;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+    }
+
+    .product-price {
+      font-size: 12px;
+      font-weight: 600;
+      color: $primary-color;
+    }
+  }
+
+  .compare-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+    justify-content: center;
+    height: 100px;
+
+    button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .clear-btn {
+      background: #6c757d;
+      color: white;
+
+      &:hover {
+        background: #5a6268;
+      }
+    }
+
+    .compare-btn {
+      background: $primary-color;
+      color: white;
+
+      &:hover:not(.disabled) {
+        background: $secondary-color;
+      }
+
+      &.disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .compare-bar {
+    .compare-bar-header {
+      padding: 5px 10px;
+
+      h3 {
+        font-size: 11px;
+      }
+
+      .minimize-btn {
+        font-size: 12px;
+      }
+    }
+
+    .compare-bar-content {
+      padding: 6px 10px;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .compare-products {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+      width: 100%;
+    }
+
+    .compare-slot {
+      min-height: 70px;
+      padding: 4px;
+
+      .remove-btn {
+        width: 15px;
+        height: 15px;
+        font-size: 9px;
+        top: 2px;
+        right: 2px;
+      }
+
+      .product-image {
+        height: 40px;
+        margin-bottom: 2px;
+      }
+
+      .product-name {
+        font-size: 9px;
+        margin-bottom: 2px;
+      }
+
+      .product-price {
+        font-size: 10px;
+      }
+
+      .empty-slot-text {
+        font-size: 9px;
+      }
+    }
+
+    .compare-actions {
+      flex-direction: row;
+      width: 100%;
+      gap: 4px;
+
+      button {
+        padding: 4px 8px;
+        font-size: 10px;
+        flex: 1;
+      }
+    }
+  }
+}
+
