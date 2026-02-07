@@ -12,7 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class CompareResponse {
-    List<String> attributeNames;
+    private List<String> attributeNames;
     // Danh sách sản phẩm được so sánh (tối đa 3)
     private List<ProductDetailDTO> products;
 }
