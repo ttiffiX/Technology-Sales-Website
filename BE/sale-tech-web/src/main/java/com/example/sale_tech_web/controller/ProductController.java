@@ -1,10 +1,8 @@
 package com.example.sale_tech_web.controller;
 
-import com.example.sale_tech_web.feature.product.dto.CategoryDTO;
-import com.example.sale_tech_web.feature.product.dto.CategoryFilterOptionsDTO;
-import com.example.sale_tech_web.feature.product.dto.ProductDetailDTO;
-import com.example.sale_tech_web.feature.product.dto.ProductListDTO;
+import com.example.sale_tech_web.feature.product.dto.*;
 import com.example.sale_tech_web.feature.product.manager.ProductServiceInterface;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -85,17 +83,17 @@ public class ProductController {
     /**
      * GET /product/category/{categoryId}/filter
      * Filter products by category with optional attributes and price range
-     *
+     * <p>
      * Examples:
      * - /product/category/1/filter?minPrice=10000000&maxPrice=30000000
      * - /product/category/1/filter?attr_1=8,16&attr_3=15.6
      * - /product/category/1/filter?attr_1=8,16&minPrice=10000000&maxPrice=30000000
-     *
+     * <p>
      * Query params:
      * - minPrice (optional): Minimum price
      * - maxPrice (optional): Maximum price
      * - attr_{attributeId} (optional): Comma-separated values for that attribute
-     *   Example: attr_1=8,16 means RAM = 8GB OR 16GB
+     * Example: attr_1=8,16 means RAM = 8GB OR 16GB
      */
     @GetMapping("/category/{categoryId}/filter")
     public ResponseEntity<List<ProductListDTO>> filterByCategory(
@@ -130,5 +128,12 @@ public class ProductController {
                 sort
         );
         return ResponseEntity.ok(products);
+    }
+
+    @PostMapping("/compare")
+    public ResponseEntity<CompareResponse> compareProducts(@Valid @RequestBody CompareRequest compareRequest) {
+        log.info("Compare products - IDs: {}", compareRequest.getProductIds());
+        CompareResponse comparison = productServiceInterface.compareProducts(compareRequest);
+        return ResponseEntity.ok(comparison);
     }
 }

@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -25,5 +27,8 @@ public class ProductAttribute {
 
     @Column(name = "data_type", length = 20)
     private String dataType;
+
+    @OneToMany(mappedBy = "attribute", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<CategoryAttributeMapping> categoryAttributeMapping;
 }
 

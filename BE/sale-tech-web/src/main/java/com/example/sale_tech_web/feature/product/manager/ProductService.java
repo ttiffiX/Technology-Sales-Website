@@ -23,6 +23,7 @@ public class ProductService implements ProductServiceInterface {
     private final CategoryAttributeMappingRepository categoryAttributeMappingRepository;
     private final ProductAttributeValueRepository productAttributeValueRepository;
     private final EntityManager entityManager;
+    private final ProductAttributeRepository productAttributeRepository;
 
     /**
      * Get all categories
@@ -196,6 +197,39 @@ public class ProductService implements ProductServiceInterface {
         return products.stream()
                 .map(this::convertToListDTO)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Compare multiple products (max 3)
+     * Returns all common attributes across products for comparison
+     */
+    public CompareResponse compareProducts(CompareRequest compareRequest) {
+        List<Long> productIds = compareRequest.getProductIds();
+        Long categoryId = compareRequest.getCategoryId();
+
+        List<Product> fetchedProducts = productRepository.findAllByIdWithDetails(productIds);
+
+        for (Product product : fetchedProducts) {
+            if (!product.getCategory().getId().equals(categoryId)) {
+                throw new ResponseStatusException(BAD_REQUEST, "All products must belong to the specified category");
+            }
+        }
+
+        // Check if all products exist
+        if (fetchedProducts.size() != productIds.size()) {
+            throw new ResponseStatusException(NOT_FOUND, "One or more products not found");
+        }
+
+        List<String> allAttributes = productAttributeRepository.findByCategory(categoryId);
+
+        List<ProductDetailDTO> productDetails = fetchedProducts.stream()
+                .map(this::convertToDetailDTO)
+                .toList();
+
+        return CompareResponse.builder()
+                .attributeNames(allAttributes)
+                .products(productDetails)
+                .build();
     }
 
     /**

@@ -24,4 +24,6 @@ public interface ProductServiceInterface {
 
     List<ProductListDTO> searchProducts(String keyword);
 
+    CompareResponse compareProducts(CompareRequest compareRequest);
+
 }

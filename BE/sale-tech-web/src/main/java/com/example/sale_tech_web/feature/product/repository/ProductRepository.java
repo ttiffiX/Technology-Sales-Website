@@ -35,4 +35,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @EntityGraph(attributePaths = {"category", "attributeValues", "attributeValues.attribute"})
     @Query("SELECT p FROM Product p WHERE p.id = :id")
     Optional<Product> findByIdWithDetails(@Param("id") Long id);
+
+    // Find multiple products by IDs with all related data (for comparison) - prevent N+1
+    @EntityGraph(attributePaths = {"category", "attributeValues", "attributeValues.attribute"})
+    @Query("SELECT p FROM Product p WHERE p.id IN :ids")
+    List<Product> findAllByIdWithDetails(@Param("ids") List<Long> ids);
 }
