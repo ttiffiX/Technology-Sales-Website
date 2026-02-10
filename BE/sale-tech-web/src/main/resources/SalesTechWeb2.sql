@@ -1,3 +1,42 @@
+-- Tăng tốc lọc sản phẩm theo danh mục
+CREATE INDEX idx_product_category ON product (category_id);
+
+-- Tăng tốc tìm kiếm theo tên sản phẩm (Cơ bản)
+CREATE INDEX idx_product_title ON product (title);
+
+-- Tăng tốc lọc theo khoảng giá (WHERE price BETWEEN x AND y)
+CREATE INDEX idx_product_price ON product (price);
+
+-- Tăng tốc sắp xếp sản phẩm mới nhất (ORDER BY created_at DESC)
+CREATE INDEX idx_product_created_at ON product (created_at DESC);
+
+-- Giúp lấy nhanh danh sách thuộc tính của 1 sản phẩm cụ thể
+CREATE INDEX idx_pav_product_id ON product_attribute_values (product_id);
+
+-- Giúp lọc sản phẩm theo thuộc tính (VD: Tìm tất cả sản phẩm có Màu = Đỏ)
+CREATE INDEX idx_pav_attr_value ON product_attribute_values (attribute_id, value);
+
+-- Giúp User xem lịch sử mua hàng nhanh hơn
+CREATE INDEX idx_orders_user_id ON orders (user_id);
+
+-- Giúp Admin/PM lọc đơn hàng theo trạng thái (VD: Lấy đơn PENDING để duyệt)
+CREATE INDEX idx_orders_status ON orders (status);
+
+-- Tối ưu hóa khi JOIN bảng Order và OrderDetail
+CREATE INDEX idx_order_detail_order_id ON order_detail (order_id);
+
+-- Tối ưu hóa khi load giỏ hàng (JOIN Cart và CartDetail)
+CREATE INDEX idx_cart_detail_cart_id ON cart_detail (cart_id);
+
+-- Tối ưu hóa tìm kiếm token xác thực email
+CREATE INDEX idx_evt_token ON email_verification_tokens (token);
+
+-- Tối ưu load danh sách địa chỉ của User
+CREATE INDEX idx_user_address_user_id ON user_address (user_id);
+
+-- Tìm kiếm hóa đơn theo mã giao dịch (của VNPAY/PayOS trả về)
+CREATE INDEX idx_invoice_transaction_id ON invoice (transaction_id);
+
 -- Enums
 drop type user_role_enum;
 CREATE TYPE user_role_enum AS ENUM (
@@ -217,14 +256,28 @@ CREATE TABLE cart_detail
 drop table email_verification_tokens;
 CREATE TABLE email_verification_tokens
 (
-    id         SERIAL PRIMARY KEY,
-    user_id    INT UNIQUE NOT NULL,
-    token      VARCHAR(255) NOT NULL,
-    expiry_date TIMESTAMP NOT NULL,
-    is_used    BOOLEAN DEFAULT FALSE,
-    last_sent TIMESTAMP NOT NULL ,
+    id          SERIAL PRIMARY KEY,
+    user_id     INT UNIQUE   NOT NULL,
+    token       VARCHAR(255) NOT NULL,
+    expiry_date TIMESTAMP    NOT NULL,
+    is_used     BOOLEAN DEFAULT FALSE,
+    last_sent   TIMESTAMP    NOT NULL,
     -- Khóa ngoại đến User
     CONSTRAINT fk_evt_user FOREIGN KEY (user_id) REFERENCES users (id)
+);
+
+drop table user_address;
+CREATE TABLE user_address
+(
+    id            SERIAL PRIMARY KEY,
+    user_id       INT NOT NULL,
+    province_code VARCHAR(20),
+    ward_code     VARCHAR(20),
+    address       TEXT,
+    -- Cờ đánh dấu
+    is_default    BOOLEAN DEFAULT FALSE, -- Địa chỉ mặc định để ship hàng
+    label         VARCHAR(20),           -- Ví dụ: "Nhà riêng", "Công ty"
+    CONSTRAINT fk_user_address FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
 
