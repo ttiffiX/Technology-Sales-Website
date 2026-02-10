@@ -68,5 +68,12 @@ public class ProvinceService {
                 .map(ProvinceData.WardData::getName)
                 .orElse("Unknown Ward");
     }
+
+    public boolean checkWardInProvince(String wardCode, String provinceCode) {
+        return getProvinceByCode(provinceCode)
+                .map(province -> province.getWards().stream()
+                        .anyMatch(ward -> ward.getWardCode().equals(wardCode)))
+                .orElse(false);
+    }
 }
 
