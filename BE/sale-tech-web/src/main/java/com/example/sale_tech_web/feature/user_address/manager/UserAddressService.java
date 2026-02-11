@@ -67,7 +67,7 @@ public class UserAddressService implements UserAddressServiceInterface {
 
         // Nếu đây là địa chỉ đầu tiên hoặc được đánh dấu là default
         long addressCount = userAddressRepository.countByUserId(userId);
-        boolean shouldBeDefault = (addressCount == 0) || request.isDefault();
+        boolean shouldBeDefault = (addressCount == 0) || request.getIsDefault();
 
         // Nếu địa chỉ mới là default, bỏ default của các địa chỉ cũ
         if (shouldBeDefault && addressCount > 0) {

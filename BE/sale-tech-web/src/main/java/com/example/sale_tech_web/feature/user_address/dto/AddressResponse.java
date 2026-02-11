@@ -16,7 +16,7 @@ public class AddressResponse {
     private String wardCode;
     private String wardName;
     private String address;
-    private boolean isDefault;
+    private Boolean isDefault;
     private String label;
 }
 

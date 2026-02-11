@@ -20,7 +20,7 @@ public class AddressRequest {
     @NotBlank(message = "Address is required")
     private String address;
 
-    private boolean isDefault;
+    private Boolean isDefault;
 
     private String label; // e.g., "Home", "Office"
 }
