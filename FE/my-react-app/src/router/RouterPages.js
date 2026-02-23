@@ -13,7 +13,6 @@ import ProductDetail from "../pages/productdetail/ProductDetail";
 import OrderHistory from "../pages/orderhistory/OrderHistory";
 import ProtectedRoute from "./ProtectedRoute";
 import PaymentResult from "../pages/paymentresult/PaymentResult";
-import VerifyEmail from "../pages/verifyemail/VerifyEmail";
 import WaitingVerification from "../pages/verifyemail/WaitingVerification";
 import VerificationHelp from "../pages/verifyemail/VerificationHelp";
 import Compare from "../pages/compare/Compare";
@@ -30,7 +29,6 @@ function RouterPages() {
                 <Route path="/login" element={<Login/>}/>
                 <Route path="/register" element={<Register/>}/>
                 <Route path="/forgot-password" element={<ForgotPassword/>}/>
-                <Route path="/verify-email" element={<VerifyEmail/>}/>
                 <Route path="/waiting-verification" element={<WaitingVerification/>}/>
                 <Route path="/verification-help" element={<VerificationHelp/>}/>
                 <Route path="/aboutme" element={<AboutMe/>}/>

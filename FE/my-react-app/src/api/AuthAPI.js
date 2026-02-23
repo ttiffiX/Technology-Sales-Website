@@ -53,13 +53,10 @@ export const register = async (userData) => {
     }
 };
 
-// Hàm xác minh email
-export const verifyEmail = async (token) => {
+// Hàm xác minh email bằng OTP
+export const verifyEmail = async (email, otp) => {
     try {
-        const response = await apiClient.get('/auth/verify-email', {
-            params: {token}
-        });
-
+        const response = await apiClient.post('/auth/verify-email', { email, otp });
         return {
             success: true,
             message: response.data,
@@ -67,7 +64,7 @@ export const verifyEmail = async (token) => {
     } catch (error) {
         return {
             success: false,
-            message: error.response?.data.message || 'Email verification failed. Token may be invalid or expired.',
+            message: error.response?.data?.message || 'OTP verification failed. Please check and try again.',
             status: error.response?.status,
         };
     }
