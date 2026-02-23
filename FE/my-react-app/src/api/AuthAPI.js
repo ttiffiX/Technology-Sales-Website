@@ -110,17 +110,42 @@ export const logout = async () => {
 export const forgotPassword = async (email) => {
     try {
         const response = await apiClient.post('/auth/forgot-password', null, {
-            params: {email}
+            params: { email }
         });
-
+        return { success: true, message: response.data };
+    } catch (error) {
         return {
-            success: true,
-            message: response.data,
+            success: false,
+            message: error.response?.data?.message || 'Failed to send OTP. Please try again.',
+            status: error.response?.status,
         };
+    }
+};
+
+export const verifyResetOtp = async (email, otp) => {
+    try {
+        const response = await apiClient.post('/auth/verify-reset-otp', { email, otp });
+        return { success: true, resetToken: response.data.resetToken };
+    } catch (error) {
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Invalid OTP. Please try again.',
+            status: error.response?.status,
+        };
+    }
+};
+
+export const resetPassword = async (resetToken, newPassword, confirmPassword) => {
+    try {
+        const response = await apiClient.post('/auth/reset-password',
+            { resetToken, newPassword, confirmPassword }
+        );
+        return { success: true, message: response.data };
     } catch (error) {
         return {
             success: false,
             message: error.response?.data?.message || 'Failed to reset password. Please try again.',
+            errors: error.response?.data?.errors || null,
             status: error.response?.status,
         };
     }

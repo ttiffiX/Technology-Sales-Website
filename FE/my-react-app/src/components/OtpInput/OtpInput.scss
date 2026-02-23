@@ -1,0 +1,49 @@
+@import '../../styles/variables';
+
+.otp-input-group {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 0 0 20px;
+}
+
+.otp-box {
+    width: 52px;
+    height: 60px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 24px;
+    font-weight: 700;
+    text-align: center;
+    color: #1a202c;
+    background: #f7fafc;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    caret-color: $primary-color;
+
+    &:focus {
+        border-color: $primary-color;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+    }
+
+    &.filled {
+        border-color: $primary-color;
+        background: white;
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+@media (max-width: 480px) {
+    .otp-box {
+        width: 42px;
+        height: 50px;
+        font-size: 18px;
+        border-radius: 8px;
+    }
+}
+

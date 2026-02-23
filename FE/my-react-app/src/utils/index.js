@@ -61,7 +61,18 @@ export {
     highlightText
 } from './stringUtils';
 
+// OTP utilities & hooks
+export {
+    OTP_LENGTH,
+    createEmptyOtp,
+    joinOtp,
+    isOtpComplete,
+    useOtpInput,
+    useResendCooldown,
+} from './otpUtils';
+
 // Order utilities
+
 export {
     ORDER_STATUS,
     PAYMENT_METHOD,

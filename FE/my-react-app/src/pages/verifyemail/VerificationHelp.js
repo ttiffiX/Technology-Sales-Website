@@ -38,13 +38,15 @@ const VerificationHelp = () => {
 
             if (result.success) {
                 setMessage({
-                    text: result.message || 'Verification email has been resent! Please check your inbox.',
+                    text: 'A new OTP code has been sent! Please check your inbox.',
                     type: 'success'
                 });
                 setResendCooldown(60);
+                // Chuyển sang trang nhập OTP sau 1.5 giây
+                setTimeout(() => navigate('/waiting-verification', { state: { email } }), 1500);
             } else {
                 setMessage({
-                    text: result.message || 'Unable to resend email. Please try again later.',
+                    text: result.message || 'Unable to send OTP. Please try again later.',
                     type: 'error'
                 });
 
@@ -77,7 +79,7 @@ const VerificationHelp = () => {
 
                     <h2>Verification Help</h2>
                     <p className="help-description">
-                        Having trouble with email verification? Enter your email address below to receive a new verification link.
+                        Having trouble verifying your email? Enter your registered email address below to receive a new OTP code.
                     </p>
 
                     <form onSubmit={handleResendEmail} className="help-form">
@@ -88,7 +90,7 @@ const VerificationHelp = () => {
                                 id="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                placeholder="Enter your email"
+                                placeholder="Enter your registered email"
                                 required
                             />
                         </div>
@@ -108,7 +110,7 @@ const VerificationHelp = () => {
                                 ? 'Sending...'
                                 : resendCooldown > 0
                                     ? `Resend (${resendCooldown}s)`
-                                    : 'Send Verification Email'}
+                                    : 'Send OTP Code'}
                         </button>
                     </form>
 
@@ -116,8 +118,9 @@ const VerificationHelp = () => {
                         <h4>Common Issues:</h4>
                         <ul>
                             <li>Check your spam/junk folder</li>
-                            <li>Verification email expires after 30 minutes</li>
+                            <li>OTP code expires after <strong>10 minutes</strong></li>
                             <li>Unverified accounts are deleted after 24 hours</li>
+                            <li>Make sure you are using the email you registered with</li>
                         </ul>
                     </div>
 
