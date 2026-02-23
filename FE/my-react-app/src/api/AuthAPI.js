@@ -168,6 +168,7 @@ export const changePassword = async (oldPassword, newPassword, confirmPassword) 
         return {
             success: false,
             message: error.response?.data?.message || 'Failed to change password. Please try again.',
+            errors: error.response?.data?.errors || null,
         };
     }
 };

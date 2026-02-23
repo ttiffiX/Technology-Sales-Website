@@ -98,6 +98,43 @@
           outline: none;
           box-shadow: 0 0 0 2px rgba($primary-color, 0.1);
         }
+
+        &.error {
+          border-color: #e53e3e;
+          &:focus {
+            border-color: #e53e3e;
+            box-shadow: 0 0 0 2px rgba(#e53e3e, 0.1);
+          }
+        }
+      }
+
+      .edit-field {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        margin-left: 16px;
+
+        input {
+          margin-left: 0;
+        }
+      }
+
+      .error-text {
+        font-size: 12px;
+        color: #e53e3e;
+        font-weight: 500;
+        margin-top: 4px;
+      }
+
+      .profile-error.general-error {
+        font-size: 13px;
+        color: #991b1b;
+        background: #fee2e2;
+        border: 1px solid #fca5a5;
+        border-radius: 6px;
+        padding: 8px 12px;
+        margin-bottom: 8px;
+        font-weight: 500;
       }
 
       &.address-section {

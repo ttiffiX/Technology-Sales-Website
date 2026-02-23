@@ -7,6 +7,7 @@ import ChangePasswordModal from "../../components/modal/changepass/ChangePasswor
 import AddressManagement from "../../components/modal/address/AddressManagement";
 import {useToast} from "../../components/Toast/Toast";
 import {getProfile, updateProfile} from "../../api/ProfileAPI";
+import {isRequired, isValidPhone} from "../../utils";
 
 const Profile = () => {
     const {cartCount} = useCart();
@@ -22,6 +23,7 @@ const Profile = () => {
 
     const [isEditing, setIsEditing] = useState(false);
     const [editedUser, setEditedUser] = useState({...user});
+    const [errors, setErrors] = useState({});
     const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
     const [isAddressManagementOpen, setIsAddressManagementOpen] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -45,18 +47,26 @@ const Profile = () => {
 
     const handleEditClick = () => {
         setIsEditing(true);
+        setErrors({});
+    };
+
+    const validateForm = () => {
+        const newErrors = {};
+        if (!isRequired(editedUser.name)) {
+            newErrors.name = 'Name is required';
+        }
+        if (!isRequired(editedUser.phone)) {
+            newErrors.phone = 'Phone is required';
+        } else if (!isValidPhone(editedUser.phone)) {
+            newErrors.phone = 'Invalid phone number';
+        }
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
 
     const handleSaveClick = async () => {
-        // Validate
-        if (!editedUser.name.trim()) {
-            triggerToast('error', 'Name is required');
-            return;
-        }
-        if (!editedUser.phone.trim()) {
-            triggerToast('error', 'Phone is required');
-            return;
-        }
+        setErrors({});
+        if (!validateForm()) return;
 
         const result = await updateProfile({
             name: editedUser.name,
@@ -66,20 +76,32 @@ const Profile = () => {
         if (result.success) {
             setUser(result.data);
             setIsEditing(false);
+            setErrors({});
             triggerToast('success', result.message || 'Profile updated successfully');
         } else {
-            triggerToast('error', result.message || 'Failed to update profile');
+            // Set general message
+            const errs = {general: result.message};
+            // Spread per-field errors từ BE nếu có
+            if (result.errors) {
+                Object.assign(errs, result.errors);
+            }
+            setErrors(errs);
         }
     };
 
     const handleCancelEdit = () => {
         setEditedUser({...user});
         setIsEditing(false);
+        setErrors({});
     };
 
     const handleChange = (e) => {
         const {name, value} = e.target;
         setEditedUser({...editedUser, [name]: value});
+        // Clear error cho field đang sửa
+        if (errors[name]) {
+            setErrors(prev => ({...prev, [name]: ''}));
+        }
     };
 
     const handleChangePasswordClick = () => {
@@ -142,13 +164,20 @@ const Profile = () => {
                     <div className="info-item">
                         <label>Name</label>
                         {isEditing ? (
-                            <input
-                                type="text"
-                                name="name"
-                                value={editedUser.name}
-                                onChange={handleChange}
-                                placeholder="Enter your name"
-                            />
+                            <div className="edit-field">
+                                {errors.general && (
+                                    <div className="profile-error general-error">{errors.general}</div>
+                                )}
+                                <input
+                                    type="text"
+                                    name="name"
+                                    value={editedUser.name}
+                                    onChange={handleChange}
+                                    placeholder="Enter your name"
+                                    className={errors.name ? 'error' : ''}
+                                />
+                                {errors.name && <span className="error-text">{errors.name}</span>}
+                            </div>
                         ) : (
                             <span>{user.name || 'Not set'}</span>
                         )}
@@ -157,13 +186,17 @@ const Profile = () => {
                     <div className="info-item">
                         <label>Phone</label>
                         {isEditing ? (
-                            <input
-                                type="text"
-                                name="phone"
-                                value={editedUser.phone}
-                                onChange={handleChange}
-                                placeholder="Enter your phone number"
-                            />
+                            <div className="edit-field">
+                                <input
+                                    type="text"
+                                    name="phone"
+                                    value={editedUser.phone}
+                                    onChange={handleChange}
+                                    placeholder="Enter your phone number"
+                                    className={errors.phone ? 'error' : ''}
+                                />
+                                {errors.phone && <span className="error-text">{errors.phone}</span>}
+                            </div>
                         ) : (
                             <span>{user.phone || 'Not set'}</span>
                         )}

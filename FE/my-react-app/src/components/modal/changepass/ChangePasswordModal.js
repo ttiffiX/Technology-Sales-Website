@@ -91,10 +91,13 @@ const ChangePasswordModal = ({ isOpen, onClose, onSuccess }) => {
                 // Close modal
                 onClose();
             } else {
-                // Show error from backend
-                setErrors({
-                    general: result.message
-                });
+                // Set general message trước
+                const errs = { general: result.message };
+                // Spread per-field errors từ BE nếu có (vd: { newPassword: "must contain uppercase..." })
+                if (result.errors) {
+                    Object.assign(errs, result.errors);
+                }
+                setErrors(errs);
             }
         } catch (error) {
             setErrors({
