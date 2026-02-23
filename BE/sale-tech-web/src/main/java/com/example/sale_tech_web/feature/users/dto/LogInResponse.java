@@ -14,4 +14,5 @@ public class LogInResponse {
     private String username;
     private String name;
     private String imageUrl;
+    private String role;
 }

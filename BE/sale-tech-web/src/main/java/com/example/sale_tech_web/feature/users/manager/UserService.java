@@ -58,6 +58,7 @@ public class UserService implements UserServiceInterface {
                 .username(users.getUsername())
                 .name(users.getName())
                 .imageUrl(users.getImageUrl())
+                .role(users.getRole().name())
                 .build();
     }
 

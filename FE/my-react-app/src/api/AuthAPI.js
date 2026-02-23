@@ -14,6 +14,7 @@ export const login = async (usernameOrEmail, password) => {
             localStorage.setItem('username', response.data.username);
             localStorage.setItem('name', response.data.name);
             localStorage.setItem('imageUrl', response.data.imageUrl || '');
+            localStorage.setItem('role', response.data.role);
         }
 
         return {
@@ -56,7 +57,7 @@ export const register = async (userData) => {
 export const verifyEmail = async (token) => {
     try {
         const response = await apiClient.get('/auth/verify-email', {
-            params: { token }
+            params: {token}
         });
 
         return {
@@ -76,7 +77,7 @@ export const verifyEmail = async (token) => {
 export const resendVerificationEmail = async (email) => {
     try {
         const response = await apiClient.post('/auth/resend-verification', null, {
-            params: { email }
+            params: {email}
         });
 
         return {
@@ -98,13 +99,14 @@ export const logout = () => {
     localStorage.removeItem('username');
     localStorage.removeItem('name');
     localStorage.removeItem('imageUrl');
+    localStorage.removeItem('role');
 };
 
 // Hàm quên mật khẩu
 export const forgotPassword = async (email) => {
     try {
         const response = await apiClient.post('/auth/forgot-password', null, {
-            params: { email }
+            params: {email}
         });
 
         return {
