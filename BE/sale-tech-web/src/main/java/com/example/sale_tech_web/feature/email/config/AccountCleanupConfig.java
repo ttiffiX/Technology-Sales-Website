@@ -3,20 +3,17 @@ package com.example.sale_tech_web.feature.email.config;
 public class AccountCleanupConfig {
 
     /**
-     * Thời gian hết hạn của token xác thực email (30 phút)
-     * Sau khi token hết hạn, user vẫn có thể request resend token
+     * Thời gian hết hạn của OTP xác thực email (10 phút)
      */
-    public static final int EMAIL_VERIFICATION_TOKEN_EXPIRY_MINUTES = 30;
+    public static final int EMAIL_VERIFICATION_TOKEN_EXPIRY_MINUTES = 10;
 
     /**
      * Thời gian tồn tại tối đa của tài khoản chưa xác thực (24 giờ)
-     * Sau 24h không xác thực, tài khoản sẽ bị xóa tự động
      */
     public static final int UNVERIFIED_ACCOUNT_MAX_AGE_HOURS = 24;
 
     /**
-     * Thời gian chờ giữa các lần gửi lại email xác thực (60 giây)
-     * Người dùng phải chờ 60 giây trước khi có thể request gửi lại email
+     * Thời gian chờ giữa các lần gửi lại OTP (60 giây)
      */
     public static final int RESEND_VERIFICATION_COOLDOWN_SECONDS = 60;
 
@@ -26,7 +23,5 @@ public class AccountCleanupConfig {
      */
     public static final String ACCOUNT_CLEANUP_CRON = "0 0 */6  * * *";
 
-    private AccountCleanupConfig() {
-        // Prevent instantiation
-    }
+    private AccountCleanupConfig() {}
 }

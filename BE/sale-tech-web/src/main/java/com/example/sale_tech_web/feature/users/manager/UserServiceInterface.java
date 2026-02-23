@@ -12,7 +12,7 @@ public interface UserServiceInterface {
 
     String changePassword(ChangePassRequest changePassRequest);
 
-    String verifyEmail(String token);
+    String verifyEmail(String email, String otp);
 
     String resendVerificationEmail(String email);
 

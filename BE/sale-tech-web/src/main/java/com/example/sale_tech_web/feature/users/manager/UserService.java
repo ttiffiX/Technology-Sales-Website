@@ -29,7 +29,6 @@ import static org.springframework.http.HttpStatus.*;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -107,10 +106,10 @@ public class UserService implements UserServiceInterface {
 
         cartRepository.save(cart);
 
-        // Tạo verification token
-        String token = UUID.randomUUID().toString();
+        // Tạo OTP 6 số
+        String otp = generateOtp();
         EmailVerificationToken verificationToken = EmailVerificationToken.builder()
-                .token(token)
+                .token(otp)
                 .user(users)
                 .expiryDate(LocalDateTime.now().plusMinutes(AccountCleanupConfig.EMAIL_VERIFICATION_TOKEN_EXPIRY_MINUTES))
                 .isUsed(false)
@@ -118,8 +117,8 @@ public class UserService implements UserServiceInterface {
                 .build();
         emailVerificationTokenRepository.save(verificationToken);
 
-        // Gửi email
-        emailService.sendVerificationEmail(email, token);
+        // Gửi email OTP
+        emailService.sendVerificationEmail(email, otp);
 
         return "Register Successfully";
     }
@@ -151,19 +150,33 @@ public class UserService implements UserServiceInterface {
 
     @Override
     @Transactional
-    public String verifyEmail(String token) {
-        EmailVerificationToken verificationToken = emailVerificationTokenRepository.findByToken(token)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Invalid verification token"));
+    public String verifyEmail(String email, String otp) {
+        // Tìm user theo email
+        Users user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Email not found"));
+
+        if (user.isActive()) {
+            throw new ResponseStatusException(CONFLICT, "Email already verified");
+        }
+
+        // Tìm token theo userId
+        EmailVerificationToken verificationToken = emailVerificationTokenRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "OTP not found. Please request a new one."));
 
         if (verificationToken.isUsed()) {
-            throw new ResponseStatusException(CONFLICT, "Token has already been used");
+            throw new ResponseStatusException(CONFLICT, "OTP has already been used");
         }
 
         if (LocalDateTime.now().isAfter(verificationToken.getExpiryDate())) {
-            throw new ResponseStatusException(HttpStatus.GONE, "TOKEN EXPIRED");
+            emailVerificationTokenRepository.delete(verificationToken);
+            throw new ResponseStatusException(HttpStatus.GONE, "OTP has expired. Please request a new one.");
         }
 
-        Users user = verificationToken.getUser();
+        // So sánh OTP
+        if (!verificationToken.getToken().equals(otp.trim())) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Invalid OTP. Please check and try again.");
+        }
+
         user.setActive(true);
         userRepository.save(user);
 
@@ -206,7 +219,7 @@ public class UserService implements UserServiceInterface {
         }
 
         verificationToken.setUser(user);
-        verificationToken.setToken(UUID.randomUUID().toString());
+        verificationToken.setToken(generateOtp());
         verificationToken.setExpiryDate(LocalDateTime.now().plusMinutes(AccountCleanupConfig.EMAIL_VERIFICATION_TOKEN_EXPIRY_MINUTES));
         verificationToken.setUsed(false);
         verificationToken.setLastSent(LocalDateTime.now());
@@ -239,6 +252,13 @@ public class UserService implements UserServiceInterface {
         emailService.sendPasswordResetEmail(user.getEmail(), tempPassword);
 
         return "A temporary password has been sent to your email address. Please check your inbox.";
+    }
+
+    /** Tạo OTP 6 chữ số ngẫu nhiên */
+    private String generateOtp() {
+        SecureRandom random = new SecureRandom();
+        int otp = 100000 + random.nextInt(900000); // 100000 – 999999
+        return String.valueOf(otp);
     }
 
     private String generateRandomPassword() {

@@ -1,5 +1,6 @@
 package com.example.sale_tech_web.feature.email.manager;
 
+import com.example.sale_tech_web.feature.email.config.AccountCleanupConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,18 +17,17 @@ public class EmailService {
     @Value("${app.email.from}")
     private String fromEmail;
 
-    public void sendVerificationEmail(String toEmail, String verificationToken) {
+    public void sendVerificationEmail(String toEmail, String otp) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromEmail);
             message.setTo(toEmail);
-            message.setSubject("Email Verification - Technology Sales");
-            message.setText(buildVerificationEmailContent(verificationToken));
-
+            message.setSubject("Mã xác thực tài khoản - Technology Sales");
+            message.setText(buildOtpEmailContent(otp));
             mailSender.send(message);
-            log.info("Verification email sent to: {}", toEmail);
+            log.info("OTP verification email sent to: {}", toEmail);
         } catch (Exception e) {
-            log.error("Failed to send verification email to: {}", toEmail, e);
+            log.error("Failed to send OTP email to: {}", toEmail, e);
             throw new RuntimeException("Failed to send verification email");
         }
     }
@@ -37,9 +37,8 @@ public class EmailService {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromEmail);
             message.setTo(toEmail);
-            message.setSubject("Password Reset - Technology Sales");
+            message.setSubject("Đặt lại mật khẩu - Technology Sales");
             message.setText(buildPasswordResetEmailContent(newPassword));
-
             mailSender.send(message);
             log.info("Password reset email sent to: {}", toEmail);
         } catch (Exception e) {
@@ -48,21 +47,23 @@ public class EmailService {
         }
     }
 
-    private String buildVerificationEmailContent(String token) {
+    private String buildOtpEmailContent(String otp) {
         return String.format("""
                 Welcome to Technology Sales!
                 
-                Thank you for registering with us. Please verify your email address by clicking the link below:
+                Thank you for registering with us. Please verify your email address with the OTP below:
                 
-                http://localhost:3000/verify-email?token=%s
+                ==============================
+                        %s
+                ==============================
                 
-                This link will expire in 30 minutes.
+                This OTP will expire in %s minutes.
                 
                 If you did not create this account, please ignore this email.
                 
                 Best regards,
                 Technology Sales Team
-                """, token);
+                """, otp, AccountCleanupConfig.EMAIL_VERIFICATION_TOKEN_EXPIRY_MINUTES);
     }
 
     private String buildPasswordResetEmailContent(String newPassword) {
@@ -82,4 +83,3 @@ public class EmailService {
                 """, newPassword);
     }
 }
-

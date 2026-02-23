@@ -1,5 +1,6 @@
 package com.example.sale_tech_web.controller;
 
+import com.example.sale_tech_web.feature.email.dto.VerifyOtpRequest;
 import com.example.sale_tech_web.feature.jwt.dto.RefreshTokenResponse;
 import com.example.sale_tech_web.feature.jwt.manager.RefreshTokenService;
 import com.example.sale_tech_web.feature.users.dto.ChangePassRequest;
@@ -101,25 +102,22 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/verify-email")
-    public ResponseEntity<?> verifyEmail(@RequestParam String token) {
-        log.info("Email verification attempt with token: {}", token);
-        String response = userServiceInterface.verifyEmail(token);
-        return ResponseEntity.ok(response);
+    @PostMapping("/verify-email")
+    public ResponseEntity<?> verifyEmail(@RequestBody VerifyOtpRequest request) {
+        log.info("OTP verification attempt for email: {}", request.getEmail());
+        return ResponseEntity.ok(userServiceInterface.verifyEmail(request.getEmail(), request.getOtp()));
     }
 
     @PostMapping("/resend-verification")
     public ResponseEntity<?> resendVerificationEmail(@RequestParam String email) {
         log.info("Resend verification email request for: {}", email);
-        String response = userServiceInterface.resendVerificationEmail(email);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(userServiceInterface.resendVerificationEmail(email));
     }
 
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestParam String email) {
         log.info("Forgot password request for: {}", email);
-        String response = userServiceInterface.forgotPassword(email);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(userServiceInterface.forgotPassword(email));
     }
 
     // Helper methods

@@ -35,7 +35,7 @@ public class WebSecurityConfig {
                 })
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/auth/register", "/auth/login", "/auth/verify-email", "auth/resend-verification", "auth/forgot-password", "/auth/refresh-token", "/auth/logout", "/product", "/product/**").permitAll()
+                        .requestMatchers("/auth/register", "/auth/login", "/auth/verify-email", "/auth/resend-verification", "/auth/forgot-password", "/auth/refresh-token", "/auth/logout", "/product", "/product/**").permitAll()
                         .requestMatchers("/payment/vnpay/callback", "/payment/vnpay/ipn").permitAll()
                         .anyRequest().authenticated()
                 )
