@@ -1,12 +1,8 @@
 package com.example.sale_tech_web.controller;
-
 import com.example.sale_tech_web.feature.email.dto.VerifyOtpRequest;
 import com.example.sale_tech_web.feature.jwt.dto.RefreshTokenResponse;
 import com.example.sale_tech_web.feature.jwt.manager.RefreshTokenService;
-import com.example.sale_tech_web.feature.users.dto.ChangePassRequest;
-import com.example.sale_tech_web.feature.users.dto.LogInRequest;
-import com.example.sale_tech_web.feature.users.dto.RegisterRequest;
-import com.example.sale_tech_web.feature.users.dto.LogInResponse;
+import com.example.sale_tech_web.feature.users.dto.*;
 import com.example.sale_tech_web.feature.users.manager.UserServiceInterface;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -118,6 +114,24 @@ public class AuthController {
     public ResponseEntity<?> forgotPassword(@RequestParam String email) {
         log.info("Forgot password request for: {}", email);
         return ResponseEntity.ok(userServiceInterface.forgotPassword(email));
+    }
+
+    @PostMapping("/verify-reset-otp")
+    public ResponseEntity<VerifyResetOtpResponse> verifyResetOtp(@RequestBody VerifyOtpRequest request) {
+        log.info("Verify reset OTP for email: {}", request.getEmail());
+        return ResponseEntity.ok(userServiceInterface.verifyResetOtp(request.getEmail(), request.getOtp()));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(
+            @RequestHeader("X-Reset-Token") String resetToken,
+            @RequestBody ResetPasswordRequest request) {
+        log.info("Reset password request");
+        return ResponseEntity.ok(userServiceInterface.resetPassword(
+                resetToken,
+                request.getNewPassword(),
+                request.getConfirmPassword()
+        ));
     }
 
     // Helper methods

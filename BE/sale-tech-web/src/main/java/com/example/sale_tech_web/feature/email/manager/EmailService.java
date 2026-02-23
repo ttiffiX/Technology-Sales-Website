@@ -17,69 +17,65 @@ public class EmailService {
     @Value("${app.email.from}")
     private String fromEmail;
 
+    // Gửi OTP xác thực tài khoản
     public void sendVerificationEmail(String toEmail, String otp) {
+        sendOtpEmail(
+                toEmail,
+                "Email Verification - Technology Sales",
+                "verify your email address",
+                otp,
+                AccountCleanupConfig.EMAIL_VERIFICATION_TOKEN_EXPIRY_MINUTES
+        );
+        log.info("OTP verification email sent to: {}", toEmail);
+    }
+
+    // Gửi OTP đặt lại mật khẩu
+    public void sendPasswordResetEmail(String toEmail, String otp) {
+        sendOtpEmail(
+                toEmail,
+                "Password Reset - Technology Sales",
+                "reset your password",
+                otp,
+                AccountCleanupConfig.EMAIL_VERIFICATION_TOKEN_EXPIRY_MINUTES
+        );
+        log.info("OTP password reset email sent to: {}", toEmail);
+    }
+
+    // ── Hàm dùng chung: gửi email chứa OTP ───────────────────
+    private void sendOtpEmail(String toEmail, String subject, String purpose, String otp, int expiryMinutes) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromEmail);
             message.setTo(toEmail);
-            message.setSubject("Mã xác thực tài khoản - Technology Sales");
-            message.setText(buildOtpEmailContent(otp));
+            message.setSubject(subject);
+            message.setText(buildOtpEmailContent(purpose, otp, expiryMinutes));
             mailSender.send(message);
-            log.info("OTP verification email sent to: {}", toEmail);
         } catch (Exception e) {
             log.error("Failed to send OTP email to: {}", toEmail, e);
-            throw new RuntimeException("Failed to send verification email");
+            throw new RuntimeException("Failed to send email");
         }
     }
 
-    public void sendPasswordResetEmail(String toEmail, String newPassword) {
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(fromEmail);
-            message.setTo(toEmail);
-            message.setSubject("Đặt lại mật khẩu - Technology Sales");
-            message.setText(buildPasswordResetEmailContent(newPassword));
-            mailSender.send(message);
-            log.info("Password reset email sent to: {}", toEmail);
-        } catch (Exception e) {
-            log.error("Failed to send password reset email to: {}", toEmail, e);
-            throw new RuntimeException("Failed to send password reset email");
-        }
-    }
-
-    private String buildOtpEmailContent(String otp) {
+    // ── Template chung cho mọi loại OTP ───────────────────────
+    private String buildOtpEmailContent(String purpose, String otp, int expiryMinutes) {
         return String.format("""
-                Welcome to Technology Sales!
-                
-                Thank you for registering with us. Please verify your email address with the OTP below:
-                
+                Hello,
+
+                You requested to %s on Technology Sales.
+
+                Your OTP code is:
+
                 ==============================
-                        %s
+                            %s
                 ==============================
-                
-                This OTP will expire in %s minutes.
-                
-                If you did not create this account, please ignore this email.
-                
+
+                This code will expire in %d minutes.
+                Do NOT share this code with anyone.
+
+                If you did not make this request, please ignore this email.
+
                 Best regards,
                 Technology Sales Team
-                """, otp, AccountCleanupConfig.EMAIL_VERIFICATION_TOKEN_EXPIRY_MINUTES);
-    }
-
-    private String buildPasswordResetEmailContent(String newPassword) {
-        return String.format("""
-                Password Reset - Technology Sales
-                
-                Your password has been reset successfully.
-                
-                Your new temporary password is: %s
-                
-                Please login with this password and change it immediately for security purposes.
-                
-                If you did not request this password reset, please contact us immediately.
-                
-                Best regards,
-                Technology Sales Team
-                """, newPassword);
+                """, purpose, otp, expiryMinutes);
     }
 }

@@ -262,6 +262,7 @@ CREATE TABLE email_verification_tokens
     expiry_date TIMESTAMP    NOT NULL,
     is_used     BOOLEAN DEFAULT FALSE,
     last_sent   TIMESTAMP    NOT NULL,
+    attempt_count INT DEFAULT 0,
     -- Khóa ngoại đến User
     CONSTRAINT fk_evt_user FOREIGN KEY (user_id) REFERENCES users (id)
 );

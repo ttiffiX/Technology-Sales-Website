@@ -3,6 +3,11 @@ package com.example.sale_tech_web.feature.email.config;
 public class AccountCleanupConfig {
 
     /**
+     * Số lần nhập OTP sai tối đa — quá giới hạn sẽ xóa OTP, buộc request lại
+     */
+    public static final int MAX_OTP_ATTEMPTS = 5;
+
+    /**
      * Thời gian hết hạn của OTP xác thực email (10 phút)
      */
     public static final int EMAIL_VERIFICATION_TOKEN_EXPIRY_MINUTES = 10;

@@ -11,6 +11,7 @@ import com.example.sale_tech_web.feature.users.dto.ChangePassRequest;
 import com.example.sale_tech_web.feature.users.dto.LogInRequest;
 import com.example.sale_tech_web.feature.users.dto.RegisterRequest;
 import com.example.sale_tech_web.feature.users.dto.LogInResponse;
+import com.example.sale_tech_web.feature.users.dto.VerifyResetOtpResponse;
 import com.example.sale_tech_web.feature.cart.entity.Cart;
 import com.example.sale_tech_web.feature.cart.repository.CartRepository;
 import com.example.sale_tech_web.feature.users.entity.Users;
@@ -172,9 +173,25 @@ public class UserService implements UserServiceInterface {
             throw new ResponseStatusException(HttpStatus.GONE, "OTP has expired. Please request a new one.");
         }
 
+        // Kiểm tra số lần nhập sai
+        if (verificationToken.getAttemptCount() >= AccountCleanupConfig.MAX_OTP_ATTEMPTS) {
+            emailVerificationTokenRepository.delete(verificationToken);
+            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,
+                    "Too many failed attempts. Please request a new OTP.");
+        }
+
         // So sánh OTP
         if (!verificationToken.getToken().equals(otp.trim())) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Invalid OTP. Please check and try again.");
+            verificationToken.setAttemptCount(verificationToken.getAttemptCount() + 1);
+            int remaining = AccountCleanupConfig.MAX_OTP_ATTEMPTS - verificationToken.getAttemptCount();
+            emailVerificationTokenRepository.save(verificationToken);
+            if (remaining <= 0) {
+                emailVerificationTokenRepository.delete(verificationToken);
+                throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,
+                        "Too many failed attempts. Please request a new OTP.");
+            }
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                    "Invalid OTP. " + remaining + " attempt(s) remaining.");
         }
 
         user.setActive(true);
@@ -223,6 +240,7 @@ public class UserService implements UserServiceInterface {
         verificationToken.setExpiryDate(LocalDateTime.now().plusMinutes(AccountCleanupConfig.EMAIL_VERIFICATION_TOKEN_EXPIRY_MINUTES));
         verificationToken.setUsed(false);
         verificationToken.setLastSent(LocalDateTime.now());
+        verificationToken.setAttemptCount(0);
 
         emailVerificationTokenRepository.save(verificationToken);
 
@@ -242,50 +260,113 @@ public class UserService implements UserServiceInterface {
             throw new ResponseStatusException(CONFLICT, "Email is not verified. Please verify your email first.");
         }
 
-        // Generate random temporary password (8 characters with numbers, letters, and special chars)
-        String tempPassword = generateRandomPassword();
+        // Tạo OTP và lưu DB
+        EmailVerificationToken resetToken = emailVerificationTokenRepository.findByUserId(user.getId())
+                .orElse(new EmailVerificationToken());
 
-        user.setPassword(passwordEncoder.encode(tempPassword));
+        String otp = generateOtp();
+        resetToken.setUser(user);
+        resetToken.setToken(otp);
+        resetToken.setExpiryDate(LocalDateTime.now().plusMinutes(AccountCleanupConfig.EMAIL_VERIFICATION_TOKEN_EXPIRY_MINUTES));
+        resetToken.setUsed(false);
+        resetToken.setLastSent(LocalDateTime.now());
+        resetToken.setAttemptCount(0);
+        emailVerificationTokenRepository.save(resetToken);
+
+        emailService.sendPasswordResetEmail(user.getEmail(), otp);
+
+        return "An OTP code has been sent to your email. Please check your inbox.";
+    }
+
+    @Override
+    @Transactional
+    public VerifyResetOtpResponse verifyResetOtp(String email, String otp) {
+        Users user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "No account found with this email address"));
+
+
+        EmailVerificationToken OTP = emailVerificationTokenRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "OTP not found. Please request a new one."));
+
+        if (OTP.isUsed()) {
+            throw new ResponseStatusException(CONFLICT, "OTP has already been used.");
+        }
+
+        if (LocalDateTime.now().isAfter(OTP.getExpiryDate())) {
+            emailVerificationTokenRepository.delete(OTP);
+            throw new ResponseStatusException(HttpStatus.GONE, "OTP has expired. Please request a new one.");
+        }
+
+        // Kiểm tra số lần nhập sai
+        if (OTP.getAttemptCount() >= AccountCleanupConfig.MAX_OTP_ATTEMPTS) {
+            emailVerificationTokenRepository.delete(OTP);
+            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,
+                    "Too many failed attempts. Please request a new OTP.");
+        }
+
+        if (!OTP.getToken().equals(otp.trim())) {
+            OTP.setAttemptCount(OTP.getAttemptCount() + 1);
+            int remaining = AccountCleanupConfig.MAX_OTP_ATTEMPTS - OTP.getAttemptCount();
+            emailVerificationTokenRepository.save(OTP);
+            if (remaining <= 0) {
+                emailVerificationTokenRepository.delete(OTP);
+                throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,
+                        "Too many failed attempts. Please request a new OTP.");
+            }
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                    "Invalid OTP. " + remaining + " attempt(s) remaining.");
+        }
+
+        // OTP hợp lệ → xóa ngay khỏi DB (không thể dùng lại)
+        emailVerificationTokenRepository.delete(OTP);
+
+        // Tạo resetToken JWT (5 phút, type=reset) — không lưu DB
+        String resetToken = jwtUtils.generateResetToken(user.getId());
+        return VerifyResetOtpResponse.builder()
+                .resetToken(resetToken)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public String resetPassword(String resetToken, String newPassword, String confirmPassword) {
+        // Validate mật khẩu khớp nhau
+        if (!newPassword.equals(confirmPassword)) {
+            throw new ResponseStatusException(BAD_REQUEST, "Passwords do not match.");
+        }
+
+        // Validate resetToken: đúng format, còn hạn
+        if (!jwtUtils.validateToken(resetToken)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Reset token is invalid or expired.");
+        }
+
+        // Kiểm tra type phải là "reset" — access token thông thường không dùng được
+        String tokenType = jwtUtils.getTokenType(resetToken);
+        if (!"reset".equals(tokenType)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token type.");
+        }
+
+        // Lấy userId từ token
+        Long userId = jwtUtils.getUserIdFromJwtToken(resetToken);
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found."));
+
+        // Đổi mật khẩu
+        user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
 
-        // Send email with new password
-        emailService.sendPasswordResetEmail(user.getEmail(), tempPassword);
+        // Revoke tất cả refresh token → kick toàn bộ session cũ
+        refreshTokenService.revokeAllUserTokens(user);
 
-        return "A temporary password has been sent to your email address. Please check your inbox.";
+        return "Password reset successfully. You can now login with your new password.";
     }
+
+
 
     /** Tạo OTP 6 chữ số ngẫu nhiên */
     private String generateOtp() {
         SecureRandom random = new SecureRandom();
         int otp = 100000 + random.nextInt(900000); // 100000 – 999999
         return String.valueOf(otp);
-    }
-
-    private String generateRandomPassword() {
-        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%^&+=!";
-        StringBuilder password = new StringBuilder();
-        SecureRandom random = new SecureRandom();
-
-        // Ensure password has at least one of each required type
-        password.append("ABCDEFGHIJKLMNOPQRSTUVWXYZ".charAt(random.nextInt(26))); // Upper
-        password.append("abcdefghijklmnopqrstuvwxyz".charAt(random.nextInt(26))); // Lower
-        password.append("0123456789".charAt(random.nextInt(10))); // Digit
-        password.append("@#$%^&+=!".charAt(random.nextInt(9))); // Special
-
-        // Fill remaining 4 characters randomly
-        for (int i = 0; i < 4; i++) {
-            password.append(chars.charAt(random.nextInt(chars.length())));
-        }
-
-        // Shuffle the password
-        char[] passwordArray = password.toString().toCharArray();
-        for (int i = passwordArray.length - 1; i > 0; i--) {
-            int j = random.nextInt(i + 1);
-            char temp = passwordArray[i];
-            passwordArray[i] = passwordArray[j];
-            passwordArray[j] = temp;
-        }
-
-        return new String(passwordArray);
     }
 }

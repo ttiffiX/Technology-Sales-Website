@@ -4,6 +4,7 @@ import com.example.sale_tech_web.feature.users.dto.ChangePassRequest;
 import com.example.sale_tech_web.feature.users.dto.LogInRequest;
 import com.example.sale_tech_web.feature.users.dto.RegisterRequest;
 import com.example.sale_tech_web.feature.users.dto.LogInResponse;
+import com.example.sale_tech_web.feature.users.dto.VerifyResetOtpResponse;
 
 public interface UserServiceInterface {
     LogInResponse login(LogInRequest logInRequest);
@@ -17,4 +18,8 @@ public interface UserServiceInterface {
     String resendVerificationEmail(String email);
 
     String forgotPassword(String email);
+
+    VerifyResetOtpResponse verifyResetOtp(String email, String otp);
+
+    String resetPassword(String resetToken, String newPassword, String confirmPassword);
 }

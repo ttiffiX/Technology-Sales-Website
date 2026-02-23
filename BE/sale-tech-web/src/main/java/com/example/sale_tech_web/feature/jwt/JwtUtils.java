@@ -47,6 +47,29 @@ public class JwtUtils {
                 .compact();
     }
 
+    // Generate RESET TOKEN — dùng 1 lần sau khi xác thực OTP, hết hạn 5 phút
+    public String generateResetToken(Long userId) {
+        SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+        return Jwts.builder()
+                .subject(userId.toString())
+                .claim("type", "reset")
+                .issuedAt(new Date())
+                .expiration(new Date((new Date()).getTime() + 5 * 60 * 1000L)) // 5 phút
+                .signWith(key)
+                .compact();
+    }
+
+    // Kiểm tra type của token (access / refresh / reset)
+    public String getTokenType(String token) {
+        SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+        return Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .get("type", String.class);
+    }
+
     public Long getUserIdFromJwtToken(String token) {
         SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
         String subject = Jwts.parser()

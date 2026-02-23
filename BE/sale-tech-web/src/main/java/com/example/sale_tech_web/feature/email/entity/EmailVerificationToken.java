@@ -35,5 +35,10 @@ public class EmailVerificationToken {
 
     @Column(name = "last_sent")
     private LocalDateTime lastSent;
+
+    // Số lần nhập OTP sai — quá 5 lần sẽ bị xóa, phải request lại
+    @Column(nullable = false)
+    @Builder.Default
+    private int attemptCount = 0;
 }
 
