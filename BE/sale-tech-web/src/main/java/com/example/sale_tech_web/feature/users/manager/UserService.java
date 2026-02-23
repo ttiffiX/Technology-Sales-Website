@@ -3,6 +3,8 @@ package com.example.sale_tech_web.feature.users.manager;
 import com.example.sale_tech_web.feature.email.config.AccountCleanupConfig;
 import com.example.sale_tech_web.feature.email.entity.EmailVerificationToken;
 import com.example.sale_tech_web.feature.email.manager.EmailService;
+import com.example.sale_tech_web.feature.email.manager.OtpValidationHelper;
+
 import com.example.sale_tech_web.feature.email.repository.EmailVerificationTokenRepository;
 import com.example.sale_tech_web.feature.jwt.SecurityUtils;
 import com.example.sale_tech_web.feature.jwt.entity.RefreshToken;
@@ -27,7 +29,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import static org.springframework.http.HttpStatus.*;
 
-import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
@@ -41,6 +42,7 @@ public class UserService implements UserServiceInterface {
     private final EmailVerificationTokenRepository emailVerificationTokenRepository;
     private final EmailService emailService;
     private final RefreshTokenService refreshTokenService;
+    private final OtpValidationHelper otpValidationHelper;
 
     @Override
     public LogInResponse login(LogInRequest logInRequest) {
@@ -168,36 +170,11 @@ public class UserService implements UserServiceInterface {
             throw new ResponseStatusException(CONFLICT, "OTP has already been used");
         }
 
-        if (LocalDateTime.now().isAfter(verificationToken.getExpiryDate())) {
-            emailVerificationTokenRepository.delete(verificationToken);
-            throw new ResponseStatusException(HttpStatus.GONE, "OTP has expired. Please request a new one.");
-        }
-
-        // Kiểm tra số lần nhập sai
-        if (verificationToken.getAttemptCount() >= AccountCleanupConfig.MAX_OTP_ATTEMPTS) {
-            emailVerificationTokenRepository.delete(verificationToken);
-            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,
-                    "Too many failed attempts. Please request a new OTP.");
-        }
-
-        // So sánh OTP
-        if (!verificationToken.getToken().equals(otp.trim())) {
-            verificationToken.setAttemptCount(verificationToken.getAttemptCount() + 1);
-            int remaining = AccountCleanupConfig.MAX_OTP_ATTEMPTS - verificationToken.getAttemptCount();
-            emailVerificationTokenRepository.save(verificationToken);
-            if (remaining <= 0) {
-                emailVerificationTokenRepository.delete(verificationToken);
-                throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,
-                        "Too many failed attempts. Please request a new OTP.");
-            }
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
-                    "Invalid OTP. " + remaining + " attempt(s) remaining.");
-        }
+        otpValidationHelper.validateOtp(verificationToken.getId(), otp);
 
         user.setActive(true);
         userRepository.save(user);
 
-        verificationToken.setUsed(true);
         emailVerificationTokenRepository.delete(verificationToken);
 
         return "Email verified successfully! You can now login.";
@@ -285,42 +262,18 @@ public class UserService implements UserServiceInterface {
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "No account found with this email address"));
 
 
-        EmailVerificationToken OTP = emailVerificationTokenRepository.findByUserId(user.getId())
+        EmailVerificationToken otpToken = emailVerificationTokenRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "OTP not found. Please request a new one."));
 
-        if (OTP.isUsed()) {
+        if (otpToken.isUsed()) {
             throw new ResponseStatusException(CONFLICT, "OTP has already been used.");
         }
 
-        if (LocalDateTime.now().isAfter(OTP.getExpiryDate())) {
-            emailVerificationTokenRepository.delete(OTP);
-            throw new ResponseStatusException(HttpStatus.GONE, "OTP has expired. Please request a new one.");
-        }
+        otpValidationHelper.validateOtp(otpToken.getId(), otp);
 
-        // Kiểm tra số lần nhập sai
-        if (OTP.getAttemptCount() >= AccountCleanupConfig.MAX_OTP_ATTEMPTS) {
-            emailVerificationTokenRepository.delete(OTP);
-            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,
-                    "Too many failed attempts. Please request a new OTP.");
-        }
+        emailVerificationTokenRepository.delete(otpToken);
 
-        if (!OTP.getToken().equals(otp.trim())) {
-            OTP.setAttemptCount(OTP.getAttemptCount() + 1);
-            int remaining = AccountCleanupConfig.MAX_OTP_ATTEMPTS - OTP.getAttemptCount();
-            emailVerificationTokenRepository.save(OTP);
-            if (remaining <= 0) {
-                emailVerificationTokenRepository.delete(OTP);
-                throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,
-                        "Too many failed attempts. Please request a new OTP.");
-            }
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
-                    "Invalid OTP. " + remaining + " attempt(s) remaining.");
-        }
-
-        // OTP hợp lệ → xóa ngay khỏi DB (không thể dùng lại)
-        emailVerificationTokenRepository.delete(OTP);
-
-        // Tạo resetToken JWT (5 phút, type=reset) — không lưu DB
+        // Tạo resetToken JWT
         String resetToken = jwtUtils.generateResetToken(user.getId());
         return VerifyResetOtpResponse.builder()
                 .resetToken(resetToken)
@@ -362,10 +315,11 @@ public class UserService implements UserServiceInterface {
     }
 
 
-
-    /** Tạo OTP 6 chữ số ngẫu nhiên */
+    /**
+     * Tạo OTP 6 chữ số ngẫu nhiên
+     */
     private String generateOtp() {
-        SecureRandom random = new SecureRandom();
+        java.security.SecureRandom random = new java.security.SecureRandom();
         int otp = 100000 + random.nextInt(900000); // 100000 – 999999
         return String.valueOf(otp);
     }

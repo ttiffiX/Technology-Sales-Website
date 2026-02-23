@@ -1,4 +1,5 @@
 package com.example.sale_tech_web.controller;
+
 import com.example.sale_tech_web.feature.email.dto.VerifyOtpRequest;
 import com.example.sale_tech_web.feature.jwt.dto.RefreshTokenResponse;
 import com.example.sale_tech_web.feature.jwt.manager.RefreshTokenService;
@@ -123,12 +124,10 @@ public class AuthController {
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<?> resetPassword(
-            @RequestHeader("X-Reset-Token") String resetToken,
-            @RequestBody ResetPasswordRequest request) {
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         log.info("Reset password request");
         return ResponseEntity.ok(userServiceInterface.resetPassword(
-                resetToken,
+                request.getResetToken(),
                 request.getNewPassword(),
                 request.getConfirmPassword()
         ));
