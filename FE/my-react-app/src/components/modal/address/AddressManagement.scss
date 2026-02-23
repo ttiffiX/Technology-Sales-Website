@@ -1,0 +1,492 @@
+@import '../../../styles/variables';
+@import '../../../styles/mixins';
+
+// ── Overlay ────────────────────────────────────────────────
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.25s ease;
+}
+
+// ── Modal shell ────────────────────────────────────────────
+.address-management-modal {
+  background: $background-color;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 600px;
+  //max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+  animation: slideUp 0.25s ease;
+  overflow: hidden;
+
+  //*, *::before, *::after {
+  //  box-sizing: border-box;
+  //}
+
+  // ── Header ──────────────────────────────────────────────
+  .modal-header {
+    padding: 20px 24px;
+    background: $primary-color;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+
+    h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+      font-family: $font-family-main;
+      letter-spacing: 0.3px;
+    }
+
+    .close-btn {
+      background: rgba(255, 255, 255, 0.15);
+      border: none;
+      color: #fff;
+      font-size: 22px;
+      width: 34px;
+      height: 34px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      transition: background 0.2s;
+      padding: 0;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+    }
+  }
+
+  // ── Scrollable body ─────────────────────────────────────
+  .modal-content {
+    padding: 24px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex: 1;
+    width: 100%;
+
+    // Loading
+    .loading {
+      text-align: center;
+      padding: 60px 0;
+      color: $border-color;
+      font-size: 15px;
+    }
+
+    // ── List view ──────────────────────────────────────
+    .addresses-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+
+      h3 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+      }
+
+      .btn-add-new {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: $primary-color;
+        color: #fff;
+        border: none;
+        padding: 9px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s, transform 0.15s;
+        white-space: nowrap;
+
+        svg {
+          flex-shrink: 0;
+        }
+
+        &:hover {
+          background: $secondary-color;
+          transform: translateY(-1px);
+        }
+      }
+    }
+
+    // Empty state
+    .no-addresses {
+      text-align: center;
+      padding: 64px 24px;
+      border: 2px dashed $divider-color;
+      border-radius: 8px;
+      background: $drop-content-color;
+
+      p {
+        color: $border-color;
+        font-size: 15px;
+        margin-bottom: 20px;
+      }
+
+      .btn-add-first {
+        background: $primary-color;
+        color: #fff;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+
+        &:hover {
+          background: $secondary-color;
+        }
+      }
+    }
+
+    // ── Address cards ──────────────────────────────────
+    .addresses-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+
+      .address-item {
+        border: 1.5px solid $divider-color;
+        border-radius: 8px;
+        padding: 14px 14px 14px;
+        background: $background-color;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+
+        &.default {
+          border-color: $primary-color;
+          background: #f5fbf6;
+        }
+
+        &:hover {
+          border-color: $secondary-color;
+          box-shadow: 0 3px 12px rgba(66, 107, 31, 0.08);
+        }
+
+        // ── top row: label tag + default badge
+        .card-top {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 10px;
+
+          .address-label {
+            background: $primary-color;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 50px;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+          }
+
+          .default-badge {
+            background: $primary-color;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 50px;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+          }
+        }
+
+        // ── address text body
+        .card-body {
+          margin-bottom: 14px;
+
+          .address-detail {
+            font-size: 14px;
+            font-weight: 600;
+            color: #222;
+            line-height: 1.55;
+            margin-bottom: 4px;
+          }
+
+          .address-location {
+            font-size: 13px;
+            color: #777;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+
+            &::before {
+              content: "📍";
+              font-size: 13px;
+            }
+          }
+        }
+
+        // ── action buttons row
+        .address-actions {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+          padding-top: 12px;
+          border-top: 1px solid $divider-color;
+
+          button {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.15s;
+            outline: none;
+
+            &:disabled {
+              opacity: 0.45;
+              cursor: not-allowed;
+              transform: none;
+            }
+
+            &.btn-set-default {
+              background: transparent;
+              color: $primary-color;
+              border: 1.5px solid $primary-color;
+
+              &:hover:not(:disabled) {
+                background: $primary-color;
+                color: #fff;
+              }
+            }
+
+            &.btn-edit {
+              background: transparent;
+              color: #b07800;
+              border: 1.5px solid #ffc107;
+
+              &:hover:not(:disabled) {
+                background: #ffc107;
+                color: #333;
+              }
+            }
+
+            &.btn-delete {
+              background: transparent;
+              color: #c0392b;
+              border: 1.5px solid #e74c3c;
+              margin-left: auto;
+
+              &:hover:not(:disabled) {
+                background: #e74c3c;
+                color: #fff;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // ── Add / Edit form ────────────────────────────────
+    .address-form {
+      .form-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: $primary-color;
+        margin: 0 0 22px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid $divider-color;
+      }
+
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+
+        @media (max-width: 520px) {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .form-group {
+        margin-bottom: 18px;
+        display: flex;
+        flex-direction: column;
+
+        label {
+          font-size: 13px;
+          font-weight: 600;
+          color: #444;
+          margin-bottom: 6px;
+
+          .required {
+            color: $error-color;
+            margin-left: 2px;
+          }
+        }
+
+        input[type="text"],
+        select,
+        textarea {
+          padding: 10px 12px;
+          border: 1.5px solid $border-color;
+          border-radius: 6px;
+          font-size: 14px;
+          font-family: $font-family-main;
+          color: #333;
+          background: $background-color;
+          transition: border-color 0.2s, box-shadow 0.2s;
+          width: 100%;
+
+          &::placeholder {
+            color: #bbb;
+          }
+
+          &:focus {
+            outline: none;
+            border-color: $primary-color;
+            box-shadow: 0 0 0 3px rgba(66, 107, 31, 0.1);
+          }
+
+          &:disabled {
+            background: $hover-color;
+            border-color: $divider-color;
+            color: #aaa;
+            cursor: not-allowed;
+          }
+        }
+
+        select {
+          appearance: auto;
+        }
+
+        textarea {
+          resize: vertical;
+          min-height: 90px;
+          line-height: 1.5;
+        }
+
+        &.checkbox-group label {
+          flex-direction: row;
+          align-items: center;
+          gap: 8px;
+          cursor: pointer;
+          font-weight: 500;
+
+          input[type="checkbox"] {
+            transform: translateY(3px);
+            width: 16px;
+            height: 16px;
+            accent-color: $primary-color;
+            cursor: pointer;
+          }
+        }
+      }
+
+      .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 8px;
+        padding-top: 20px;
+        border-top: 1px solid $divider-color;
+
+        button {
+          padding: 10px 22px;
+          border: none;
+          border-radius: 6px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.2s, transform 0.15s;
+          outline: none;
+
+          &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+
+          &.btn-submit {
+            background: $primary-color;
+            color: #fff;
+            min-width: 100px;
+
+            &:hover:not(:disabled) {
+              background: $secondary-color;
+              transform: translateY(-1px);
+            }
+          }
+
+          &.btn-cancel {
+            background: $hover-color;
+            color: #555;
+            border: 1.5px solid $divider-color;
+
+            &:hover:not(:disabled) {
+              background: $divider-color;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// ── Animations ─────────────────────────────────────────────
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(24px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+// ── Mobile ─────────────────────────────────────────────────
+@media (max-width: 600px) {
+  .address-management-modal {
+    width: 95%;
+    max-height: 92vh;
+
+    .modal-content {
+      padding: 16px;
+
+      .addresses-header .btn-add-new {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .addresses-list .address-item .address-actions {
+        .btn-delete {
+          margin-left: 0;
+        }
+      }
+
+      .address-form .form-actions {
+        flex-direction: column-reverse;
+
+        button {
+          width: 100%;
+          justify-content: center;
+        }
+      }
+    }
+  }
+}
