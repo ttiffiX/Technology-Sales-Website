@@ -19,10 +19,12 @@ public class JwtUtils {
     @Value("${jwt.expiration}")
     private int jwtExp;
 
-    public String generateToken(Long userId) {
+    // Generate token với cả userId lẫn role
+    public String generateToken(Long userId, String role) {
         SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
         return Jwts.builder()
                 .subject(userId.toString())
+                .claim("role", role)
                 .issuedAt(new Date())
                 .expiration(new Date((new Date()).getTime() + jwtExp))
                 .signWith(key)
@@ -38,6 +40,16 @@ public class JwtUtils {
                 .getPayload()
                 .getSubject();
         return Long.parseLong(subject);
+    }
+
+    public String getRoleFromJwtToken(String token) {
+        SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+        return Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .get("role", String.class);
     }
 
     public boolean validateToken(String token) {

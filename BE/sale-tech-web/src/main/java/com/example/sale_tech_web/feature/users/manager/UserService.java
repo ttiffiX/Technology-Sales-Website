@@ -52,7 +52,7 @@ public class UserService implements UserServiceInterface {
             throw new ResponseStatusException(UNAUTHORIZED, "Email is not verified. Please verify your email before logging in.");
         }
 
-        String token = jwtUtils.generateToken(users.getId());
+        String token = jwtUtils.generateToken(users.getId(), users.getRole().name());
         return LogInResponse.builder()
                 .token(token)
                 .username(users.getUsername())
