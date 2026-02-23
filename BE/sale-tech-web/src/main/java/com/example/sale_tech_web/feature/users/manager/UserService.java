@@ -5,6 +5,8 @@ import com.example.sale_tech_web.feature.email.entity.EmailVerificationToken;
 import com.example.sale_tech_web.feature.email.manager.EmailService;
 import com.example.sale_tech_web.feature.email.repository.EmailVerificationTokenRepository;
 import com.example.sale_tech_web.feature.jwt.SecurityUtils;
+import com.example.sale_tech_web.feature.jwt.entity.RefreshToken;
+import com.example.sale_tech_web.feature.jwt.manager.RefreshTokenService;
 import com.example.sale_tech_web.feature.users.dto.ChangePassRequest;
 import com.example.sale_tech_web.feature.users.dto.LogInRequest;
 import com.example.sale_tech_web.feature.users.dto.RegisterRequest;
@@ -38,6 +40,7 @@ public class UserService implements UserServiceInterface {
     private final CartRepository cartRepository;
     private final EmailVerificationTokenRepository emailVerificationTokenRepository;
     private final EmailService emailService;
+    private final RefreshTokenService refreshTokenService;
 
     @Override
     public LogInResponse login(LogInRequest logInRequest) {
@@ -53,8 +56,11 @@ public class UserService implements UserServiceInterface {
         }
 
         String token = jwtUtils.generateToken(users.getId(), users.getRole().name());
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(users);
+
         return LogInResponse.builder()
                 .token(token)
+                .refreshToken(refreshToken.getToken())
                 .username(users.getUsername())
                 .name(users.getName())
                 .imageUrl(users.getImageUrl())
@@ -138,6 +144,8 @@ public class UserService implements UserServiceInterface {
 
         users.setPassword(passwordEncoder.encode(changePassRequest.getNewPassword()));
         userRepository.save(users);
+        // Revoke tất cả refresh token khi đổi mật khẩu
+        refreshTokenService.revokeAllUserTokens(users);
         return "Password changed successfully";
     }
 

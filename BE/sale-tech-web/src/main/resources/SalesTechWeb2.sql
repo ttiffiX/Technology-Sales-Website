@@ -280,6 +280,19 @@ CREATE TABLE user_address
     CONSTRAINT fk_user_address FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
+drop table refresh_tokens;
+CREATE TABLE refresh_tokens
+(
+    id         SERIAL PRIMARY KEY,
+    user_id    INT UNIQUE   NOT NULL,
+    token      VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP    NOT NULL,
+    expiry_at TIMESTAMP    NOT NULL,
+    is_revoked BOOLEAN DEFAULT FALSE,
+    -- Khóa ngoại đến User
+    CONSTRAINT fk_rt_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+);
+
 
 -- DATA
 INSERT INTO categories (name)

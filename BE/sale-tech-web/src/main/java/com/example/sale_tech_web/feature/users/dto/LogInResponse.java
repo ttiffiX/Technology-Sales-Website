@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class LogInResponse {
     private String token;
+    private String refreshToken;
     private String username;
     private String name;
     private String imageUrl;

@@ -19,14 +19,30 @@ public class JwtUtils {
     @Value("${jwt.expiration}")
     private int jwtExp;
 
-    // Generate token với cả userId lẫn role
+    @Value("${jwt.refresh-expiration}")
+    private long jwtRefreshExp;
+
+    // Generate ACCESS token với userId và role, thời hạn ngắn
     public String generateToken(Long userId, String role) {
         SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
         return Jwts.builder()
                 .subject(userId.toString())
                 .claim("role", role)
+                .claim("type", "access")
                 .issuedAt(new Date())
                 .expiration(new Date((new Date()).getTime() + jwtExp))
+                .signWith(key)
+                .compact();
+    }
+
+    // Generate REFRESH token với userId, thời hạn dài
+    public String generateRefreshToken(Long userId) {
+        SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+        return Jwts.builder()
+                .subject(userId.toString())
+                .claim("type", "refresh")
+                .issuedAt(new Date())
+                .expiration(new Date((new Date()).getTime() + jwtRefreshExp))
                 .signWith(key)
                 .compact();
     }
@@ -68,5 +84,4 @@ public class JwtUtils {
         }
         return false;
     }
-
 }

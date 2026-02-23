@@ -35,7 +35,7 @@ public class WebSecurityConfig {
                 })
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/auth/register", "/auth/login", "/auth/verify-email", "auth/resend-verification", "auth/forgot-password",  "/product", "/product/**").permitAll()
+                        .requestMatchers("/auth/register", "/auth/login", "/auth/verify-email", "auth/resend-verification", "auth/forgot-password", "/auth/refresh-token", "/auth/logout", "/product", "/product/**").permitAll()
                         .requestMatchers("/payment/vnpay/callback", "/payment/vnpay/ipn").permitAll()
                         .anyRequest().authenticated()
                 )
@@ -49,7 +49,7 @@ public class WebSecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of("http://localhost:3000"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With", "Cookie"));
         config.setExposedHeaders(List.of("Authorization", "Location"));
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
