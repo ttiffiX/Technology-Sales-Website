@@ -12,7 +12,7 @@ import java.util.List;
 public interface ProductAttributeRepository extends JpaRepository<ProductAttribute, Long> {
     @Query(
             "SELECT pa.name FROM ProductAttribute pa " +
-                    "JOIN FETCH CategoryAttributeMapping cam ON pa.id = cam.attribute.id " +
+                    "JOIN CategoryAttributeMapping cam ON pa.id = cam.attribute.id " +
                     "WHERE cam.category.id = :categoryId " +
                     "ORDER BY pa.id"
     )

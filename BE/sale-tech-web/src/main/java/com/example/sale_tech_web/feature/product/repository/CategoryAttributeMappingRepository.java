@@ -18,5 +18,11 @@ public interface CategoryAttributeMappingRepository extends JpaRepository<Catego
     })
     @Query("SELECT cam FROM CategoryAttributeMapping cam WHERE cam.category.id = :categoryId AND cam.isFilterable = true")
     List<CategoryAttributeMapping> findFilterableAttributesByCategory(@Param("categoryId") Long categoryId);
+
+    @EntityGraph(attributePaths = {
+            "attribute"
+    })
+    @Query("SELECT cam FROM CategoryAttributeMapping cam WHERE cam.category.id = :categoryId ORDER BY cam.attribute.id")
+    List<CategoryAttributeMapping> findAllByCategoryId(@Param("categoryId") Long categoryId);
 }
 
