@@ -1,6 +1,6 @@
 package com.example.sale_tech_web.feature.product.manager;
 
-import com.example.sale_tech_web.feature.product.dto.*;
+import com.example.sale_tech_web.feature.product.dto.customer.*;
 
 import java.util.List;
 import java.util.Map;

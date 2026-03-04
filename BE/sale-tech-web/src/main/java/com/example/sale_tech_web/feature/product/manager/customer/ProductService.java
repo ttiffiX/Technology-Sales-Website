@@ -1,9 +1,10 @@
-package com.example.sale_tech_web.feature.product.manager;
+package com.example.sale_tech_web.feature.product.manager.customer;
 
 import static org.springframework.http.HttpStatus.*;
 
-import com.example.sale_tech_web.feature.product.dto.*;
+import com.example.sale_tech_web.feature.product.dto.customer.*;
 import com.example.sale_tech_web.feature.product.entity.*;
+import com.example.sale_tech_web.feature.product.manager.ProductServiceInterface;
 import com.example.sale_tech_web.feature.product.repository.*;
 
 import java.util.*;

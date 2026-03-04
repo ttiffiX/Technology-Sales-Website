@@ -1,6 +1,6 @@
-package com.example.sale_tech_web.feature.product.pm.manager;
+package com.example.sale_tech_web.feature.product.manager.pm;
 
-import com.example.sale_tech_web.feature.product.pm.dto.AttributeResponse;
+import com.example.sale_tech_web.feature.product.dto.pm.AttributeResponse;
 
 import java.util.List;
 

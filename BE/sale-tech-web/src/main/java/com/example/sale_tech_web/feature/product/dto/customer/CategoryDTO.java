@@ -1,4 +1,4 @@
-package com.example.sale_tech_web.feature.product.dto;
+package com.example.sale_tech_web.feature.product.dto.customer;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,4 +1,4 @@
-package com.example.sale_tech_web.controller;
+package com.example.sale_tech_web.controller.customer;
 
 import com.example.sale_tech_web.feature.order.dto.OrderDTO;
 import com.example.sale_tech_web.feature.order.dto.OrderDetailDTO;

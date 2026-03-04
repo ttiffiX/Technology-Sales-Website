@@ -1,7 +1,7 @@
 package com.example.sale_tech_web.controller.pm;
 
-import com.example.sale_tech_web.feature.product.pm.dto.AttributeResponse;
-import com.example.sale_tech_web.feature.product.pm.manager.PMServiceInterface;
+import com.example.sale_tech_web.feature.product.dto.pm.AttributeResponse;
+import com.example.sale_tech_web.feature.product.manager.pm.PMServiceInterface;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

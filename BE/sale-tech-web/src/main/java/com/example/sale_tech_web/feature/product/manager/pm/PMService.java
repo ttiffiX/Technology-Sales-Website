@@ -1,7 +1,7 @@
-package com.example.sale_tech_web.feature.product.pm.manager;
+package com.example.sale_tech_web.feature.product.manager.pm;
 
 import com.example.sale_tech_web.feature.product.entity.CategoryAttributeMapping;
-import com.example.sale_tech_web.feature.product.pm.dto.AttributeResponse;
+import com.example.sale_tech_web.feature.product.dto.pm.AttributeResponse;
 import com.example.sale_tech_web.feature.product.repository.CategoryAttributeMappingRepository;
 import com.example.sale_tech_web.feature.product.repository.CategoryRepository;
 import com.example.sale_tech_web.feature.product.repository.ProductRepository;

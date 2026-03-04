@@ -1,4 +1,4 @@
-package com.example.sale_tech_web.controller;
+package com.example.sale_tech_web.controller.customer;
 
 import com.example.sale_tech_web.feature.user_address.dto.AddressResponse;
 import com.example.sale_tech_web.feature.user_address.dto.AddressRequest;

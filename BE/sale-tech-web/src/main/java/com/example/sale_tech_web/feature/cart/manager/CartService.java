@@ -8,7 +8,7 @@ import com.example.sale_tech_web.feature.cart.dto.CartDTO;
 import com.example.sale_tech_web.feature.cart.repository.CartDetailRepository;
 import com.example.sale_tech_web.feature.cart.repository.CartRepository;
 import com.example.sale_tech_web.feature.jwt.SecurityUtils;
-import com.example.sale_tech_web.feature.product.dto.ProductListDTO;
+import com.example.sale_tech_web.feature.product.dto.customer.ProductListDTO;
 import com.example.sale_tech_web.feature.product.entity.Product;
 import com.example.sale_tech_web.feature.product.repository.ProductRepository;
 import com.example.sale_tech_web.feature.users.entity.Users;

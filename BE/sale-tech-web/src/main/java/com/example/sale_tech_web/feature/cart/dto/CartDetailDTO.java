@@ -1,6 +1,6 @@
 package com.example.sale_tech_web.feature.cart.dto;
 
-import com.example.sale_tech_web.feature.product.dto.ProductListDTO;
+import com.example.sale_tech_web.feature.product.dto.customer.ProductListDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

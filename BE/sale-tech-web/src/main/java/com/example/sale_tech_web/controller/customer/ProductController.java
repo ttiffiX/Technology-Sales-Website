@@ -1,6 +1,6 @@
-package com.example.sale_tech_web.controller;
+package com.example.sale_tech_web.controller.customer;
 
-import com.example.sale_tech_web.feature.product.dto.*;
+import com.example.sale_tech_web.feature.product.dto.customer.*;
 import com.example.sale_tech_web.feature.product.manager.ProductServiceInterface;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
