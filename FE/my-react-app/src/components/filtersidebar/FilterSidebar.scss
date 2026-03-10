@@ -186,16 +186,42 @@
       }
     }
 
+    .filter-group-name {
+      margin: 0 0 10px 0;
+      font-size: 15px;
+      font-weight: 700;
+      color: $primary-color;
+      padding-bottom: 6px;
+      border-bottom: 2px solid $primary-color;
+    }
+
+    .filter-sub-section {
+      margin-bottom: 14px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      .filter-attr-name {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: $text-in-header-color;
+        margin-bottom: 6px;
+        padding-left: 2px;
+      }
+    }
+
     .filter-options {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 4px;
 
       .filter-option {
         display: flex;
         align-items: center;
         gap: 8px;
-        padding: 8px;
+        padding: 6px 8px;
         border-radius: 4px;
         cursor: pointer;
         transition: background 0.2s;
@@ -205,14 +231,15 @@
         }
 
         input[type="checkbox"] {
-          width: 18px;
-          height: 18px;
+          width: 16px;
+          height: 16px;
           cursor: pointer;
           accent-color: $primary-color;
+          flex-shrink: 0;
         }
 
         span {
-          font-size: 14px;
+          font-size: 13px;
           color: $text-in-header-color;
           user-select: none;
         }

@@ -1,5 +1,5 @@
-import React, {useEffect, useState} from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React, {useEffect, useRef, useState} from 'react';
+import {useSearchParams} from 'react-router-dom';
 import '../../App.scss';
 import './Home.scss';
 import 'react-toastify/dist/ReactToastify.css';
@@ -7,7 +7,7 @@ import ProductGrid from "../../components/productgrid/ProductGrid";
 import Nav from "../../components/navigation/Nav";
 import Header from "../../components/header/Header";
 import FilterSidebar from "../../components/filtersidebar/FilterSidebar";
-import useFetchProducts, { filterProducts, searchProducts, getAllCategories } from "../../api/ProductAPI";
+import useFetchProducts, {filterProducts, searchProducts, getAllCategories} from "../../api/ProductAPI";
 import {useCart} from "../../contexts/CartContext";
 import CompareBar from "../../components/comparebar/CompareBar";
 
@@ -25,6 +25,9 @@ function Home() {
     const [error, setError] = useState(null);
     const [searchKeyword, setSearchKeyword] = useState('');
     const [currentFilters, setCurrentFilters] = useState({});
+    const filterDebounceRef = useRef(null);
+    // Đảm bảo sync từ URL chỉ chạy 1 lần duy nhất (kể cả khi back về từ trang khác)
+    const hasInitialized = useRef(false);
 
 
     // Load all products initially
@@ -47,19 +50,19 @@ function Home() {
         fetchCategories();
     }, []);
 
-    // Sync state from URL on initial load
+    // Sync state from URL on initial load — chỉ chạy 1 lần duy nhất
     useEffect(() => {
         if (!allProducts || categories.length === 0) return;
+        if (hasInitialized.current) return;
+        hasInitialized.current = true;
 
         const urlCategoryId = searchParams.get('category');
         const urlSearch = searchParams.get('search');
 
         if (urlSearch) {
-            // If search param exists, perform search
             setSearchKeyword(urlSearch);
             handleSearch(urlSearch);
         } else if (urlCategoryId) {
-            // If category param exists, filter by category
             const categoryId = parseInt(urlCategoryId);
 
             // Restore filter params from URL
@@ -72,12 +75,12 @@ function Home() {
             if (maxPrice) filters.maxPrice = parseInt(maxPrice);
             if (sort) filters.sort = sort;
 
-            // Restore attribute filters (attr_1, attr_2, etc.)
+            // Restore attribute filters — keys are attribute codes directly (no attr_ prefix)
+            const systemKeys = new Set(['category', 'minPrice', 'maxPrice', 'sort', 'search', 'page', 'size']);
             const attributes = {};
             searchParams.forEach((value, key) => {
-                if (key.startsWith('attr_')) {
-                    const attrId = key.substring(5);
-                    attributes[attrId] = value.split(',');
+                if (!systemKeys.has(key)) {
+                    attributes[key] = value.split(',');
                 }
             });
             if (Object.keys(attributes).length > 0) {
@@ -98,17 +101,17 @@ function Home() {
 
         // Update URL params
         if (categoryId) {
-            const params = { category: categoryId.toString() };
+            const params = {category: categoryId.toString()};
 
             // Add filter params to URL
             if (filters.minPrice) params.minPrice = filters.minPrice.toString();
             if (filters.maxPrice) params.maxPrice = filters.maxPrice.toString();
             if (filters.sort) params.sort = filters.sort;
 
-            // Add attribute filters
+            // Add attribute filters — key is attribute code directly (no attr_ prefix)
             if (filters.attributes) {
-                Object.entries(filters.attributes).forEach(([attrId, values]) => {
-                    params[`attr_${attrId}`] = values.join(',');
+                Object.entries(filters.attributes).forEach(([attrCode, values]) => {
+                    params[attrCode] = values.join(',');
                 });
             }
 
@@ -145,41 +148,37 @@ function Home() {
         await handleCategoryChangeWithFilters(categoryId, {});
     };
 
-    // Handle filter change from sidebar
-    const handleFilterChange = async (filters) => {
+    // Handle filter change from sidebar (debounced 400ms)
+    const handleFilterChange = (filters) => {
         if (!selectedCategoryId) return;
 
-        // Store current filters
-        setCurrentFilters(filters);
-
-        // Update URL with filters
-        const params = { category: selectedCategoryId.toString() };
-
+        // Cập nhật URL ngay lập tức để người dùng thấy phản hồi
+        const params = {category: selectedCategoryId.toString()};
         if (filters.minPrice) params.minPrice = filters.minPrice.toString();
         if (filters.maxPrice) params.maxPrice = filters.maxPrice.toString();
         if (filters.sort) params.sort = filters.sort;
-
-        // Add attribute filters
         if (filters.attributes) {
-            Object.entries(filters.attributes).forEach(([attrId, values]) => {
-                if (values && values.length > 0) {
-                    params[`attr_${attrId}`] = values.join(',');
-                }
+            Object.entries(filters.attributes).forEach(([attrCode, values]) => {
+                if (values && values.length > 0) params[attrCode] = values.join(',');
             });
         }
-
         setSearchParams(params);
+        setCurrentFilters(filters);
 
-        setLoading(true);
-        setError(null);
-        try {
-            const filtered = await filterProducts(selectedCategoryId, filters);
-            setProducts(filtered);
-        } catch (err) {
-            setError(err.response?.data || 'Failed to filter products');
-        } finally {
-            setLoading(false);
-        }
+        // Debounce: huỷ timer cũ, đặt timer mới 400ms
+        if (filterDebounceRef.current) clearTimeout(filterDebounceRef.current);
+        filterDebounceRef.current = setTimeout(async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const filtered = await filterProducts(selectedCategoryId, filters);
+                setProducts(filtered);
+            } catch (err) {
+                setError(err.response?.data || 'Failed to filter products');
+            } finally {
+                setLoading(false);
+            }
+        }, 400);
     };
 
     // Handle search
@@ -201,7 +200,7 @@ function Home() {
         }
 
         // Update URL with search param
-        setSearchParams({ search: keyword });
+        setSearchParams({search: keyword});
 
         setLoading(true);
         setError(null);
@@ -254,7 +253,7 @@ function Home() {
             </div>
 
             {/* Compare Bar */}
-            <CompareBar />
+            <CompareBar/>
         </div>
     );
 }

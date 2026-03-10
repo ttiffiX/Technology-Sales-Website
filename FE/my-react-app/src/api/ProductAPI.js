@@ -65,11 +65,11 @@ export const filterProducts = async (categoryId, filters = {}) => {
         if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
         if (filters.sort) params.append('sort', filters.sort);
 
-        // Add attribute filters
+        // Add attribute filters (key = attribute code, e.g. "ram", "storage")
         if (filters.attributes) {
-            for (const [attrId, values] of Object.entries(filters.attributes)) {
+            for (const [attrCode, values] of Object.entries(filters.attributes)) {
                 if (values && values.length > 0) {
-                    params.append(`attr_${attrId}`, values.join(','));
+                    params.append(attrCode, values.join(','));
                 }
             }
         }

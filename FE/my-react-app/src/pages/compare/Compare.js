@@ -37,7 +37,8 @@ function Compare() {
         };
 
         fetchCompareData();
-    }, [selectedProducts, categoryId, navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const handleProductClick = (productId) => {
         navigate(`/product/${productId}`);
@@ -106,16 +107,15 @@ function Compare() {
                             </tr>
                             </thead>
                             <tbody>
-                            {/* Dynamic attributes */}
-                            {compareData.attributeNames && compareData.attributeNames.map(attrName => (
-                                <tr key={attrName}>
-                                    <td className="attribute-name">{attrName}</td>
+                            {/* Dynamic attributes — attr.code làm key tra cứu trong rawAttributes */}
+                            {compareData.attributeNames && compareData.attributeNames.map(attr => (
+                                <tr key={attr.code}>
+                                    <td className="attribute-name">{attr.attributeName}</td>
                                     {compareData.products.map(product => {
-                                        // attributes is an object/map, not an array
-                                        const attrValue = product.attributes?.[attrName];
+                                        const attrValue = product.rawAttributes?.[attr.code];
                                         return (
                                             <td key={product.id} className="attribute-value">
-                                                {attrValue || '-'}
+                                                {attrValue != null ? String(attrValue) : '-'}
                                             </td>
                                         );
                                     })}

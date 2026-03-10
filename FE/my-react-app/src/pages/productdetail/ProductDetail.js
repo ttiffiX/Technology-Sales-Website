@@ -161,16 +161,26 @@ function ProductDetail() {
                         {product.attributes && Object.keys(product.attributes).length > 0 && (
                             <div className="product-specifications">
                                 <h3>Specifications</h3>
-                                <table className="specs-table">
-                                    <tbody>
-                                        {Object.entries(product.attributes).map(([key, value]) => (
-                                            <tr key={key}>
-                                                <td className="spec-label">{key}</td>
-                                                <td className="spec-value">{value}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                {Object.entries(product.attributes).map(([groupOrder, group]) => (
+                                    <div key={groupOrder} className="spec-group">
+                                        <h4 className="spec-group-name">{group.groupName}</h4>
+                                        <table className="specs-table">
+                                            <tbody>
+                                                {group.filterAttributes?.map((attr, idx) => (
+                                                    <tr key={idx}>
+                                                        <td className="spec-label">{attr.attributeName}</td>
+                                                        <td className="spec-value">
+                                                            {Array.isArray(attr.availableValues)
+                                                                ? attr.availableValues.join(', ')
+                                                                : attr.availableValues}
+                                                            {attr.unit ? ` ${attr.unit}` : ''}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                ))}
                             </div>
                         )}
 
