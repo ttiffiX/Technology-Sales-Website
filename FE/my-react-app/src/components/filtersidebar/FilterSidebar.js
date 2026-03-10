@@ -27,25 +27,36 @@ function FilterSidebar({ categoryId, onFilterChange }) {
                 const options = await getFilterOptions(categoryId);
                 setFilterOptions(options);
 
-                // Restore UI state từ URL (chỉ để hiển thị đúng checkbox/sort/price)
-                // Home.js đã lo việc gọi API lấy sản phẩm rồi
-                const minPrice = searchParams.get('minPrice');
-                const maxPrice = searchParams.get('maxPrice');
-                const urlSort = searchParams.get('sort');
+                // Chỉ restore từ URL nếu URL đang ứng với đúng category này
+                // Ngược lại (switch category) → reset sạch
+                const urlCategoryId = searchParams.get('category');
+                const isSameCategory = urlCategoryId && parseInt(urlCategoryId) === categoryId;
 
-                const defaultMin = minPrice ? parseInt(minPrice) : 0;
-                const defaultMax = maxPrice ? parseInt(maxPrice) : 100000000;
-                setPriceRange({ min: defaultMin, max: defaultMax });
-                setTempPriceRange({ min: defaultMin, max: defaultMax });
-                if (urlSort) setSort(urlSort);
-                else setSort('price_asc');
+                if (isSameCategory) {
+                    const minPrice = searchParams.get('minPrice');
+                    const maxPrice = searchParams.get('maxPrice');
+                    const urlSort = searchParams.get('sort');
 
-                const systemKeys = new Set(['category', 'minPrice', 'maxPrice', 'sort', 'search', 'page', 'size']);
-                const attributes = {};
-                searchParams.forEach((value, key) => {
-                    if (!systemKeys.has(key)) attributes[key] = value.split(',');
-                });
-                setSelectedFilters(attributes);
+                    const defaultMin = minPrice ? parseInt(minPrice) : 0;
+                    const defaultMax = maxPrice ? parseInt(maxPrice) : 100000000;
+                    setPriceRange({ min: defaultMin, max: defaultMax });
+                    setTempPriceRange({ min: defaultMin, max: defaultMax });
+                    if (urlSort) setSort(urlSort);
+                    else setSort('price_asc');
+
+                    const systemKeys = new Set(['category', 'minPrice', 'maxPrice', 'sort', 'search', 'page', 'size']);
+                    const attributes = {};
+                    searchParams.forEach((value, key) => {
+                        if (!systemKeys.has(key)) attributes[key] = value.split(',');
+                    });
+                    setSelectedFilters(attributes);
+                } else {
+                    // Switch sang category khác → reset sạch
+                    setSelectedFilters({});
+                    setPriceRange({ min: 0, max: 100000000 });
+                    setTempPriceRange({ min: 0, max: 100000000 });
+                    setSort('price_asc');
+                }
 
             } catch (error) {
                 console.error('Failed to load filter options:', error);
