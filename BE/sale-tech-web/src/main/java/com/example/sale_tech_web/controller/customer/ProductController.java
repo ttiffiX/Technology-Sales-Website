@@ -1,7 +1,7 @@
 package com.example.sale_tech_web.controller.customer;
 
 import com.example.sale_tech_web.feature.product.dto.customer.*;
-import com.example.sale_tech_web.feature.product.manager.ProductServiceInterface;
+import com.example.sale_tech_web.feature.product.manager.customer.ProductServiceInterface;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,9 +17,6 @@ import java.util.*;
 public class ProductController {
     private final ProductServiceInterface productServiceInterface;
 
-    /**
-     * GET /product/categories - Get all categories
-     */
     @GetMapping("/categories")
     public ResponseEntity<List<CategoryDTO>> getAllCategories() {
         List<CategoryDTO> categories = productServiceInterface.getAllCategories();
@@ -27,9 +24,6 @@ public class ProductController {
         return ResponseEntity.ok(categories);
     }
 
-    /**
-     * GET /product - Get all active products
-     */
     @GetMapping
     public ResponseEntity<List<ProductListDTO>> getAllProducts() {
         List<ProductListDTO> products = productServiceInterface.getAllProducts();
@@ -72,54 +66,38 @@ public class ProductController {
      * Get all available filter options for a category (attributes and their values)
      */
     @GetMapping("/category/{categoryId}/filter-options")
-    public ResponseEntity<CategoryFilterOptionsDTO> getFilterOptions(
+    public ResponseEntity<Map<Integer, FilterGroupDTO>> getFilterOptions(
             @PathVariable Long categoryId
     ) {
         log.info("Get filter options for category: {}", categoryId);
-        CategoryFilterOptionsDTO options = productServiceInterface.getFilterOptions(categoryId);
+        Map<Integer, FilterGroupDTO> options = productServiceInterface.getFilterOptions(categoryId);
         return ResponseEntity.ok(options);
     }
 
-    /**
-     * GET /product/category/{categoryId}/filter
-     * Filter products by category with optional attributes and price range
-     * <p>
-     * Examples:
-     * - /product/category/1/filter?minPrice=10000000&maxPrice=30000000
-     * - /product/category/1/filter?attr_1=8,16&attr_3=15.6
-     * - /product/category/1/filter?attr_1=8,16&minPrice=10000000&maxPrice=30000000
-     * <p>
-     * Query params:
-     * - minPrice (optional): Minimum price
-     * - maxPrice (optional): Maximum price
-     * - attr_{attributeId} (optional): Comma-separated values for that attribute
-     * Example: attr_1=8,16 means RAM = 8GB OR 16GB
-     */
     @GetMapping("/category/{categoryId}/filter")
     public ResponseEntity<List<ProductListDTO>> filterByCategory(
             @PathVariable Long categoryId,
             @RequestParam(required = false) Integer minPrice,
             @RequestParam(required = false) Integer maxPrice,
-            @RequestParam(required = false, defaultValue = "price_asc") String sort,
-            @RequestParam Map<String, String> allParams
+            @RequestParam(required = false, defaultValue = "id_desc") String sort,
+            @RequestParam Map<String, String> allParams // Hứng tất cả: {ram=8GB,16GB, minPrice=1000...}
     ) {
-        log.info("Filter products - Category: {}, Sort: {}, Params: {}", categoryId, sort, allParams);
+        log.info("Filter Product with attributes for category: {}", categoryId);
+        // 1. Các key không phải thuộc tính sản phẩm
+        Set<String> systemParams = Set.of("minPrice", "maxPrice", "sort", "page", "size");
 
-        // Parse attribute filters from query params (attr_1=8,16 -> {1: [8, 16]})
-        Map<Long, List<String>> attributeFilters = new HashMap<>();
-        for (Map.Entry<String, String> entry : allParams.entrySet()) {
-            String key = entry.getKey();
-            if (key.startsWith("attr_")) {
-                try {
-                    Long attributeId = Long.parseLong(key.substring(5));
-                    List<String> values = Arrays.asList(entry.getValue().split(","));
-                    attributeFilters.put(attributeId, values);
-                } catch (NumberFormatException e) {
-                    log.warn("Invalid attribute ID in param: {}", key);
-                }
+        // 2. Parse các thuộc tính còn lại thành Map<String, List<String>>
+        Map<String, List<String>> attributeFilters = new HashMap<>();
+
+        allParams.forEach((key, value) -> {
+            if (!systemParams.contains(key) && value != null && !value.isBlank()) {
+                // "8GB,16GB" -> ["8GB", "16GB"]
+                List<String> values = Arrays.asList(value.split(","));
+                attributeFilters.put(key, values);
             }
-        }
+        });
 
+        // 3. Gọi Service
         List<ProductListDTO> products = productServiceInterface.filterByAttributes(
                 categoryId,
                 attributeFilters.isEmpty() ? null : attributeFilters,
@@ -127,6 +105,7 @@ public class ProductController {
                 maxPrice,
                 sort
         );
+
         return ResponseEntity.ok(products);
     }
 

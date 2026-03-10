@@ -1,4 +1,4 @@
-package com.example.sale_tech_web.feature.product.manager;
+package com.example.sale_tech_web.feature.product.manager.customer;
 
 import com.example.sale_tech_web.feature.product.dto.customer.*;
 
@@ -12,10 +12,10 @@ public interface ProductServiceInterface {
 
     ProductDetailDTO getProductById(Long productId);
 
-    CategoryFilterOptionsDTO getFilterOptions(Long categoryId);
+    Map<Integer, FilterGroupDTO> getFilterOptions(Long categoryId);
 
     List<ProductListDTO> filterByAttributes(Long categoryId,
-                                            Map<Long, List<String>> attributeFilters,
+                                            Map<String, List<String>> attributeFilters,
                                             Integer minPrice,
                                             Integer maxPrice,
                                             String sort);

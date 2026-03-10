@@ -1,214 +1,158 @@
 package com.example.sale_tech_web.feature.product.manager.customer;
 
-import static org.springframework.http.HttpStatus.*;
-
 import com.example.sale_tech_web.feature.product.dto.customer.*;
-import com.example.sale_tech_web.feature.product.entity.*;
-import com.example.sale_tech_web.feature.product.manager.ProductServiceInterface;
-import com.example.sale_tech_web.feature.product.repository.*;
+import com.example.sale_tech_web.feature.product.entity.CategoryAttributeSchema;
+import com.example.sale_tech_web.feature.product.entity.Product;
+import com.example.sale_tech_web.feature.product.repository.CategoryAttributeSchemaRepository;
+import com.example.sale_tech_web.feature.product.repository.CategoryRepository;
+import com.example.sale_tech_web.feature.product.repository.ProductRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.criteria.*;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
 public class ProductService implements ProductServiceInterface {
-    private final ProductRepository productRepository;
+    @Autowired
+    private ObjectMapper objectMapper;
+
     private final CategoryRepository categoryRepository;
-    private final CategoryAttributeMappingRepository categoryAttributeMappingRepository;
-    private final ProductAttributeValueRepository productAttributeValueRepository;
-    private final EntityManager entityManager;
-    private final ProductAttributeRepository productAttributeRepository;
+    private final ProductRepository productRepository;
+    private final CategoryAttributeSchemaRepository schemaRepository;
 
-    /**
-     * Get all categories
-     */
+    @Override
+    @Cacheable("categories")
     public List<CategoryDTO> getAllCategories() {
-        List<Category> categories = categoryRepository.findAll();
-        return categories.stream()
-                .map(category -> CategoryDTO.builder()
-                        .id(category.getId())
-                        .name(category.getName())
-                        .build())
-                .collect(Collectors.toList());
+        return categoryRepository.findAll().stream()
+                .map(c -> CategoryDTO.builder().id(c.getId()).name(c.getName()).build())
+                .toList();
     }
 
-    /**
-     * Get all active products with basic info for listing
-     */
+    @Override
     public List<ProductListDTO> getAllProducts() {
-        List<Product> products = productRepository.findByIsActiveTrue();
-        return products.stream()
+        return productRepository.findByIsActiveTrue().stream()
                 .map(this::convertToListDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
-    /**
-     * Get product detail by ID with full information
-     */
+    @Override
     public ProductDetailDTO getProductById(Long productId) {
-        Product product = productRepository.findByIdWithDetails(productId)
+        Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Product not found"));
         return convertToDetailDTO(product);
     }
 
-    /**
-     * Get filter options for a category (tất cả attributes có thể filter và giá trị của chúng)
-     */
-    public CategoryFilterOptionsDTO getFilterOptions(Long categoryId) {
-        Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Category not found"));
+    @Override
+    @Cacheable(value = "filterOptions", key = "#categoryId")
+    public Map<Integer, FilterGroupDTO> getFilterOptions(Long categoryId) {
+        List<CategoryAttributeSchema> schemas = schemaRepository.findByCategoryIdOrdered(categoryId);
+        Map<String, List<String>> attributeValuesMap = getFilterValuesMap(categoryId);
 
-        // Get all filterable attributes for this category
-        List<CategoryAttributeMapping> mappings = categoryAttributeMappingRepository
-                .findFilterableAttributesByCategory(categoryId);
+        Map<Integer, FilterGroupDTO> groups = new LinkedHashMap<>();
 
-        //Get ALL attribute values for this category in ONE query
-        List<ProductAttributeValue> allAttributeValues = productAttributeValueRepository
-                .findAllByCategory(categoryId);
+        schemas.stream()
+                .filter(s -> attributeValuesMap.containsKey(s.getCode()))
+                .forEach(s -> {
+                    FilterGroupDTO group = groups.computeIfAbsent(s.getGroupOrder(), order ->
+                            FilterGroupDTO.builder()
+                                    .groupName(s.getGroupName())
+                                    .filterAttributes(new ArrayList<>())
+                                    .build()
+                    );
 
-        // Group attribute values by attributeId and get distinct values
-        Map<Long, List<String>> attributeValuesMap = allAttributeValues.stream()
-                .collect(Collectors.groupingBy(
-                        pav -> pav.getAttribute().getId(),
-                        Collectors.mapping(
-                                ProductAttributeValue::getValue,
-                                Collectors.collectingAndThen(
-                                        Collectors.toSet(),
-                                        set -> set.stream().sorted().collect(Collectors.toList())
-                                )
-                        )
-                ));
-
-        // Build filter attributes DTOs - only for filterable attributes
-        List<FilterAttributeDTO> filterAttributes = mappings.stream()
-                .map(mapping -> {
-                    ProductAttribute attr = mapping.getAttribute();
-                    List<String> values = attributeValuesMap.getOrDefault(attr.getId(), List.of());
-
-                    return FilterAttributeDTO.builder()
-                            .attributeId(attr.getId())
-                            .attributeName(attr.getName())
-                            .unit(attr.getUnit())
-                            .availableValues(values)
+                    FilterGroupDTO.FilterAttributeDTO attrDTO = FilterGroupDTO.FilterAttributeDTO.builder()
+                            .code(s.getCode())
+                            .attributeName(s.getName())
+                            .unit(s.getUnit())
+                            .availableValues(attributeValuesMap.get(s.getCode()))
                             .build();
-                })
-                .collect(Collectors.toList());
 
-        return CategoryFilterOptionsDTO.builder()
-                .categoryId(categoryId)
-                .categoryName(category.getName())
-                .filterableAttributes(filterAttributes)
-                .build();
+                    group.getFilterAttributes().add(attrDTO);
+                });
+
+        return groups;
+
     }
 
-    /**
-     * Filter products by dynamic attributes and sort by price (asc/desc)
-     *
-     * @param categoryId       Category ID (required)
-     * @param attributeFilters Map<attributeId, List<values>> - ví dụ: {1: ["8", "16"], 3: ["15.6"]}
-     * @param minPrice         Minimum price (optional)
-     * @param maxPrice         Maximum price (optional)
-     * @param sort             Sort direction: price_asc | price_desc (default price_asc if null/invalid)
-     */
-    public List<ProductListDTO> filterByAttributes(Long categoryId,
-                                                   Map<Long, List<String>> attributeFilters,
-                                                   Integer minPrice,
-                                                   Integer maxPrice,
-                                                   String sort) {
-        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-        CriteriaQuery<Product> query = cb.createQuery(Product.class);
-        Root<Product> product = query.from(Product.class);
+    @Override
+    public List<ProductListDTO> filterByAttributes(Long categoryId, Map<String, List<String>> attributeFilters, Integer minPrice, Integer maxPrice, String sort) {
 
-        // Eager fetch category to prevent N+1
-        product.fetch("category", JoinType.LEFT);
+        // 1. Khởi tạo Specification cơ bản
+        // Lưu ý: Đảm bảo Entity Product có field 'category' và 'isActive' (đúng hoa thường)
+        Specification<Product> spec = Specification.where((root, query, cb) ->
+                cb.and(
+                        cb.equal(root.get("category").get("id"), categoryId),
+                        cb.isTrue(root.get("isActive"))
+                )
+        );
 
-        List<Predicate> predicates = new ArrayList<>();
+        // 2. Lọc theo giá
+        if (minPrice != null)
+            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("price"), minPrice));
+        if (maxPrice != null) spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("price"), maxPrice));
 
-        // Always filter by category and active status
-        predicates.add(cb.equal(product.get("category").get("id"), categoryId));
-        predicates.add(cb.isTrue(product.get("isActive")));
-
-        // Price range filter
-        if (minPrice != null) {
-            predicates.add(cb.greaterThanOrEqualTo(product.get("price"), minPrice));
-        }
-        if (maxPrice != null) {
-            predicates.add(cb.lessThanOrEqualTo(product.get("price"), maxPrice));
-        }
-
-        // Dynamic attribute filters
+        // 3. Lọc JSONB: Dùng function để Postgres bóc tách text từ JSONB
         if (attributeFilters != null && !attributeFilters.isEmpty()) {
-            for (Map.Entry<Long, List<String>> entry : attributeFilters.entrySet()) {
-                Long attributeId = entry.getKey();
-                List<String> values = entry.getValue();
-
-                if (values != null && !values.isEmpty()) {
-                    // Subquery: product must have this attribute with one of the specified values
-                    Subquery<Long> subquery = query.subquery(Long.class);
-                    Root<ProductAttributeValue> attrValue = subquery.from(ProductAttributeValue.class);
-                    subquery.select(attrValue.get("product").get("id"));
-                    subquery.where(
-                            cb.and(
-                                    cb.equal(attrValue.get("product").get("id"), product.get("id")),
-                                    cb.equal(attrValue.get("attribute").get("id"), attributeId),
-                                    attrValue.get("value").in(values)
-                            )
-                    );
-                    predicates.add(cb.exists(subquery));
-                }
+            for (Map.Entry<String, List<String>> entry : attributeFilters.entrySet()) {
+                spec = spec.and((root, query, cb) ->
+                        cb.function("jsonb_extract_path_text", String.class,
+                                        root.get("attributes"), cb.literal(entry.getKey()))
+                                .in(entry.getValue())
+                );
             }
         }
 
-        query.where(predicates.toArray(new Predicate[0]));
-        query.distinct(true);
+        // 4. Xử lý Sắp xếp linh hoạt hơn
+        Sort sortOrder;
+        switch (sort) {
+            case "price_asc" -> sortOrder = Sort.by("price").ascending();
+            case "price_desc" -> sortOrder = Sort.by("price").descending();
+            default -> sortOrder = Sort.by("id").descending(); // Mặc định sản phẩm mới lên đầu
+        }
 
-        // Sorting by price only
-        boolean desc = sort != null && sort.equalsIgnoreCase("price_desc");
-        query.orderBy(desc ? cb.desc(product.get("price")) : cb.asc(product.get("price")));
-
-        List<Product> products = entityManager.createQuery(query).getResultList();
-
-        return products.stream()
+        return productRepository.findAll(spec, sortOrder).stream()
                 .map(this::convertToListDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
-    /**
-     * Get products by category
-     */
+
+    @Override
     public List<ProductListDTO> getProductsByCategory(Long categoryId) {
-        List<Product> products = productRepository.findByCategoryIdAndIsActiveTrue(categoryId);
-        return products.stream()
+        categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Category not found"));
+        return productRepository.findByCategoryIdAndIsActiveTrue(categoryId).stream()
                 .map(this::convertToListDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
-    /**
-     * Search products by keyword in title
-     */
+    @Override
     public List<ProductListDTO> searchProducts(String keyword) {
-        List<Product> products = productRepository.searchByTitle(keyword);
-        return products.stream()
+        if (keyword == null || keyword.isBlank()) {
+            return getAllProducts();
+        }
+        return productRepository.findByIsActiveTrueAndTitleContainingIgnoreCase(keyword.trim()).stream()
                 .map(this::convertToListDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
-    /**
-     * Compare multiple products (max 3)
-     * Returns all common attributes across products for comparison
-     */
+    @Override
     public CompareResponse compareProducts(CompareRequest compareRequest) {
         List<Long> productIds = compareRequest.getProductIds();
         Long categoryId = compareRequest.getCategoryId();
 
-        List<Product> fetchedProducts = productRepository.findAllByIdWithDetails(productIds);
+        List<Product> fetchedProducts = productRepository.findByIdInAndIsActiveTrue(productIds);
 
         for (Product product : fetchedProducts) {
             if (!product.getCategory().getId().equals(categoryId)) {
@@ -221,68 +165,68 @@ public class ProductService implements ProductServiceInterface {
             throw new ResponseStatusException(NOT_FOUND, "One or more products not found");
         }
 
-        List<String> allAttributes = productAttributeRepository.findByCategory(categoryId);
-
-        List<ProductDetailDTO> productDetails = fetchedProducts.stream()
-                .map(this::convertToDetailDTO)
+        List<CategoryAttributeSchema> schemas = schemaRepository.findByCategoryIdOrdered(categoryId);
+        List<CompareResponse.AttributeValueDTO> allAttributes = schemas.stream()
+                .map(s -> new CompareResponse.AttributeValueDTO(s.getCode(), s.getName()))
                 .toList();
+
+        List<CompareDTO> productCompare = new ArrayList<>();
+        for (Product product : fetchedProducts) {
+            productCompare.add(CompareDTO.builder()
+                    .id(product.getId())
+                    .title(product.getTitle())
+                    .price(product.getPrice())
+                    .imageUrl(product.getImageUrl())
+                    .categoryName(product.getCategory().getName())
+                    .rawAttributes(product.getAttributes())
+                    .build());
+        }
+
 
         return CompareResponse.builder()
                 .attributeNames(allAttributes)
-                .products(productDetails)
+                .products(productCompare)
                 .build();
     }
 
-    /**
-     * Convert Product entity to ProductListDTO (for listing)
-     */
     private ProductListDTO convertToListDTO(Product product) {
         return ProductListDTO.builder()
                 .id(product.getId())
                 .title(product.getTitle())
                 .price(product.getPrice())
-                .quantitySold(product.getQuantitySold() != null ? product.getQuantitySold() : 0)
+                .quantitySold(product.getQuantitySold())
                 .imageUrl(product.getImageUrl())
                 .stocked(product.getStocked())
-                .categoryName(product.getCategory() != null ? product.getCategory().getName() : null)
+                .categoryId(product.getCategory().getId())
+                .categoryName(product.getCategory().getName())
                 .build();
     }
 
-    /**
-     * Convert Product entity to ProductDetailDTO (for detail view)
-     */
     private ProductDetailDTO convertToDetailDTO(Product product) {
-        // Convert attributes to map - use LinkedHashMap to maintain order
-        // Group multiple values for same attribute (e.g., "Kiểu kết nối" can have multiple values)
-        Map<String, String> attributesMap = new LinkedHashMap<>();
+        Long catId = product.getCategory().getId();
+        Map<String, Object> raw = product.getAttributes();
 
-        if (product.getAttributeValues() != null) {
-            // Group by attribute name and collect all values
-            Map<String, List<ProductAttributeValue>> groupedByAttribute = product.getAttributeValues().stream()
-                    .filter(attrValue -> attrValue.getAttribute() != null)
-                    .sorted(Comparator.comparing(av -> av.getAttribute().getId()))
-                    .collect(Collectors.groupingBy(
-                            av -> av.getAttribute().getName(),
-                            LinkedHashMap::new,
-                            Collectors.toList()
-                    ));
+        List<CategoryAttributeSchema> schemas = schemaRepository.findByCategoryIdOrdered(catId);
 
-            // For each attribute, combine all values
-            groupedByAttribute.forEach((attrName, attrValues) -> {
-                String unit = attrValues.getFirst().getAttribute().getUnit();
+        Map<Integer, ProductFilterGroupDTO> attributes = new LinkedHashMap<>();
+        for (CategoryAttributeSchema s : schemas) {
+            Object value = raw.get(s.getCode());
+            if (value == null) continue;
 
-                // Collect and join all values for this attribute
-                String combinedValue = attrValues.stream()
-                        .map(ProductAttributeValue::getValue)
-                        .collect(Collectors.joining(", "));
+            ProductFilterGroupDTO.AttributeDTO attrDTO = ProductFilterGroupDTO.AttributeDTO.builder()
+                    .attributeName(s.getName())
+                    .unit(s.getUnit())
+                    .availableValues(value)
+                    .build();
 
-                // Format: "value unit" or just "value" if no unit
-                String formattedValue = unit != null && !unit.isEmpty()
-                        ? combinedValue + " " + unit
-                        : combinedValue;
-
-                attributesMap.put(attrName, formattedValue);
+            attributes.computeIfAbsent(s.getGroupOrder(), key -> {
+                ProductFilterGroupDTO newGroup = new ProductFilterGroupDTO();
+                newGroup.setGroupName(s.getGroupName());
+                newGroup.setFilterAttributes(new ArrayList<>());
+                return newGroup;
             });
+
+            attributes.get(s.getGroupOrder()).getFilterAttributes().add(attrDTO);
         }
 
         return ProductDetailDTO.builder()
@@ -290,12 +234,32 @@ public class ProductService implements ProductServiceInterface {
                 .title(product.getTitle())
                 .description(product.getDescription())
                 .price(product.getPrice())
-                .quantitySold(product.getQuantitySold() != null ? product.getQuantitySold() : 0)
+                .quantitySold(product.getQuantitySold())
                 .imageUrl(product.getImageUrl())
                 .stocked(product.getStocked())
-                .categoryId(product.getCategory() != null ? product.getCategory().getId() : null)
-                .categoryName(product.getCategory() != null ? product.getCategory().getName() : null)
-                .attributes(attributesMap)
+                .categoryId(catId)
+                .categoryName(product.getCategory().getName())
+                .attributes(attributes)
                 .build();
     }
+
+    public Map<String, List<String>> getFilterValuesMap(Long categoryId) {
+        List<FilterProjection> rawData = productRepository.findAllFilterValuesAggregated(categoryId);
+
+        return rawData.stream().collect(Collectors.toMap(
+                FilterProjection::getCode,
+                p -> {
+                    try {
+                        // Chuyển trực tiếp thành List<String>
+                        return objectMapper.readValue(p.getValues(), new TypeReference<List<String>>() {
+                        });
+                    } catch (Exception e) {
+                        // Log lỗi nếu cần thiết
+                        return Collections.emptyList();
+                    }
+                }
+        ));
+    }
 }
+
+

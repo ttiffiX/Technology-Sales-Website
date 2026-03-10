@@ -17,14 +17,13 @@ public class ProductDetailDTO {
     private String description;
     private Integer price;
     private Integer quantitySold;
-    private String imageUrl;
     private Boolean stocked;
+    private String imageUrl;
 
     // Category info
     private Long categoryId;
     private String categoryName;
 
-    // Attributes as map: attributeName -> value
-    private Map<String, String> attributes;
+    private Map<Integer, ProductFilterGroupDTO> attributes;
 }
 

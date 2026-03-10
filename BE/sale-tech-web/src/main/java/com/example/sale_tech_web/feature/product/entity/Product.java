@@ -1,14 +1,16 @@
 package com.example.sale_tech_web.feature.product.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Type;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Map;
 
 @Data
 @NoArgsConstructor
@@ -51,8 +53,9 @@ public class Product {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<ProductAttributeValue> attributeValues;
+    @Type(JsonBinaryType.class)
+    @Column(name = "attributes", columnDefinition = "jsonb")
+    private Map<String, Object> attributes;
 
     @Transient
     private Boolean stocked;

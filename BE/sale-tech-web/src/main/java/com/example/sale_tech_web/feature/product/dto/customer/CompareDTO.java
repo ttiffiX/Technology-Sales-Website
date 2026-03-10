@@ -5,18 +5,18 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
+import java.util.Map;
 
-/**
- * DTO chứa tất cả filter options cho một category
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CategoryFilterOptionsDTO {
-    private Long categoryId;
+public class CompareDTO {
+    private Long id;
+    private String title;
+    private Integer price;
+    private String imageUrl;
     private String categoryName;
-    private List<FilterAttributeDTO> filterableAttributes;
-}
 
+    private Map<String, Object> rawAttributes;
+}

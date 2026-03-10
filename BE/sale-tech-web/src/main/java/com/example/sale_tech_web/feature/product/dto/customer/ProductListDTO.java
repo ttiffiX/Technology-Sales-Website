@@ -16,6 +16,7 @@ public class ProductListDTO {
     private Integer quantitySold;
     private String imageUrl;
     private Boolean stocked;
+    private Long categoryId;
     private String categoryName;
 }
 
