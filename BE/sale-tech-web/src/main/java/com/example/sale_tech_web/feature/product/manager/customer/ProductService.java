@@ -65,7 +65,7 @@ public class ProductService implements ProductServiceInterface {
         schemas.stream()
                 .filter(s -> attributeValuesMap.containsKey(s.getCode()))
                 .forEach(s -> {
-                    FilterGroupDTO group = groups.computeIfAbsent(s.getGroupOrder(), order ->
+                    FilterGroupDTO group = groups.computeIfAbsent(s.getGroupOrder(), _ ->
                             FilterGroupDTO.builder()
                                     .groupName(s.getGroupName())
                                     .filterAttributes(new ArrayList<>())
@@ -91,7 +91,7 @@ public class ProductService implements ProductServiceInterface {
 
         // 1. Khởi tạo Specification cơ bản
         // Lưu ý: Đảm bảo Entity Product có field 'category' và 'isActive' (đúng hoa thường)
-        Specification<Product> spec = Specification.where((root, query, cb) ->
+        Specification<Product> spec = Specification.where((root, _, cb) ->
                 cb.and(
                         cb.equal(root.get("category").get("id"), categoryId),
                         cb.isTrue(root.get("isActive"))
@@ -100,17 +100,39 @@ public class ProductService implements ProductServiceInterface {
 
         // 2. Lọc theo giá
         if (minPrice != null)
-            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("price"), minPrice));
-        if (maxPrice != null) spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("price"), maxPrice));
+            spec = spec.and((root, _, cb) -> cb.greaterThanOrEqualTo(root.get("price"), minPrice));
+        if (maxPrice != null) spec = spec.and((root, _, cb) -> cb.lessThanOrEqualTo(root.get("price"), maxPrice));
 
-        // 3. Lọc JSONB: Dùng function để Postgres bóc tách text từ JSONB
+        // 3. Lọc JSONB: xử lý cả scalar lẫn array
+        // - Scalar: jsonb_extract_path_text(attributes, key) IN (values)
+        // - Array:  jsonb_path_exists(attributes, '$.key[*] ? (@ == "v1" || @ == "v2")')
+        // Dùng OR của cả 2 để Postgres tự chọn đúng theo kiểu thực tế của field
         if (attributeFilters != null && !attributeFilters.isEmpty()) {
             for (Map.Entry<String, List<String>> entry : attributeFilters.entrySet()) {
-                spec = spec.and((root, query, cb) ->
-                        cb.function("jsonb_extract_path_text", String.class,
-                                        root.get("attributes"), cb.literal(entry.getKey()))
-                                .in(entry.getValue())
-                );
+                String key = entry.getKey();
+                List<String> values = entry.getValue();
+
+                spec = spec.and((root, _, cb) -> {
+                    // Scalar predicate
+                    var scalarPredicate = cb.function(
+                            "jsonb_extract_path_text", String.class,
+                            root.get("attributes"), cb.literal(key)
+                    ).in(values);
+
+                    // Array predicate — jsonb_path_exists với OR của tất cả values
+                    String jsonPath = "$.\"" + key + "\"[*] ? (" +
+                            values.stream()
+                                    .map(v -> "@ == \"" + v + "\"")
+                                    .collect(Collectors.joining(" || "))
+                            + ")";
+                    var arrayPredicate = cb.isTrue(
+                            cb.function("jsonb_path_exists", Boolean.class,
+                                    root.get("attributes"),
+                                    cb.literal(jsonPath))
+                    );
+
+                    return cb.or(scalarPredicate, arrayPredicate);
+                });
             }
         }
 
@@ -219,7 +241,7 @@ public class ProductService implements ProductServiceInterface {
                     .availableValues(value)
                     .build();
 
-            attributes.computeIfAbsent(s.getGroupOrder(), key -> {
+            attributes.computeIfAbsent(s.getGroupOrder(), _ -> {
                 ProductFilterGroupDTO newGroup = new ProductFilterGroupDTO();
                 newGroup.setGroupName(s.getGroupName());
                 newGroup.setFilterAttributes(new ArrayList<>());
@@ -250,11 +272,13 @@ public class ProductService implements ProductServiceInterface {
                 FilterProjection::getCode,
                 p -> {
                     try {
-                        // Chuyển trực tiếp thành List<String>
-                        return objectMapper.readValue(p.getValues(), new TypeReference<List<String>>() {
+                        List<String> list = objectMapper.readValue(p.getValues(), new TypeReference<List<String>>() {
                         });
+
+                        return list.stream()
+                                .filter(val -> val != null && !val.trim().isEmpty())
+                                .toList();
                     } catch (Exception e) {
-                        // Log lỗi nếu cần thiết
                         return Collections.emptyList();
                     }
                 }

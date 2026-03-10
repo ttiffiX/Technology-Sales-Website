@@ -25,18 +25,30 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @EntityGraph(attributePaths = {"category"})
     List<Product> findByIsActiveTrueAndTitleContainingIgnoreCase(String keyword);
 
+    /*
+    lấy tất cả giá trị của các thuộc tính filterable trong category, đã được gộp lại thành 1 list duy nhất
+    nếu là String thì lấy giá trị đó, nếu là Array thì lấy tất cả phần tử trong array đó
+    */
     @Query(value = """
-             SELECT\s
-                 cas.code AS code,\s
-                 jsonb_agg(DISTINCT attr.value ORDER BY attr.value) AS values
-             FROM category_attribute_schema cas
-             JOIN product p ON cas.category_id = p.category_id
-             CROSS JOIN LATERAL jsonb_each_text(p.attributes) AS attr
-             WHERE cas.category_id = :categoryId
-               AND cas.is_filterable = true
-               AND p.is_active = true
-               AND attr.key = cas.code
-             GROUP BY cas.code
+            SELECT\s
+                cas.code AS code,\s
+                jsonb_agg(DISTINCT val.element ORDER BY val.element) AS values
+            FROM category_attribute_schema cas
+            JOIN product p ON cas.category_id = p.category_id
+            CROSS JOIN LATERAL jsonb_extract_path(p.attributes, cas.code) AS raw_val
+            CROSS JOIN LATERAL (
+                SELECT x AS element\s
+                FROM jsonb_array_elements_text(
+                    CASE\s
+                        WHEN jsonb_typeof(raw_val) = 'array' THEN raw_val\s
+                        ELSE jsonb_build_array(raw_val)\s
+                    END
+                ) x
+            ) AS val
+            WHERE cas.category_id = :categoryId
+              AND cas.is_filterable = true
+              AND p.is_active = true
+            GROUP BY cas.code
             \s""", nativeQuery = true)
     List<FilterProjection> findAllFilterValuesAggregated(@Param("categoryId") Long categoryId);
 

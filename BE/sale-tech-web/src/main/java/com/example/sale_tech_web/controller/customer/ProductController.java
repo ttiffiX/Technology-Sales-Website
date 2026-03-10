@@ -80,7 +80,7 @@ public class ProductController {
             @RequestParam(required = false) Integer minPrice,
             @RequestParam(required = false) Integer maxPrice,
             @RequestParam(required = false, defaultValue = "id_desc") String sort,
-            @RequestParam Map<String, String> allParams // Hứng tất cả: {ram=8GB,16GB, minPrice=1000...}
+            @RequestParam Map<String, String> allParams
     ) {
         log.info("Filter Product with attributes for category: {}", categoryId);
         // 1. Các key không phải thuộc tính sản phẩm
