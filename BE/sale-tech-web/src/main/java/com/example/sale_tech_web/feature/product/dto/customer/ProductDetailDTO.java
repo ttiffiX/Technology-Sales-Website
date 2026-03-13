@@ -16,8 +16,6 @@ public class ProductDetailDTO {
     private String title;
     private String description;
     private Integer price;
-    private Integer quantitySold;
-    private Boolean stocked;
     private String imageUrl;
 
     // Category info
@@ -26,4 +24,3 @@ public class ProductDetailDTO {
 
     private Map<Integer, ProductFilterGroupDTO> attributes;
 }
-

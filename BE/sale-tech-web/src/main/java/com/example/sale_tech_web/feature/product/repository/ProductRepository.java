@@ -5,6 +5,7 @@ import com.example.sale_tech_web.feature.product.entity.Product;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -54,4 +55,24 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
     List<Product> findByIdInAndIsActiveTrue(List<Long> ids);
 
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("""
+            UPDATE Product p
+            SET p.quantity = p.quantity - :quantity,
+                p.quantitySold = COALESCE(p.quantitySold, 0) + :quantity
+            WHERE p.id = :productId
+              AND p.isActive = true
+              AND p.quantity IS NOT NULL
+              AND p.quantity >= :quantity
+            """)
+    int decrementStockIfAvailable(@Param("productId") Long productId, @Param("quantity") Integer quantity);
+
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("""
+            UPDATE Product p
+            SET p.quantity = COALESCE(p.quantity, 0) + :quantity,
+                p.quantitySold = COALESCE(p.quantitySold, 0) - :quantity
+            WHERE p.id = :productId
+            """)
+    void incrementStockOnRevert(@Param("productId") Long productId, @Param("quantity") Integer quantity);
 }

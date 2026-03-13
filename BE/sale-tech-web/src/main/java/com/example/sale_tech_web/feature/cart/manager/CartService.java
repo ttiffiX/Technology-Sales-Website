@@ -73,9 +73,7 @@ public class CartService implements CartServiceInterface {
                             .id(product.getId())
                             .title(product.getTitle())
                             .price(product.getPrice())
-                            .quantitySold(product.getQuantitySold() != null ? product.getQuantitySold() : 0)
                             .imageUrl(product.getImageUrl())
-                            .stocked(product.getStocked())
                             .categoryName(product.getCategory().getName()) // Category cũng đã được load
                             .build();
 

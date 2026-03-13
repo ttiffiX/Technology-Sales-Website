@@ -1,5 +1,6 @@
 package com.example.sale_tech_web.feature.product.manager.customer;
 
+import com.example.sale_tech_web.config.CacheNames;
 import com.example.sale_tech_web.feature.product.dto.customer.*;
 import com.example.sale_tech_web.feature.product.entity.CategoryAttributeSchema;
 import com.example.sale_tech_web.feature.product.entity.Product;
@@ -33,7 +34,7 @@ public class ProductService implements ProductServiceInterface {
     private final CategoryAttributeSchemaRepository schemaRepository;
 
     @Override
-    @Cacheable("categories")
+    @Cacheable(CacheNames.CATEGORIES)
     public List<CategoryDTO> getAllCategories() {
         return categoryRepository.findAll().stream()
                 .map(c -> CategoryDTO.builder().id(c.getId()).name(c.getName()).build())
@@ -41,6 +42,7 @@ public class ProductService implements ProductServiceInterface {
     }
 
     @Override
+    @Cacheable(CacheNames.PRODUCT_LIST_ALL)
     public List<ProductListDTO> getAllProducts() {
         return productRepository.findByIsActiveTrue().stream()
                 .map(this::convertToListDTO)
@@ -48,6 +50,7 @@ public class ProductService implements ProductServiceInterface {
     }
 
     @Override
+    @Cacheable(value = CacheNames.PRODUCT_BY_ID, key = "#productId")
     public ProductDetailDTO getProductById(Long productId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Product not found"));
@@ -55,8 +58,8 @@ public class ProductService implements ProductServiceInterface {
     }
 
     @Override
-    @Cacheable(value = "filterOptions", key = "#categoryId")
-    public Map<Integer, FilterGroupDTO> getFilterOptions(Long categoryId) {
+    @Cacheable(value = CacheNames.FILTER_OPTIONS, key = "#categoryId")
+        public Map<Integer, FilterGroupDTO> getFilterOptions(Long categoryId) {
         List<CategoryAttributeSchema> schemas = schemaRepository.findByCategoryIdOrdered(categoryId);
         Map<String, List<String>> attributeValuesMap = getFilterValuesMap(categoryId);
 
@@ -151,6 +154,7 @@ public class ProductService implements ProductServiceInterface {
 
 
     @Override
+    @Cacheable(value = CacheNames.PRODUCT_BY_CATEGORY, key = "#categoryId")
     public List<ProductListDTO> getProductsByCategory(Long categoryId) {
         categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Category not found"));
@@ -160,6 +164,7 @@ public class ProductService implements ProductServiceInterface {
     }
 
     @Override
+    @Cacheable(value = CacheNames.PRODUCT_SEARCH, key = "#keyword == null ? 'ALL' : #keyword.trim().toLowerCase()")
     public List<ProductListDTO> searchProducts(String keyword) {
         if (keyword == null || keyword.isBlank()) {
             return getAllProducts();
@@ -216,9 +221,7 @@ public class ProductService implements ProductServiceInterface {
                 .id(product.getId())
                 .title(product.getTitle())
                 .price(product.getPrice())
-                .quantitySold(product.getQuantitySold())
                 .imageUrl(product.getImageUrl())
-                .stocked(product.getStocked())
                 .categoryId(product.getCategory().getId())
                 .categoryName(product.getCategory().getName())
                 .build();
@@ -256,9 +259,7 @@ public class ProductService implements ProductServiceInterface {
                 .title(product.getTitle())
                 .description(product.getDescription())
                 .price(product.getPrice())
-                .quantitySold(product.getQuantitySold())
                 .imageUrl(product.getImageUrl())
-                .stocked(product.getStocked())
                 .categoryId(catId)
                 .categoryName(product.getCategory().getName())
                 .attributes(attributes)
@@ -285,5 +286,3 @@ public class ProductService implements ProductServiceInterface {
         ));
     }
 }
-
-

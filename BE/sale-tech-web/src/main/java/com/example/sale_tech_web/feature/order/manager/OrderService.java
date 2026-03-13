@@ -114,6 +114,9 @@ public class OrderService implements OrderServiceInterface {
             throw new ResponseStatusException(BAD_REQUEST, "Need at least one items selected. ");
         }
 
+        // Apply stock updates in deterministic order to reduce deadlock probability.
+        cartDetails.sort(Comparator.comparing(cd -> cd.getProduct().getId()));
+
         Order order = Order.builder()
                 .user(user)
                 .customerName(request.getCustomerName())
@@ -132,27 +135,35 @@ public class OrderService implements OrderServiceInterface {
 
         int tempTotalPrice = 0;
         List<OrderDetail> orderDetails = new ArrayList<>();
-        List<Product> productsToUpdate = new ArrayList<>();
 
         for (CartDetail cartDetail : cartDetails) {
-            Product product = getProduct(cartDetail);
+            Product product = cartDetail.getProduct();
+
+            if (!Boolean.TRUE.equals(product.getIsActive())) {
+                throw new ResponseStatusException(CONFLICT, "Product is no longer available");
+            }
+
+            int updatedRows = productRepository.decrementStockIfAvailable(product.getId(), cartDetail.getQuantity());
+            if (updatedRows == 0) {
+                throw new ResponseStatusException(CONFLICT,
+                        "Insufficient stock for product: " + product.getTitle());
+            }
 
             OrderDetail orderDetail = OrderDetail.builder()
                     .order(order)
-                    .product(cartDetail.getProduct())
+                    .product(product)
                     .quantity(cartDetail.getQuantity())
-                    .price(cartDetail.getProduct().getPrice())
-                    .productTitle(cartDetail.getProduct().getTitle())
-                    .categoryName(cartDetail.getProduct().getCategory().getName())
+                    .price(product.getPrice())
+                    .productTitle(product.getTitle())
+                    .categoryName(product.getCategory().getName())
                     .build();
 
             orderDetails.add(orderDetail);
-            productsToUpdate.add(product);
-            tempTotalPrice += cartDetail.getProduct().getPrice() * cartDetail.getQuantity();
+            tempTotalPrice += product.getPrice() * cartDetail.getQuantity();
         }
+
         order.setOrderDetails(orderDetails);
         order.setTotalPrice(tempTotalPrice + order.getDeliveryFee());
-        productRepository.saveAll(productsToUpdate);
         Order savedOrder = orderRepository.save(order);
 
         // Check payment method
@@ -256,15 +267,10 @@ public class OrderService implements OrderServiceInterface {
             refundMessage = " and pending payment has been cancelled";
         }
 
-        //revert product quantities
-        List<Product> productsToUpdate = new ArrayList<>();
+        // Revert product quantities atomically
         for (OrderDetail orderDetail : order.getOrderDetails()) {
-            Product product = orderDetail.getProduct();
-            product.setQuantity(product.getQuantity() + orderDetail.getQuantity());
-            product.setQuantitySold(product.getQuantitySold() - orderDetail.getQuantity());
-            productsToUpdate.add(product);
+            productRepository.incrementStockOnRevert(orderDetail.getProduct().getId(), orderDetail.getQuantity());
         }
-        productRepository.saveAll(productsToUpdate);
 
         // Cancel the order
         order.setStatus(OrderStatus.CANCELLED);
@@ -282,23 +288,6 @@ public class OrderService implements OrderServiceInterface {
             throw new ResponseStatusException(UNAUTHORIZED, "User not authenticated");
         }
         return userId;
-    }
-
-    private static Product getProduct(CartDetail cartDetail) {
-        Product product = cartDetail.getProduct();
-
-        if (!product.getIsActive()) {
-            throw new ResponseStatusException(CONFLICT, "Product is no longer available");
-        }
-
-        if (product.getQuantity() == null || product.getQuantity() < cartDetail.getQuantity()) {
-            throw new ResponseStatusException(CONFLICT, "Insufficient stock. Available quantity: " +
-                    (product.getQuantity() != null ? product.getQuantity() : 0));
-        }
-
-        product.setQuantity(product.getQuantity() - cartDetail.getQuantity());
-        product.setQuantitySold(product.getQuantitySold() + cartDetail.getQuantity());
-        return product;
     }
 
     private OrderDTO convertToDTO(Order order, String paymentStatus) {
