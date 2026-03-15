@@ -7,7 +7,7 @@ import { getProductDetail } from "../../api/ProductAPI";
 import { addCartItem } from "../../api/CartAPI";
 import { useToast } from "../../components/Toast/Toast";
 import { isAuthenticated } from "../../api/AuthAPI";
-import {formatPrice, getImage} from "../../utils";
+import {formatPrice, formatProductAttributeValue, getImage} from "../../utils";
 import {useCart} from "../../contexts/CartContext";
 
 function ProductDetail() {
@@ -39,7 +39,7 @@ function ProductDetail() {
     }, [id]);
 
     const handleAddToCart = async () => {
-        if (!product || !product.stocked) return;
+        if (!product) return;
 
         // Check if user is logged in
         if (!isAuthenticated()) {
@@ -134,19 +134,6 @@ function ProductDetail() {
                             <span className="product-price">
                                 {formatPrice(product.price)}
                             </span>
-                            {product.quantitySold > 0 && (
-                                <span className="sold-count">
-                                    Sold: {product.quantitySold}
-                                </span>
-                            )}
-                        </div>
-
-                        <div className="stock-status">
-                            {product.stocked ? (
-                                <span className="in-stock">✓ In Stock</span>
-                            ) : (
-                                <span className="out-of-stock">✗ Out of Stock</span>
-                            )}
                         </div>
 
                         {/* Description */}
@@ -170,9 +157,7 @@ function ProductDetail() {
                                                     <tr key={idx}>
                                                         <td className="spec-label">{attr.attributeName}</td>
                                                         <td className="spec-value">
-                                                            {Array.isArray(attr.availableValues)
-                                                                ? attr.availableValues.join(', ')
-                                                                : attr.availableValues}
+                                                            {formatProductAttributeValue(attr.availableValues)}
                                                             {attr.unit ? ` ${attr.unit}` : ''}
                                                         </td>
                                                     </tr>
@@ -187,11 +172,11 @@ function ProductDetail() {
                         {/* Action Buttons */}
                         <div className="product-actions">
                             <button
-                                className={`add-to-cart-btn ${!product.stocked ? 'disabled' : ''}`}
+                                className="add-to-cart-btn"
                                 onClick={handleAddToCart}
-                                disabled={!product.stocked || addingToCart}
+                                disabled={addingToCart}
                             >
-                                {addingToCart ? 'Adding...' : product.stocked ? 'Add to Cart' : 'Out of Stock'}
+                                {addingToCart ? 'Adding...' : 'Add to Cart'}
                             </button>
                         </div>
                     </div>

@@ -42,10 +42,15 @@ apiClient.interceptors.response.use(
     (response) => response,
     async (error) => {
         const originalRequest = error.config;
+        const status = error.response?.status;
 
-        // Chỉ xử lý 401, không retry chính endpoint /auth/*
+        if (!originalRequest) {
+            return Promise.reject(error);
+        }
+
+        // Retry khi token hết hạn: backend có thể trả 401 hoặc 403 tùy security config.
         if (
-            error.response?.status === 401 &&
+            (status === 401 || status === 403) &&
             !originalRequest._retry &&
             !originalRequest.url?.includes('/auth/')
         ) {

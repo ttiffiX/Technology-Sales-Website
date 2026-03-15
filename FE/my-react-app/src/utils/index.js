@@ -83,3 +83,16 @@ export {
     canCancelOrder
 } from './orderUtils';
 
+// PM product utilities
+export {
+    getAttributeInputVariant,
+    normalizeAttributeValue,
+    buildAddProductPayload,
+    groupAttributesByGroupName
+} from './pmProductUtils';
+
+// Product attribute display utilities
+export {
+    formatProductAttributeValue
+} from './productAttributeUtils';
+

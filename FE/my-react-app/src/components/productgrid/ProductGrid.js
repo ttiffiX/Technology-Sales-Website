@@ -34,7 +34,7 @@ function ProductGrid({products, categoryId}) {
         <div className="product-grid">
             {products.map((product) => (
                 <div
-                    className={`product-item ${product.stocked ? '' : 'out-of-stock'}`}
+                    className="product-item"
                     key={product.id}
                     onClick={() => handleProductClick(product.id)}
                 >
@@ -43,9 +43,6 @@ function ProductGrid({products, categoryId}) {
                     <div className="category-badge">{product.categoryName}</div>
                     <div className="techName">{product.title}</div>
                     <div className="price">{formatPrice(product.price)}</div>
-                    {product.quantitySold > 0 && (
-                        <div className="sold-count">Sold: {product.quantitySold}</div>
-                    )}
                     {/* Only show compare button when category is selected */}
                     {categoryId && (
                         <button

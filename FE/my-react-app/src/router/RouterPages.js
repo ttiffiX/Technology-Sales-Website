@@ -12,17 +12,22 @@ import Order from "../pages/order/Order";
 import ProductDetail from "../pages/productdetail/ProductDetail";
 import OrderHistory from "../pages/orderhistory/OrderHistory";
 import ProtectedRoute from "./ProtectedRoute";
+import RoleProtectedRoute from "./RoleProtectedRoute";
 import PaymentResult from "../pages/paymentresult/PaymentResult";
 import WaitingVerification from "../pages/verifyemail/WaitingVerification";
 import VerificationHelp from "../pages/verifyemail/VerificationHelp";
 import Compare from "../pages/compare/Compare";
+import PMDashboard from "../pages/pm/dashboard/PMDashboard";
+import PMProductManagement from "../pages/pm/products/PMProductManagement";
+import PMOrderManagement from "../pages/pm/orders/PMOrderManagement";
 
+const PM_ROLES = ['ADMIN', 'PM'];
 
 function RouterPages() {
     return (
         <Router future={{
-            v7_relativeSplatPath: true, // Bật thay đổi liên quan đến splat path
-            v7_startTransition: true,  // Bật sử dụng React.startTransition
+            v7_relativeSplatPath: true,
+            v7_startTransition: true,
         }}>
             <Routes>
                 <Route path="/" element={<Home/>}/>
@@ -62,6 +67,23 @@ function RouterPages() {
                     </ProtectedRoute>
                 }/>
                 <Route path="/payment-result" element={<PaymentResult/>}/>
+
+                {/* PM / Admin Routes - Only ADMIN and PM roles allowed */}
+                <Route path="/pm" element={
+                    <RoleProtectedRoute allowedRoles={PM_ROLES}>
+                        <PMDashboard/>
+                    </RoleProtectedRoute>
+                }/>
+                <Route path="/pm/products" element={
+                    <RoleProtectedRoute allowedRoles={PM_ROLES}>
+                        <PMProductManagement/>
+                    </RoleProtectedRoute>
+                }/>
+                <Route path="/pm/orders" element={
+                    <RoleProtectedRoute allowedRoles={PM_ROLES}>
+                        <PMOrderManagement/>
+                    </RoleProtectedRoute>
+                }/>
             </Routes>
         </Router>
     );

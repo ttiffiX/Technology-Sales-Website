@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getFilterOptions } from '../../api/ProductAPI';
-import { formatPrice } from '../../utils';
+import { formatPrice, formatProductAttributeValue } from '../../utils';
 import './FilterSidebar.scss';
 
 function FilterSidebar({ categoryId, onFilterChange }) {
@@ -204,7 +204,7 @@ function FilterSidebar({ categoryId, onFilterChange }) {
                                                 checked={selectedFilters[attr.code]?.includes(value) || false}
                                                 onChange={(e) => handleAttributeChange(attr.code, value, e.target.checked)}
                                             />
-                                            <span>{value}</span>
+                                            <span>{formatProductAttributeValue(value)}</span>
                                         </label>
                                     ))}
                                 </div>

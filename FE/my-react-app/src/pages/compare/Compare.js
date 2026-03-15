@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {useCompare} from '../../contexts/CompareContext';
 import {compareProducts} from '../../api/ProductAPI';
-import {formatPrice, getImage} from '../../utils';
+import {formatPrice, formatProductAttributeValue, getImage} from '../../utils';
 import Nav from '../../components/navigation/Nav';
 import {useCart} from '../../contexts/CartContext';
 import './Compare.scss';
@@ -115,7 +115,7 @@ function Compare() {
                                         const attrValue = product.rawAttributes?.[attr.code];
                                         return (
                                             <td key={product.id} className="attribute-value">
-                                                {attrValue != null ? String(attrValue) : '-'}
+                                                {formatProductAttributeValue(attrValue)}
                                             </td>
                                         );
                                     })}
