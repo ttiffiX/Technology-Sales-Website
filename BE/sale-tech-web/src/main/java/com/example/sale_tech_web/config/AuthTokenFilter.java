@@ -36,17 +36,30 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         }
 
         final String token = authHeader.substring(7);
-        final Long userId = jwtUtils.getUserIdFromJwtToken(token);
+        if (!jwtUtils.validateToken(token)) {
+            // Access token expired/invalid: keep request unauthenticated and continue.
+            SecurityContextHolder.clearContext();
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-        if (userId != null && jwtUtils.validateToken(token)) {
-            String role = jwtUtils.getRoleFromJwtToken(token);
-            List<SimpleGrantedAuthority> authorities = (role != null)
-                    ? List.of(new SimpleGrantedAuthority("ROLE_" + role))
-                    : List.of();
+        try {
+            final Long userId = jwtUtils.getUserIdFromJwtToken(token);
 
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(userId, null, authorities);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            if (userId != null) {
+                String role = jwtUtils.getRoleFromJwtToken(token);
+                List<SimpleGrantedAuthority> authorities = (role != null)
+                        ? List.of(new SimpleGrantedAuthority("ROLE_" + role))
+                        : List.of();
+
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(userId, null, authorities);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+        } catch (Exception ex) {
+            // Never bubble JWT parse errors from filter.
+            log.warn("Failed to parse JWT in filter: {}", ex.getMessage());
+            SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);

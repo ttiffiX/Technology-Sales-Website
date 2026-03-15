@@ -11,7 +11,9 @@ import lombok.NoArgsConstructor;
 @Data
 public class AttributeResponse {
     private Long attributeId;
+    private String code;
     private String name;
     private String unit;
     private String dataType;
+    private String groupName;
 }
