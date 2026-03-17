@@ -75,4 +75,9 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
             WHERE p.id = :productId
             """)
     void incrementStockOnRevert(@Param("productId") Long productId, @Param("quantity") Integer quantity);
+
+    @EntityGraph(attributePaths = {
+            "category"
+    })
+    List<Product> findAllByOrderByIdDesc();
 }

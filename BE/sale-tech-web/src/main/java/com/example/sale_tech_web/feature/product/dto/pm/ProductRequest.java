@@ -28,6 +28,11 @@ public class ProductRequest {
     private Integer price;
 
     private String imageUrl;
+    private Integer quantitySold;
+
+    @NotNull(message = "Quantity is required")
+    @Min(value = 0, message = "Quantity must be >= 0")
+    private Integer quantity;
 
     @NotNull(message = "Need to specify if the product is active")
     private Boolean isActive = true;
