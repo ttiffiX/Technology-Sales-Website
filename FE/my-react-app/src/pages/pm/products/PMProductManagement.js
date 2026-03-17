@@ -1,11 +1,18 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Nav from '../../../components/navigation/Nav';
 import Header from '../../../components/header/Header';
 import { getAllCategories } from '../../../api/ProductAPI';
-import { addProduct, getAttributesByCategory } from '../../../api/PMAPI';
+import {
+    addProduct,
+    deletePMProduct,
+    getAttributesByCategory,
+    getPMProducts,
+    updatePMProductState,
+} from '../../../api/PMAPI';
 import { useToast } from '../../../components/Toast/Toast';
-import { getAttributeInputVariant, groupAttributesByGroupName } from '../../../utils';
+import AddProductModal from '../../../components/modal/addproduct/AddProductModal';
+import { formatPrice } from '../../../utils';
 import './PMProductManagement.scss';
 
 const INITIAL_FORM = {
@@ -13,8 +20,23 @@ const INITIAL_FORM = {
     title: '',
     description: '',
     price: '',
+    quantity: '',
+    quantitySold: '',
     imageUrl: '',
     isActive: true,
+};
+
+const normalizePMListProduct = (product = {}) => ({
+    ...product,
+    isActive: typeof product.isActive === 'boolean' ? product.isActive : Boolean(product.active),
+});
+
+const extractCreatedProduct = (payload) => {
+    if (!payload || typeof payload !== 'object') return null;
+    if (payload.id) return payload;
+    if (payload.product && payload.product.id) return payload.product;
+    if (payload.data && payload.data.id) return payload.data;
+    return null;
 };
 
 function PMProductManagement() {
@@ -29,13 +51,41 @@ function PMProductManagement() {
     const [loadingAttr, setLoadingAttr] = useState(false);
     const [errorAttr, setErrorAttr] = useState(null);
     const [savingProduct, setSavingProduct] = useState(false);
+    const [products, setProducts] = useState([]);
+    const [loadingProducts, setLoadingProducts] = useState(true);
+    const [productsError, setProductsError] = useState(null);
+    const [deletingProductId, setDeletingProductId] = useState(null);
+    const [activatingProductId, setActivatingProductId] = useState(null);
+    const hasFetchedInitialDataRef = useRef(false);
+
+    const loadProducts = async () => {
+        setLoadingProducts(true);
+        setProductsError(null);
+
+        try {
+            const data = await getPMProducts();
+            setProducts((Array.isArray(data) ? data : []).map(normalizePMListProduct));
+        } catch (_error) {
+            setProducts([]);
+            setProductsError('Failed to load product list');
+        } finally {
+            setLoadingProducts(false);
+        }
+    };
 
     useEffect(() => {
+        if (hasFetchedInitialDataRef.current) {
+            return;
+        }
+        hasFetchedInitialDataRef.current = true;
+
         getAllCategories()
             .then(setCategories)
             .catch(() => {
                 triggerToast('error', 'Failed to load categories');
             });
+
+        loadProducts();
     }, [triggerToast]);
 
     useEffect(() => {
@@ -71,8 +121,6 @@ function PMProductManagement() {
             isMounted = false;
         };
     }, [isAddModalOpen, productForm.categoryId]);
-
-    const groupedAttributes = useMemo(() => groupAttributesByGroupName(attributes), [attributes]);
 
     const resetAddModal = () => {
         setProductForm(INITIAL_FORM);
@@ -138,6 +186,57 @@ function PMProductManagement() {
         }));
     };
 
+    const handleListAttributeItemChange = (attributeCode, index, value) => {
+        setAttributeValues((prev) => {
+            const previousValue = prev[attributeCode];
+            const listValues = Array.isArray(previousValue) ? [...previousValue] : [''];
+
+            if (index >= listValues.length) {
+                listValues.push('');
+            }
+
+            listValues[index] = value;
+
+            return {
+                ...prev,
+                [attributeCode]: listValues,
+            };
+        });
+    };
+
+    const addListAttributeItem = (attributeCode) => {
+        setAttributeValues((prev) => {
+            const previousValue = prev[attributeCode];
+            const listValues = Array.isArray(previousValue) ? [...previousValue] : [''];
+
+            return {
+                ...prev,
+                [attributeCode]: [...listValues, ''],
+            };
+        });
+    };
+
+    const removeListAttributeItem = (attributeCode, index) => {
+        setAttributeValues((prev) => {
+            const previousValue = prev[attributeCode];
+            const listValues = Array.isArray(previousValue) ? [...previousValue] : [''];
+
+            if (listValues.length <= 1) {
+                return {
+                    ...prev,
+                    [attributeCode]: [''],
+                };
+            }
+
+            listValues.splice(index, 1);
+
+            return {
+                ...prev,
+                [attributeCode]: listValues,
+            };
+        });
+    };
+
     const validateForm = () => {
         const nextErrors = {};
 
@@ -155,6 +254,19 @@ function PMProductManagement() {
             nextErrors.price = 'Price must be a valid number >= 0';
         }
 
+        if (productForm.quantity === '') {
+            nextErrors.quantity = 'Quantity is required';
+        } else if (Number.isNaN(Number(productForm.quantity)) || Number(productForm.quantity) < 0) {
+            nextErrors.quantity = 'Quantity must be a valid number >= 0';
+        }
+
+        if (
+            productForm.quantitySold !== '' &&
+            (Number.isNaN(Number(productForm.quantitySold)) || Number(productForm.quantitySold) < 0)
+        ) {
+            nextErrors.quantitySold = 'Quantity sold must be a valid number >= 0';
+        }
+
         setFormErrors(nextErrors);
         return Object.keys(nextErrors).length === 0;
     };
@@ -169,13 +281,26 @@ function PMProductManagement() {
         setSavingProduct(true);
 
         try {
-            await addProduct(
+            const responsePayload = await addProduct(
                 {
                     ...productForm,
                     attributes: attributeValues,
                 },
                 attributes
             );
+
+            const createdProduct = extractCreatedProduct(responsePayload);
+
+            if (createdProduct?.id) {
+                const nextProduct = normalizePMListProduct(createdProduct);
+                setProducts((prev) => [
+                    nextProduct,
+                    ...prev.filter((item) => item.id !== nextProduct.id),
+                ]);
+            } else {
+                // Fallback only when BE does not return created product payload.
+                await loadProducts();
+            }
 
             triggerToast('success', 'Product added successfully');
             closeAddModal();
@@ -191,59 +316,52 @@ function PMProductManagement() {
         }
     };
 
-    const renderAttributeInput = (attribute) => {
-        const inputVariant = getAttributeInputVariant(attribute.dataType);
-        const value = attributeValues[attribute.code] ?? '';
-        const labelText = `${attribute.name}${attribute.unit ? ` (${attribute.unit})` : ''}`;
-
-        if (inputVariant === 'boolean') {
-            return (
-                <div className="pm-form-group" key={attribute.attributeId}>
-                    <label htmlFor={`attr-${attribute.code}`}>{labelText}</label>
-                    <select
-                        id={`attr-${attribute.code}`}
-                        value={value}
-                        onChange={(event) => handleAttributeChange(attribute.code, event.target.value)}
-                        disabled={savingProduct}
-                    >
-                        <option value="">-- Select --</option>
-                        <option value="true">True</option>
-                        <option value="false">False</option>
-                    </select>
-                </div>
-            );
+    const handleDeleteProduct = async (productId) => {
+        const confirmed = window.confirm('Are you sure you want to delete this product?');
+        if (!confirmed) {
+            return;
         }
 
-        if (inputVariant === 'list') {
-            return (
-                <div className="pm-form-group" key={attribute.attributeId}>
-                    <label htmlFor={`attr-${attribute.code}`}>{labelText}</label>
-                    <input
-                        id={`attr-${attribute.code}`}
-                        type="text"
-                        value={value}
-                        onChange={(event) => handleAttributeChange(attribute.code, event.target.value)}
-                        placeholder="Enter values separated by commas"
-                        disabled={savingProduct}
-                    />
-                </div>
-            );
+        setDeletingProductId(productId);
+        try {
+            await deletePMProduct(productId);
+            triggerToast('success', 'Product deleted successfully');
+            setProducts((prev) => prev.filter((item) => item.id !== productId));
+        } catch (error) {
+            const message =
+                error?.response?.data?.message ||
+                error?.response?.data ||
+                'Failed to delete product';
+            triggerToast('error', message);
+        } finally {
+            setDeletingProductId(null);
+        }
+    };
+
+    const handleToggleActiveProduct = async (productId, nextActiveState) => {
+        const actionLabel = nextActiveState ? 'activate' : 'deactivate';
+        const confirmed = window.confirm(`Are you sure you want to ${actionLabel} this product?`);
+        if (!confirmed) {
+            return;
         }
 
-        return (
-            <div className="pm-form-group" key={attribute.attributeId}>
-                <label htmlFor={`attr-${attribute.code}`}>{labelText}</label>
-                <input
-                    id={`attr-${attribute.code}`}
-                    type={inputVariant === 'number' ? 'number' : 'text'}
-                    value={value}
-                    onChange={(event) => handleAttributeChange(attribute.code, event.target.value)}
-                    placeholder={`Enter ${attribute.name.toLowerCase()}`}
-                    step={inputVariant === 'number' ? 'any' : undefined}
-                    disabled={savingProduct}
-                />
-            </div>
-        );
+        setActivatingProductId(productId);
+        try {
+            await updatePMProductState(productId, nextActiveState);
+
+            setProducts((prev) => prev.map((item) => (
+                item.id === productId ? { ...item, isActive: nextActiveState } : item
+            )));
+            triggerToast('success', `Product ${nextActiveState ? 'activated' : 'deactivated'} successfully`);
+        } catch (error) {
+            const message =
+                error?.response?.data?.message ||
+                error?.response?.data ||
+                `Failed to ${actionLabel} product`;
+            triggerToast('error', message);
+        } finally {
+            setActivatingProductId(null);
+        }
     };
 
     return (
@@ -262,173 +380,106 @@ function PMProductManagement() {
                     </button>
                 </div>
 
-                <div className="pm-product-list-placeholder">
-                    <p>Product list will appear here.</p>
-                </div>
+                {loadingProducts && (
+                    <div className="pm-product-list-placeholder">
+                        <p>Loading products...</p>
+                    </div>
+                )}
+
+                {!loadingProducts && productsError && (
+                    <div className="pm-product-list-placeholder pm-product-list-placeholder--error">
+                        <p>{productsError}</p>
+                        <button type="button" className="pm-btn-reload" onClick={loadProducts}>
+                            Reload
+                        </button>
+                    </div>
+                )}
+
+                {!loadingProducts && !productsError && products.length === 0 && (
+                    <div className="pm-product-list-placeholder">
+                        <p>No products found.</p>
+                    </div>
+                )}
+
+                {!loadingProducts && !productsError && products.length > 0 && (
+                    <div className="pm-product-table-wrapper">
+                        <table className="pm-product-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Title</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th>Active</th>
+                                    <th className="pm-product-table__actions">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {products.map((product) => (
+                                    <tr key={product.id}>
+                                        <td>{product.id}</td>
+                                        <td>{product.title}</td>
+                                        <td>{product.categoryName || '-'}</td>
+                                        <td>{formatPrice(product.price)}</td>
+                                        <td>
+                                            <span className={`pm-active-badge ${product.isActive ? 'pm-active-badge--on' : 'pm-active-badge--off'}`}>
+                                                {product.isActive ? 'Active' : 'Inactive'}
+                                            </span>
+                                        </td>
+                                        <td className="pm-product-table__actions">
+                                            <button
+                                                type="button"
+                                                className="pm-action-btn pm-action-btn--view"
+                                                onClick={() => navigate(`/pm/products/${product.id}`)}
+                                            >
+                                                View
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className={`pm-action-btn ${product.isActive ? 'pm-action-btn--deactivate' : 'pm-action-btn--active'}`}
+                                                onClick={() => handleToggleActiveProduct(product.id, !product.isActive)}
+                                                disabled={activatingProductId === product.id}
+                                            >
+                                                {activatingProductId === product.id
+                                                    ? (product.isActive ? 'Deactivating...' : 'Activating...')
+                                                    : (product.isActive ? 'Deactivate' : 'Active')}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="pm-action-btn pm-action-btn--delete"
+                                                onClick={() => handleDeleteProduct(product.id)}
+                                                disabled={deletingProductId === product.id}
+                                            >
+                                                {deletingProductId === product.id ? 'Deleting...' : 'Delete'}
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </div>
 
-            {isAddModalOpen && (
-                <div className="pm-add-modal-overlay" onClick={closeAddModal}>
-                    <div className="pm-add-modal" onClick={(event) => event.stopPropagation()}>
-                        <div className="pm-add-modal__header">
-                            <div>
-                                <h2>Add Product</h2>
-                                <p>Select a category first, then fill in the required product information.</p>
-                            </div>
-                            <button type="button" className="pm-add-modal__close" onClick={closeAddModal}>
-                                ×
-                            </button>
-                        </div>
-
-                        <form className="pm-add-form" onSubmit={handleAddProduct}>
-                            <div className="pm-form-group pm-form-group--full">
-                                <label htmlFor="pm-product-category">
-                                    Category <span>*</span>
-                                </label>
-                                <select
-                                    id="pm-product-category"
-                                    name="categoryId"
-                                    value={productForm.categoryId}
-                                    onChange={handleCategoryChange}
-                                    disabled={savingProduct}
-                                >
-                                    <option value="">-- Select category --</option>
-                                    {categories.map((category) => (
-                                        <option key={category.id} value={category.id}>
-                                            {category.name}
-                                        </option>
-                                    ))}
-                                </select>
-                                {formErrors.categoryId && <span className="pm-form-error">{formErrors.categoryId}</span>}
-                            </div>
-
-                            {!productForm.categoryId && (
-                                <div className="pm-add-form__hint">
-                                    Choose a category to load the correct fields for this product.
-                                </div>
-                            )}
-
-                            {productForm.categoryId && loadingAttr && (
-                                <div className="pm-add-form__status">Loading category attributes…</div>
-                            )}
-
-                            {productForm.categoryId && errorAttr && (
-                                <div className="pm-add-form__status pm-add-form__status--error">{errorAttr}</div>
-                            )}
-
-                            {productForm.categoryId && !loadingAttr && !errorAttr && (
-                                <>
-                                    <div className="pm-add-form__grid">
-                                        <div className="pm-form-group pm-form-group--full">
-                                            <label htmlFor="pm-product-title">
-                                                Product title <span>*</span>
-                                            </label>
-                                            <input
-                                                id="pm-product-title"
-                                                name="title"
-                                                type="text"
-                                                value={productForm.title}
-                                                onChange={handleBaseFieldChange}
-                                                placeholder="Enter product title"
-                                                disabled={savingProduct}
-                                            />
-                                            {formErrors.title && <span className="pm-form-error">{formErrors.title}</span>}
-                                        </div>
-
-                                        <div className="pm-form-group">
-                                            <label htmlFor="pm-product-price">
-                                                Price <span>*</span>
-                                            </label>
-                                            <input
-                                                id="pm-product-price"
-                                                name="price"
-                                                type="number"
-                                                min="0"
-                                                step="1"
-                                                value={productForm.price}
-                                                onChange={handleBaseFieldChange}
-                                                placeholder="Enter price"
-                                                disabled={savingProduct}
-                                            />
-                                            {formErrors.price && <span className="pm-form-error">{formErrors.price}</span>}
-                                        </div>
-
-                                        <div className="pm-form-group pm-form-group--checkbox">
-                                            <label htmlFor="pm-product-active">Active for sale</label>
-                                            <input
-                                                id="pm-product-active"
-                                                name="isActive"
-                                                type="checkbox"
-                                                checked={productForm.isActive}
-                                                onChange={handleBaseFieldChange}
-                                                disabled={savingProduct}
-                                            />
-                                        </div>
-
-                                        <div className="pm-form-group pm-form-group--full">
-                                            <label htmlFor="pm-product-image">Image URL</label>
-                                            <input
-                                                id="pm-product-image"
-                                                name="imageUrl"
-                                                type="text"
-                                                value={productForm.imageUrl}
-                                                onChange={handleBaseFieldChange}
-                                                placeholder="Enter image URL"
-                                                disabled={savingProduct}
-                                            />
-                                        </div>
-
-                                        <div className="pm-form-group pm-form-group--full">
-                                            <label htmlFor="pm-product-description">Description</label>
-                                            <textarea
-                                                id="pm-product-description"
-                                                name="description"
-                                                value={productForm.description}
-                                                onChange={handleBaseFieldChange}
-                                                placeholder="Enter product description"
-                                                rows={4}
-                                                disabled={savingProduct}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {groupedAttributes.length > 0 && (
-                                        <div className="pm-attribute-sections">
-                                            {groupedAttributes.map((group) => (
-                                                <section className="pm-attribute-section" key={group.groupName}>
-                                                    <h3>{group.groupName}</h3>
-                                                    <div className="pm-add-form__grid">
-                                                        {group.items.map(renderAttributeInput)}
-                                                    </div>
-                                                </section>
-                                            ))}
-                                        </div>
-                                    )}
-
-                                    {groupedAttributes.length === 0 && (
-                                        <div className="pm-add-form__hint pm-add-form__hint--soft">
-                                            This category has no extra attributes. You can still create the product with the basic information above.
-                                        </div>
-                                    )}
-                                </>
-                            )}
-
-                            <div className="pm-add-modal__actions">
-                                <button type="button" className="pm-btn-cancel" onClick={closeAddModal} disabled={savingProduct}>
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="pm-btn-submit"
-                                    disabled={savingProduct || loadingAttr || !!errorAttr || !productForm.categoryId}
-                                >
-                                    {savingProduct ? 'Adding...' : 'Add Product'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+            <AddProductModal
+                isOpen={isAddModalOpen}
+                onClose={closeAddModal}
+                onSubmit={handleAddProduct}
+                savingProduct={savingProduct}
+                categories={categories}
+                productForm={productForm}
+                formErrors={formErrors}
+                loadingAttr={loadingAttr}
+                errorAttr={errorAttr}
+                attributes={attributes}
+                attributeValues={attributeValues}
+                onCategoryChange={handleCategoryChange}
+                onBaseFieldChange={handleBaseFieldChange}
+                onAttributeChange={handleAttributeChange}
+                onListAttributeItemChange={handleListAttributeItemChange}
+                onAddListAttributeItem={addListAttributeItem}
+                onRemoveListAttributeItem={removeListAttributeItem}
+            />
         </div>
     );
 }

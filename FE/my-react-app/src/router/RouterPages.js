@@ -19,6 +19,7 @@ import VerificationHelp from "../pages/verifyemail/VerificationHelp";
 import Compare from "../pages/compare/Compare";
 import PMDashboard from "../pages/pm/dashboard/PMDashboard";
 import PMProductManagement from "../pages/pm/products/PMProductManagement";
+import PMProductDetail from "../pages/pm/products/PMProductDetail";
 import PMOrderManagement from "../pages/pm/orders/PMOrderManagement";
 
 const PM_ROLES = ['ADMIN', 'PM'];
@@ -77,6 +78,11 @@ function RouterPages() {
                 <Route path="/pm/products" element={
                     <RoleProtectedRoute allowedRoles={PM_ROLES}>
                         <PMProductManagement/>
+                    </RoleProtectedRoute>
+                }/>
+                <Route path="/pm/products/:productId" element={
+                    <RoleProtectedRoute allowedRoles={PM_ROLES}>
+                        <PMProductDetail/>
                     </RoleProtectedRoute>
                 }/>
                 <Route path="/pm/orders" element={

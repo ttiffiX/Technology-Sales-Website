@@ -10,7 +10,7 @@ const isNumberType = (type) => (
     type.includes('DECIMAL')
 );
 
-const isListType = (type) => type.includes('ARRAY') || type.includes('LIST') || type.includes('MULTI');
+const isListType = (type) => type.includes('LIST') || type.includes('MULTI');
 
 export const getAttributeInputVariant = (dataType) => {
     const type = resolveAttributeType(dataType);
@@ -24,8 +24,26 @@ export const getAttributeInputVariant = (dataType) => {
 
 export const normalizeAttributeValue = (rawValue, dataType) => {
     const type = resolveAttributeType(dataType);
+    const listType = isListType(type);
 
     if (rawValue === undefined || rawValue === null) {
+        return undefined;
+    }
+
+    if (listType) {
+        if (Array.isArray(rawValue)) {
+            const items = rawValue
+                .map((item) => (item === null || item === undefined ? '' : String(item).trim()))
+                .filter(Boolean);
+
+            return items.length > 0 ? items : undefined;
+        }
+
+        if (typeof rawValue === 'string') {
+            const item = rawValue.trim();
+            return item ? [item] : undefined;
+        }
+
         return undefined;
     }
 
@@ -37,21 +55,14 @@ export const normalizeAttributeValue = (rawValue, dataType) => {
         }
 
         if (isBooleanType(type)) {
-            return trimmedValue.toLowerCase() === 'true';
+            if (trimmedValue.toLowerCase() === 'true') return true;
+            if (trimmedValue.toLowerCase() === 'false') return false;
+            return undefined;
         }
 
         if (isNumberType(type)) {
             const parsedNumber = Number(trimmedValue);
             return Number.isNaN(parsedNumber) ? undefined : parsedNumber;
-        }
-
-        if (isListType(type)) {
-            const items = trimmedValue
-                .split(',')
-                .map((item) => item.trim())
-                .filter(Boolean);
-
-            return items.length > 0 ? items : undefined;
         }
 
         return trimmedValue;
@@ -63,14 +74,6 @@ export const normalizeAttributeValue = (rawValue, dataType) => {
 
     if (typeof rawValue === 'number') {
         return Number.isNaN(rawValue) ? undefined : rawValue;
-    }
-
-    if (Array.isArray(rawValue)) {
-        const items = rawValue
-            .map((item) => (typeof item === 'string' ? item.trim() : item))
-            .filter((item) => item !== '' && item !== undefined && item !== null);
-
-        return items.length > 0 ? items : undefined;
     }
 
     return rawValue;
@@ -95,6 +98,10 @@ export const buildAddProductPayload = (productRequest, attributeSchemas = []) =>
         title: (productRequest.title || '').trim(),
         description: (productRequest.description || '').trim(),
         price: Number(productRequest.price),
+        quantity: Number(productRequest.quantity),
+        ...(productRequest.quantitySold !== '' && productRequest.quantitySold !== undefined && productRequest.quantitySold !== null
+            ? { quantitySold: Number(productRequest.quantitySold) }
+            : {}),
         imageUrl: (productRequest.imageUrl || '').trim(),
         isActive: productRequest.isActive !== false,
         attributes: normalizedAttributes,
@@ -118,5 +125,103 @@ export const groupAttributesByGroupName = (attributes = []) => {
     });
 
     return groups;
+};
+
+export const flattenPMDetailAttributes = (attributeGroups = {}) => {
+    if (!attributeGroups || typeof attributeGroups !== 'object') {
+        return [];
+    }
+
+    return Object.values(attributeGroups)
+        .filter(Boolean)
+        .flatMap((group) => {
+            const groupName = group?.groupName || 'Additional Information';
+            const filterAttributes = Array.isArray(group?.filterAttributes) ? group.filterAttributes : [];
+
+            return filterAttributes.map((attribute) => ({
+                groupName,
+                attributeName: attribute?.attributeName,
+                availableValues: attribute?.availableValues,
+            }));
+        })
+        .filter((item) => item.attributeName);
+};
+
+export const buildPMDetailAttributeValues = (detailAttributes = {}, attributeSchemas = []) => {
+    const attributeValues = {};
+    const flattenedDetailAttributes = flattenPMDetailAttributes(detailAttributes);
+
+    attributeSchemas.forEach((schema) => {
+        const detailAttribute = flattenedDetailAttributes.find((item) => (
+            item.groupName === schema.groupName && item.attributeName === schema.name
+        )) || flattenedDetailAttributes.find((item) => item.attributeName === schema.name);
+
+        if (!detailAttribute) {
+            return;
+        }
+
+        const inputVariant = getAttributeInputVariant(schema.dataType);
+        const rawValue = detailAttribute.availableValues;
+
+        if (inputVariant === 'list') {
+            attributeValues[schema.code] = Array.isArray(rawValue) ? rawValue.map((item) => String(item ?? '')) : [String(rawValue ?? '')];
+            return;
+        }
+
+        if (inputVariant === 'boolean') {
+            if (typeof rawValue === 'boolean') {
+                attributeValues[schema.code] = String(rawValue);
+                return;
+            }
+
+            if (typeof rawValue === 'string') {
+                const normalizedBoolean = rawValue.trim().toLowerCase();
+                if (normalizedBoolean === 'true' || normalizedBoolean === 'false') {
+                    attributeValues[schema.code] = normalizedBoolean;
+                }
+            }
+            return;
+        }
+
+        attributeValues[schema.code] = rawValue ?? '';
+    });
+
+    return attributeValues;
+};
+
+export const buildUpdateProductPayload = (productForm, attributeSchemas = [], detailAttributes = {}, editedAttributeValues = null) => {
+    const normalizedAttributes = {};
+    const flattenedDetailAttributes = flattenPMDetailAttributes(detailAttributes);
+
+    attributeSchemas.forEach((schema) => {
+        const rawValue = editedAttributeValues
+            ? editedAttributeValues[schema.code]
+            : (() => {
+                const detailAttribute = flattenedDetailAttributes.find((item) => (
+                    item.groupName === schema.groupName && item.attributeName === schema.name
+                )) || flattenedDetailAttributes.find((item) => item.attributeName === schema.name);
+
+                return detailAttribute?.availableValues;
+            })();
+
+        const normalizedValue = normalizeAttributeValue(rawValue, schema.dataType);
+        if (normalizedValue !== undefined) {
+            normalizedAttributes[schema.code] = normalizedValue;
+        }
+    });
+
+    return {
+        categoryId: Number(productForm.categoryId),
+        title: (productForm.title || '').trim(),
+        description: (productForm.description || '').trim(),
+        price: Number(productForm.price),
+        quantity: Number(productForm.quantity),
+        ...(productForm.quantitySold !== '' && productForm.quantitySold !== undefined && productForm.quantitySold !== null
+            ? { quantitySold: Number(productForm.quantitySold) }
+            : {}),
+        imageUrl: (productForm.imageUrl || '').trim(),
+        isActive: productForm.isActive !== false,
+        attributes: normalizedAttributes,
+    };
 };
 

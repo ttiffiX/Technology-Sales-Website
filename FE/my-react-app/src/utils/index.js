@@ -88,6 +88,9 @@ export {
     getAttributeInputVariant,
     normalizeAttributeValue,
     buildAddProductPayload,
+    buildPMDetailAttributeValues,
+    buildUpdateProductPayload,
+    flattenPMDetailAttributes,
     groupAttributesByGroupName
 } from './pmProductUtils';
 
