@@ -1,6 +1,7 @@
 package com.example.sale_tech_web.feature.product.repository;
 
 import com.example.sale_tech_web.feature.product.dto.customer.FilterProjection;
+import com.example.sale_tech_web.feature.product.entity.Category;
 import com.example.sale_tech_web.feature.product.entity.Product;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -80,4 +81,11 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
             "category"
     })
     List<Product> findAllByOrderByIdDesc();
+
+    @Query(value = "SELECT EXISTS(SELECT 1 FROM product " +
+            "WHERE category_id = :categoryId " +
+            "AND jsonb_exists(attributes, :attributeCode))", nativeQuery = true)
+    boolean existsByAttributeCodeAndCategoryId(@Param("attributeCode") String attributeCode, @Param("categoryId") Long categoryId);
+
+    boolean existsByCategory(Category category);
 }

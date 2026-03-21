@@ -1,5 +1,6 @@
 package com.example.sale_tech_web.feature.product.repository;
 
+import com.example.sale_tech_web.feature.product.entity.Category;
 import com.example.sale_tech_web.feature.product.entity.CategoryAttributeSchema;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -14,4 +15,9 @@ public interface CategoryAttributeSchemaRepository extends JpaRepository<Categor
             "ORDER BY s.groupOrder ASC, s.displayOrder ASC")
     List<CategoryAttributeSchema> findByCategoryIdOrdered(@Param("categoryId") Long categoryId);
 
+    CategoryAttributeSchema findByCategoryIdAndCode(Long categoryId, String code);
+
+    Boolean existsByCategoryIdAndCode(Long categoryId, String code);
+
+    Boolean existsByCategory(Category category);
 }

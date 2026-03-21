@@ -1,9 +1,7 @@
 package com.example.sale_tech_web.controller.pm;
 
-import com.example.sale_tech_web.feature.product.dto.pm.AttributeResponse;
-import com.example.sale_tech_web.feature.product.dto.pm.PMProductDetailDTO;
-import com.example.sale_tech_web.feature.product.dto.pm.PMProductListDTO;
-import com.example.sale_tech_web.feature.product.dto.pm.ProductRequest;
+import com.example.sale_tech_web.feature.product.dto.customer.CategoryDTO;
+import com.example.sale_tech_web.feature.product.dto.pm.*;
 import com.example.sale_tech_web.feature.product.manager.pm.PMServiceInterface;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -68,5 +66,52 @@ public class PMController {
         log.info("PM - Delete product: id={}", productId);
         String mes = pmServiceInterface.deleteProduct(productId);
         return ResponseEntity.ok(mes);
+    }
+
+    @GetMapping("/category/{categoryId}/attributes-schema")
+    public ResponseEntity<List<CategoryAttribute>> getAttributeByCategory(@PathVariable Long categoryId) {
+        log.info("PM - Get category attributes: categoryId={}", categoryId);
+        return ResponseEntity.ok(pmServiceInterface.getAttributeByCategory(categoryId));
+    }
+
+    // Attribute Schema endpoints
+    @PostMapping("/category/{categoryId}/attributes-schema")
+    public ResponseEntity<CategoryAttribute> addAttributeSchema(
+            @PathVariable Long categoryId,
+            @Valid @RequestBody CategoryAttributeRequest request) {
+        log.info("PM - Add attribute schema: categoryId={}, code={}", categoryId, request.getCode());
+        return ResponseEntity.ok(pmServiceInterface.addAttributeSchema(categoryId, request));
+    }
+
+    @PutMapping("/category/{categoryId}/attributes-schema")
+    public ResponseEntity<CategoryAttribute> updateAttributeSchema(
+            @PathVariable Long categoryId,
+            @Valid @RequestBody CategoryAttributeRequest request) {
+        log.info("PM - Update attribute schema: categoryId={}", categoryId);
+        return ResponseEntity.ok(pmServiceInterface.updateAttributeSchema(categoryId, request));
+    }
+
+    @DeleteMapping("/attributes-schema/{attributeId}")
+    public ResponseEntity<String> deleteAttributeSchema(@PathVariable Long attributeId) {
+        log.info("PM - Delete attribute schema: attributeId={}", attributeId);
+        return ResponseEntity.ok(pmServiceInterface.deleteAttributeSchema(attributeId));
+    }
+
+    @PostMapping("/category/add")
+    public ResponseEntity<CategoryDTO> addCategory(@RequestParam String name) {
+        log.info("PM - Add category: name={}", name);
+        return ResponseEntity.ok(pmServiceInterface.addCategory(name));
+    }
+
+    @PutMapping("/category/{categoryId}/update")
+    public ResponseEntity<CategoryDTO> updateCategory(@PathVariable Long categoryId, @RequestParam String name) {
+        log.info("PM - Update category: id={}, name={}", categoryId, name);
+        return ResponseEntity.ok(pmServiceInterface.updateCategory(categoryId, name));
+    }
+
+    @DeleteMapping("category/{categoryId}/delete")
+    public ResponseEntity<String> deleteCategory(@PathVariable Long categoryId) {
+        log.info("PM - Delete category: id={}", categoryId);
+        return ResponseEntity.ok(pmServiceInterface.deleteCategory(categoryId));
     }
 }
