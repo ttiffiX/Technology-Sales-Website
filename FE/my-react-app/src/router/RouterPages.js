@@ -18,9 +18,12 @@ import WaitingVerification from "../pages/verifyemail/WaitingVerification";
 import VerificationHelp from "../pages/verifyemail/VerificationHelp";
 import Compare from "../pages/compare/Compare";
 import PMDashboard from "../pages/pm/dashboard/PMDashboard";
+import PMProductHub from "../pages/pm/products/PMProductHub";
 import PMProductManagement from "../pages/pm/products/PMProductManagement";
 import PMProductDetail from "../pages/pm/products/PMProductDetail";
 import PMOrderManagement from "../pages/pm/orders/PMOrderManagement";
+import PMAttributeSchemaManagement from "../pages/pm/products/attributes/PMAttributeSchemaManagement";
+import PMCategoryManagement from "../pages/pm/products/categories/PMCategoryManagement";
 
 const PM_ROLES = ['ADMIN', 'PM'];
 
@@ -77,10 +80,15 @@ function RouterPages() {
                 }/>
                 <Route path="/pm/products" element={
                     <RoleProtectedRoute allowedRoles={PM_ROLES}>
+                        <PMProductHub/>
+                    </RoleProtectedRoute>
+                }/>
+                <Route path="/pm/products/list" element={
+                    <RoleProtectedRoute allowedRoles={PM_ROLES}>
                         <PMProductManagement/>
                     </RoleProtectedRoute>
                 }/>
-                <Route path="/pm/products/:productId" element={
+                <Route path="/pm/products/list/:productId" element={
                     <RoleProtectedRoute allowedRoles={PM_ROLES}>
                         <PMProductDetail/>
                     </RoleProtectedRoute>
@@ -88,6 +96,26 @@ function RouterPages() {
                 <Route path="/pm/orders" element={
                     <RoleProtectedRoute allowedRoles={PM_ROLES}>
                         <PMOrderManagement/>
+                    </RoleProtectedRoute>
+                }/>
+                <Route path="/pm/attributes" element={
+                    <RoleProtectedRoute allowedRoles={PM_ROLES}>
+                        <PMAttributeSchemaManagement/>
+                    </RoleProtectedRoute>
+                }/>
+                <Route path="/pm/products/attributes" element={
+                    <RoleProtectedRoute allowedRoles={PM_ROLES}>
+                        <PMAttributeSchemaManagement/>
+                    </RoleProtectedRoute>
+                }/>
+                <Route path="/pm/categories" element={
+                    <RoleProtectedRoute allowedRoles={PM_ROLES}>
+                        <PMCategoryManagement/>
+                    </RoleProtectedRoute>
+                }/>
+                <Route path="/pm/products/categories" element={
+                    <RoleProtectedRoute allowedRoles={PM_ROLES}>
+                        <PMCategoryManagement/>
                     </RoleProtectedRoute>
                 }/>
             </Routes>

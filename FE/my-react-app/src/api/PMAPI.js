@@ -54,3 +54,56 @@ export const deletePMProduct = async (productId) => {
     return response.data;
 };
 
+export const getAttributeSchemasByCategory = async (categoryId) => {
+    if (!categoryId) {
+        return [];
+    }
+
+    const response = await apiClient.get(`/pm/category/${categoryId}/attributes-schema`);
+    return Array.isArray(response.data) ? response.data : [];
+};
+
+export const addAttributeSchema = async (categoryId, request) => {
+    const response = await apiClient.post(`/pm/category/${categoryId}/attributes-schema`, request);
+    return response.data;
+};
+
+export const updateAttributeSchema = async (categoryId, request) => {
+    const response = await apiClient.put(`/pm/category/${categoryId}/attributes-schema`, request);
+    return response.data;
+};
+
+export const deleteAttributeSchema = async (attributeId) => {
+    const response = await apiClient.delete(`/pm/attributes-schema/${attributeId}`);
+    return response.data;
+};
+
+export const addCategory = async (name) => {
+    const response = await apiClient.post('/pm/category/add', null, {
+        params: { name },
+    });
+    return response.data;
+};
+
+export const updateCategory = async (categoryId, name) => {
+    const response = await apiClient.put(`/pm/category/${categoryId}/update`, null, {
+        params: { name },
+    });
+    return response.data;
+};
+
+export const deleteCategory = async (categoryId) => {
+    try {
+        const response = await apiClient.delete(`/pm/category/${categoryId}/delete`);
+        return response.data;
+    } catch (error) {
+        if (error?.response?.status !== 404) {
+            throw error;
+        }
+
+        // Backward-compatible fallback when BE mapping is declared without leading slash.
+        const response = await apiClient.delete(`/pmcategory/${categoryId}/delete`);
+        return response.data;
+    }
+};
+

@@ -371,8 +371,8 @@ function PMProductManagement() {
 
             <div className="pm-content">
                 <div className="pm-toolbar">
-                    <button className="pm-btn-back" onClick={() => navigate('/pm')}>
-                        ← Dashboard
+                    <button className="pm-btn-back" onClick={() => navigate('/pm/products')}>
+                        ← Product workspace
                     </button>
 
                     <button className="pm-btn-add" onClick={openAddModal}>
@@ -430,7 +430,7 @@ function PMProductManagement() {
                                             <button
                                                 type="button"
                                                 className="pm-action-btn pm-action-btn--view"
-                                                onClick={() => navigate(`/pm/products/${product.id}`)}
+                                                onClick={() => navigate(`/pm/products/list/${product.id}`)}
                                             >
                                                 View
                                             </button>

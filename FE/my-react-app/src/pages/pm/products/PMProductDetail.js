@@ -318,7 +318,7 @@ function PMProductDetail() {
 
             <div className="pm-product-detail-content">
                 <div className="pm-product-detail-toolbar">
-                    <button type="button" className="pm-btn-back" onClick={() => navigate('/pm/products')}>
+                    <button type="button" className="pm-btn-back" onClick={() => navigate('/pm/products/list')}>
                         ← Product list
                     </button>
                 </div>

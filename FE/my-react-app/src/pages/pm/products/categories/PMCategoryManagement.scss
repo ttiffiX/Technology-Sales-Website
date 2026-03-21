@@ -1,0 +1,164 @@
+@use '../../../../styles/variables';
+
+.pm-category-page {
+  min-height: 100vh;
+  background: variables.$background-color;
+  font-family: variables.$font-family-main;
+}
+
+.pm-category-content {
+  padding: 28px 96px 80px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.pm-category-toolbar {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 20px;
+
+  .pm-btn-back {
+    background: none;
+    border: 1.5px solid variables.$border-color;
+    border-radius: 8px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-weight: 600;
+
+    &:hover {
+      border-color: variables.$primary-color;
+      color: variables.$primary-color;
+    }
+  }
+
+  .pm-btn-add {
+    margin-left: auto;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 18px;
+    background: variables.$primary-color;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 600;
+
+    &:hover {
+      background: variables.$secondary-color;
+    }
+  }
+}
+
+.pm-category-add-card {
+  background: #fff;
+  border: 1px solid variables.$border-color;
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 18px;
+
+  h3 {
+    margin: 0 0 12px;
+  }
+}
+
+.pm-category-add-row {
+  display: flex;
+  gap: 10px;
+
+  input {
+    flex: 1;
+    border: 1px solid variables.$border-color;
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+
+  button {
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    background: variables.$primary-color;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.pm-category-placeholder {
+  border: 2px dashed variables.$border-color;
+  border-radius: 10px;
+  padding: 48px;
+  text-align: center;
+  color: #888;
+  background: #fff;
+}
+
+.pm-category-table-wrapper {
+  border: 1px solid variables.$border-color;
+  border-radius: 12px;
+  overflow: auto;
+  background: #fff;
+}
+
+.pm-category-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: 14px;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+  }
+
+  thead th {
+    background: #fafafa;
+  }
+}
+
+.pm-category-actions {
+  white-space: nowrap;
+}
+
+.pm-category-edit-input {
+  width: 100%;
+  min-width: 220px;
+  border: 1px solid variables.$border-color;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.pm-action-btn {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.pm-action-btn--edit,
+.pm-action-btn--save {
+  background: rgba(variables.$primary-color, 0.12);
+  color: variables.$primary-color;
+  margin-right: 6px;
+}
+
+.pm-action-btn--cancel {
+  background: #f0f0f0;
+  color: #555;
+  margin-right: 6px;
+}
+
+.pm-action-btn--delete {
+  background: rgba(variables.$error-color, 0.12);
+  color: variables.$error-color;
+}
+

@@ -24,9 +24,9 @@ function PMDashboard() {
                         tabIndex={0}
                         onKeyDown={(e) => e.key === 'Enter' && navigate('/pm/products')}
                     >
-                        <h3 className="pm-dashboard-card__title">Manage Products</h3>
+                        <h3 className="pm-dashboard-card__title">Product</h3>
                         <p className="pm-dashboard-card__desc">
-                            Add, edit or remove products and their attributes by category.
+                            Open product workspace for products, categories, and attribute schema.
                         </p>
                         <span className="pm-dashboard-card__arrow">→</span>
                     </div>
@@ -38,7 +38,7 @@ function PMDashboard() {
                         tabIndex={0}
                         onKeyDown={(e) => e.key === 'Enter' && navigate('/pm/orders')}
                     >
-                        <h3 className="pm-dashboard-card__title">Manage Orders</h3>
+                        <h3 className="pm-dashboard-card__title">Order</h3>
                         <p className="pm-dashboard-card__desc">
                             View and process customer orders, update order statuses.
                         </p>

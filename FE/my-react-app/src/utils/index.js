@@ -99,3 +99,17 @@ export {
     formatProductAttributeValue
 } from './productAttributeUtils';
 
+// API error utilities
+export {
+    getApiErrorMessage
+} from './apiErrorUtils';
+
+// PM attribute schema utilities
+export {
+    ATTRIBUTE_DATA_TYPES,
+    EMPTY_ATTRIBUTE_SCHEMA_FORM,
+    mapAttributeSchemaToForm,
+    validateAttributeSchemaForm,
+    buildAttributeSchemaPayload
+} from './pmAttributeSchemaUtils';
+
