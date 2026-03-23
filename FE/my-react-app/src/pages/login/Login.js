@@ -17,7 +17,13 @@ function Login() {
 
     useEffect(() => {
         if (isAuthenticated()) {
-            navigate('/');
+            // Người dùng đã đăng nhập rồi, redirect dựa trên role
+            const userRole = localStorage.getItem('role');
+            if (userRole === 'ADMIN' || userRole === 'PM') {
+                navigate('/pm'); // Nếu là PM/ADMIN, vào trang PM
+            } else {
+                navigate('/'); // Nếu là customer, vào trang chủ
+            }
         }
     }, [navigate]);
 
@@ -31,13 +37,19 @@ function Login() {
 
             if (result.success) {
                 // Đăng nhập thành công
-                // alert('Login Successful!');
-                // alert('Login Successful!');
                 triggerToast('success', 'Login Successful!');
-                navigate('/'); // Chuyển về trang chủ
+                
+                // Lấy role từ localStorage (đã được set trong AuthAPI)
+                const userRole = localStorage.getItem('role');
+                
+                // Redirect dựa trên role
+                if (userRole === 'ADMIN' || userRole === 'PM') {
+                    navigate('/pm'); // Chuyển tới dashboard PM
+                } else {
+                    navigate('/'); // Chuyển về trang chủ customer
+                }
             } else {
                 // Đăng nhập thất bại
-                setError(result.message);
                 setError(result.message);
             }
         } catch (err) {
