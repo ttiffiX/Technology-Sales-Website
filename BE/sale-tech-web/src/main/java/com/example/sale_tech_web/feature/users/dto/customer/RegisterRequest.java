@@ -1,4 +1,4 @@
-package com.example.sale_tech_web.feature.users.dto;
+package com.example.sale_tech_web.feature.users.dto.customer;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

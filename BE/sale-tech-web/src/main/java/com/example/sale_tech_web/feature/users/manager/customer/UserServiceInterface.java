@@ -1,10 +1,10 @@
-package com.example.sale_tech_web.feature.users.manager;
+package com.example.sale_tech_web.feature.users.manager.customer;
 
-import com.example.sale_tech_web.feature.users.dto.ChangePassRequest;
-import com.example.sale_tech_web.feature.users.dto.LogInRequest;
-import com.example.sale_tech_web.feature.users.dto.RegisterRequest;
-import com.example.sale_tech_web.feature.users.dto.LogInResponse;
-import com.example.sale_tech_web.feature.users.dto.VerifyResetOtpResponse;
+import com.example.sale_tech_web.feature.users.dto.customer.ChangePassRequest;
+import com.example.sale_tech_web.feature.users.dto.customer.LogInRequest;
+import com.example.sale_tech_web.feature.users.dto.customer.RegisterRequest;
+import com.example.sale_tech_web.feature.users.dto.customer.LogInResponse;
+import com.example.sale_tech_web.feature.users.dto.customer.VerifyResetOtpResponse;
 
 public interface UserServiceInterface {
     LogInResponse login(LogInRequest logInRequest);

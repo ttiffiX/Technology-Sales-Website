@@ -1,17 +1,20 @@
-package com.example.sale_tech_web.feature.users.dto;
+package com.example.sale_tech_web.feature.users.dto.customer;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ResetPasswordRequest {
-    private String resetToken;
+@Builder
+public class ChangePassRequest {
+    @NotBlank(message = "Old Password is required")
+    private String oldPassword;
 
     @NotBlank(message = "New Password is required")
     @Size(min = 8, message = "New Password must be at least 8 characters long")
