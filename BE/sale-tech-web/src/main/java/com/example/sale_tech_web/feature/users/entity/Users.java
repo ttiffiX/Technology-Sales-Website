@@ -44,6 +44,7 @@ public class Users {
 
     private String name;
     private boolean isActive = false;
+    private boolean isBanned = false;
     private LocalDateTime createdAt;
     private String imageUrl;
 

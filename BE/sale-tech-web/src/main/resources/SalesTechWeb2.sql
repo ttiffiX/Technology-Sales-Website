@@ -81,6 +81,7 @@ CREATE TABLE users
     role       user_role_enum     NOT NULL,
     name       VARCHAR(50),
     is_active  BOOLEAN,
+    is_banned  BOOLEAN DEFAULT FALSE,
     created_at DATE,
     image_url  VARCHAR(255)
 );

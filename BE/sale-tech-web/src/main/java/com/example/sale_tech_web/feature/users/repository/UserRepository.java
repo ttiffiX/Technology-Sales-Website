@@ -1,6 +1,7 @@
 package com.example.sale_tech_web.feature.users.repository;
 
 import com.example.sale_tech_web.feature.users.entity.Users;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -28,6 +29,9 @@ public interface UserRepository extends JpaRepository<Users, Long> {
      */
     @Query("SELECT u FROM Users u WHERE u.isActive = false AND u.createdAt < :cutoffTime")
     List<Users> findInactiveUsersOlderThan(@Param("cutoffTime") LocalDateTime cutoffTime);
+
+    @EntityGraph(attributePaths = {"cart"})
+    List<Users> findAllByOrderByIdDesc();
 }
 
 
