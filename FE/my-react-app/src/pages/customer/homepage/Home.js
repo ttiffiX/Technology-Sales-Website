@@ -1,15 +1,15 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {useSearchParams} from 'react-router-dom';
-import '../../App.scss';
+import '../../../App.scss';
 import './Home.scss';
 import 'react-toastify/dist/ReactToastify.css';
-import ProductGrid from "../../components/productgrid/ProductGrid";
-import Nav from "../../components/navigation/Nav";
-import Header from "../../components/header/Header";
-import FilterSidebar from "../../components/filtersidebar/FilterSidebar";
-import useFetchProducts, {filterProducts, searchProducts, getAllCategories} from "../../api/ProductAPI";
-import {useCart} from "../../contexts/CartContext";
-import CompareBar from "../../components/comparebar/CompareBar";
+import ProductGrid from "../../../components/productgrid/ProductGrid";
+import Nav from "../../../components/navigation/Nav";
+import Header from "../../../components/header/Header";
+import FilterSidebar from "../../../components/filtersidebar/FilterSidebar";
+import useFetchProducts, {filterProducts, searchProducts, getAllCategories} from "../../../api/ProductAPI";
+import {useCart} from "../../../contexts/CartContext";
+import CompareBar from "../../../components/comparebar/CompareBar";
 
 function Home() {
     const [searchParams, setSearchParams] = useSearchParams();

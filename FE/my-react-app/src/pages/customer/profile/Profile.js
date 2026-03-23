@@ -1,13 +1,13 @@
 import React, {useState, useEffect} from "react";
 import "./Profile.scss";
-import avatarIcon from "../../assets/icon/img.png";
-import Nav from "../../components/navigation/Nav";
-import {useCart} from "../../contexts/CartContext";
-import ChangePasswordModal from "../../components/modal/changepass/ChangePasswordModal";
-import AddressManagement from "../../components/modal/address/AddressManagement";
-import {useToast} from "../../components/Toast/Toast";
-import {getProfile, updateProfile} from "../../api/ProfileAPI";
-import {isRequired, isValidPhone} from "../../utils";
+import avatarIcon from "../../../assets/icon/img.png";
+import Nav from "../../../components/navigation/Nav";
+import {useCart} from "../../../contexts/CartContext";
+import ChangePasswordModal from "../../../components/modal/changepass/ChangePasswordModal";
+import AddressManagement from "../../../components/modal/address/AddressManagement";
+import {useToast} from "../../../components/Toast/Toast";
+import {getProfile, updateProfile} from "../../../api/ProfileAPI";
+import {isRequired, isValidPhone} from "../../../utils";
 
 const Profile = () => {
     const {cartCount} = useCart();

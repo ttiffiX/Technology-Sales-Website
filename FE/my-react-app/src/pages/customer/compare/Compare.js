@@ -1,10 +1,10 @@
 import React, {useEffect, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
-import {useCompare} from '../../contexts/CompareContext';
-import {compareProducts} from '../../api/ProductAPI';
-import {formatPrice, formatProductAttributeValue, getImage} from '../../utils';
-import Nav from '../../components/navigation/Nav';
-import {useCart} from '../../contexts/CartContext';
+import {useCompare} from '../../../contexts/CompareContext';
+import {compareProducts} from '../../../api/ProductAPI';
+import {formatPrice, formatProductAttributeValue, getImage} from '../../../utils';
+import Nav from '../../../components/navigation/Nav';
+import {useCart} from '../../../contexts/CartContext';
 import './Compare.scss';
 
 function Compare() {

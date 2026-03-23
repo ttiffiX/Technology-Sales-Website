@@ -1,9 +1,9 @@
 import React, {useEffect} from "react";
-import Nav from "../../components/navigation/Nav";
-import Header from "../../components/header/Header";
-import CartGrid from "../../components/cartgrid/CartGrid";
-import {useGetCartItems} from "../../api/CartAPI";
-import {useCart} from "../../contexts/CartContext";
+import Nav from "../../../components/navigation/Nav";
+import Header from "../../../components/header/Header";
+import CartGrid from "../../../components/cartgrid/CartGrid";
+import {useGetCartItems} from "../../../api/CartAPI";
+import {useCart} from "../../../contexts/CartContext";
 
 function Cart(){
     const { cartItems, totalQuantity, loading, error } = useGetCartItems();

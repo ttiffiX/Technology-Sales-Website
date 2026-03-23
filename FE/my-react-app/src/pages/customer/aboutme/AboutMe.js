@@ -1,7 +1,7 @@
 import React from "react";
 import './AboutMe.scss'
-import Nav from "../../components/navigation/Nav";
-import {useCart} from "../../contexts/CartContext";
+import Nav from "../../../components/navigation/Nav";
+import {useCart} from "../../../contexts/CartContext";
 
 function AboutMe() {
     const {cartCount} = useCart();

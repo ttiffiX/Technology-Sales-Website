@@ -1,13 +1,13 @@
 import React, {useEffect, useState} from 'react';
 import './Order.scss';
-import Nav from "../../components/navigation/Nav";
-import Header from "../../components/header/Header";
-import {useGetCartItems} from "../../api/CartAPI";
-import {useToast} from "../../components/Toast/Toast";
-import {usePlaceOrder} from "../../api/OrderAPI";
+import Nav from "../../../components/navigation/Nav";
+import Header from "../../../components/header/Header";
+import {useGetCartItems} from "../../../api/CartAPI";
+import {useToast} from "../../../components/Toast/Toast";
+import {usePlaceOrder} from "../../../api/OrderAPI";
 import {useNavigate} from "react-router-dom";
-import {formatPrice, getImage, isValidPhone, PROVINCES} from "../../utils";
-import {useCart} from "../../contexts/CartContext";
+import {formatPrice, getImage, isValidPhone, PROVINCES} from "../../../utils";
+import {useCart} from "../../../contexts/CartContext";
 
 const Order = () => {
     const {triggerToast} = useToast();

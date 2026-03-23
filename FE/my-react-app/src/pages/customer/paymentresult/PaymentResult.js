@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { verifyVNPayPayment } from '../../api/PaymentAPI';
-import { useToast } from '../../components/Toast/Toast';
-import PaymentSuccess from '../../components/paymentProcess/PaymentSuccess';
-import PaymentFailed from '../../components/paymentProcess/PaymentFailed';
-import PaymentLoading from '../../components/paymentProcess/PaymentLoading';
+import { verifyVNPayPayment } from '../../../api/PaymentAPI';
+import { useToast } from '../../../components/Toast/Toast';
+import PaymentSuccess from '../../../components/paymentProcess/PaymentSuccess';
+import PaymentFailed from '../../../components/paymentProcess/PaymentFailed';
+import PaymentLoading from '../../../components/paymentProcess/PaymentLoading';
 import './PaymentResult.scss';
 
 const PaymentResult = () => {
