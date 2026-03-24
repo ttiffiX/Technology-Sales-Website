@@ -1,0 +1,207 @@
+@use '../../../styles/variables';
+
+.admin-add-user-modal__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 14px;
+}
+
+.admin-add-user-modal {
+  width: min(780px, 100%);
+  max-height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
+  background: variables.$background-color;
+  border-radius: 20px;
+  border: 1px solid variables.$divider-color;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+  overflow: hidden;
+}
+
+.admin-add-user-modal,
+.admin-add-user-modal * {
+  box-sizing: border-box;
+}
+
+.admin-add-user-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 22px 24px 18px;
+  border-bottom: 1px solid variables.$divider-color;
+
+  h3 {
+    margin: 0;
+    font-family: variables.$font-family-header;
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.1;
+    background: linear-gradient(135deg, variables.$primary-color, variables.$secondary-color);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  p {
+    margin: 7px 0 0;
+    color: variables.$border-color;
+    font-size: 0.95rem;
+    line-height: 1.45;
+  }
+}
+
+.admin-add-user-modal__close {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 8px;
+  background: rgba(113, 128, 150, 0.14);
+  color: #556170;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(113, 128, 150, 0.24);
+  }
+}
+
+.admin-add-user-modal__form {
+  overflow-y: auto;
+  padding: 20px 24px 24px;
+}
+
+.admin-add-user-modal__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 16px;
+  row-gap: 16px;
+  align-items: start;
+}
+
+.admin-add-user-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+
+  span {
+    font-family: variables.$font-family-main;
+    font-size: 0.9rem;
+    line-height: 1.3;
+    font-weight: 600;
+    color: variables.$text-in-header-color;
+  }
+
+  input,
+  select {
+    font-family: variables.$font-family-main;
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+    border: 2px solid variables.$divider-color;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 0.95rem;
+    line-height: 1.35;
+    background: variables.$background-color;
+    color: variables.$text-in-header-color;
+    transition: all 0.25s ease;
+
+    &::placeholder {
+      color: #a0aec0;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: variables.$primary-color;
+      background: variables.$background-color;
+      box-shadow: 0 0 0 3px rgba(66, 107, 31, 0.1);
+    }
+  }
+}
+
+.admin-add-user-modal__field--full {
+  grid-column: 1 / -1;
+}
+
+.admin-add-user-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid variables.$divider-color;
+}
+
+.admin-add-user-modal__cancel,
+.admin-add-user-modal__submit {
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.admin-add-user-modal__cancel {
+  background: variables.$hover-color;
+  color: variables.$text-in-header-color;
+
+  &:hover {
+    background: variables.$divider-color;
+  }
+}
+
+.admin-add-user-modal__submit {
+  background: linear-gradient(135deg, variables.$primary-color, variables.$secondary-color);
+  color: #fff;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(66, 107, 31, 0.25);
+  }
+}
+
+.admin-add-user-modal__cancel,
+.admin-add-user-modal__submit {
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+@media (max-width: 760px) {
+  .admin-add-user-modal {
+    border-radius: 16px;
+  }
+
+  .admin-add-user-modal__header {
+    padding: 18px 18px 14px;
+
+    h3 {
+      font-size: 1.6rem;
+    }
+  }
+
+  .admin-add-user-modal__form {
+    padding: 16px 18px 18px;
+  }
+
+  .admin-add-user-modal__grid {
+    grid-template-columns: 1fr;
+    row-gap: 12px;
+  }
+}
+
+
+
+
+

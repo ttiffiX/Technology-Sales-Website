@@ -19,8 +19,10 @@ function Login() {
         if (isAuthenticated()) {
             // Người dùng đã đăng nhập rồi, redirect dựa trên role
             const userRole = localStorage.getItem('role');
-            if (userRole === 'ADMIN' || userRole === 'PM') {
-                navigate('/pm'); // Nếu là PM/ADMIN, vào trang PM
+            if (userRole === 'ADMIN') {
+                navigate('/admin');
+            } else if (userRole === 'PM') {
+                navigate('/pm');
             } else {
                 navigate('/'); // Nếu là customer, vào trang chủ
             }
@@ -43,8 +45,10 @@ function Login() {
                 const userRole = localStorage.getItem('role');
                 
                 // Redirect dựa trên role
-                if (userRole === 'ADMIN' || userRole === 'PM') {
-                    navigate('/pm'); // Chuyển tới dashboard PM
+                if (userRole === 'ADMIN') {
+                    navigate('/admin');
+                } else if (userRole === 'PM') {
+                    navigate('/pm');
                 } else {
                     navigate('/'); // Chuyển về trang chủ customer
                 }

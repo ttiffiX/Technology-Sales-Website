@@ -1,0 +1,198 @@
+@use '../../../styles/variables';
+
+.admin-users {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.admin-users__loading {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 24px;
+  color: #64748b;
+}
+
+.admin-users__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.admin-users__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-users__title {
+  margin: 0;
+  color: variables.$primary-color;
+  font-size: 24px;
+}
+
+.admin-users__reload {
+  border: 1px solid #d1d5db;
+  background: #fff;
+  border-radius: 10px;
+  padding: 8px 14px;
+  min-height: 38px;
+  min-width: 92px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 600;
+
+  &:hover {
+    border-color: variables.$primary-color;
+    color: variables.$primary-color;
+  }
+}
+
+.admin-users__add-user {
+  border: 0;
+  border-radius: 10px;
+  padding: 8px 14px;
+  min-height: 38px;
+  min-width: 92px;
+  font-size: 14px;
+  background: variables.$primary-color;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.admin-users__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.admin-users__stat-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: #f8fafc;
+
+  span {
+    display: block;
+    color: #64748b;
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+
+  strong {
+    font-size: 20px;
+    color: #0f172a;
+  }
+}
+
+.admin-users__table-wrapper {
+  overflow-x: auto;
+}
+
+.admin-users__table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 960px;
+
+  th,
+  td {
+    text-align: left;
+    padding: 12px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 14px;
+    color: #1e293b;
+    vertical-align: middle;
+  }
+
+  th {
+    color: #64748b;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+}
+
+.admin-users__role-select {
+  min-width: 110px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 7px 10px;
+}
+
+.admin-users__status {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+
+  &.active {
+    color: #166534;
+    background: #dcfce7;
+  }
+
+  &.banned {
+    color: #991b1b;
+    background: #fee2e2;
+  }
+}
+
+.admin-users__ban-btn {
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &.ban {
+    background: #dc2626;
+  }
+
+  &.unban {
+    background: #2563eb;
+  }
+}
+
+.admin-users__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-users__delete-btn {
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #fff;
+  background: #7f1d1d;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+@media (max-width: 900px) {
+  .admin-users__stats {
+    grid-template-columns: 1fr;
+  }
+}
+

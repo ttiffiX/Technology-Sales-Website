@@ -15,6 +15,7 @@ export {
     formatDate,
     formatDateOnly,
     formatTimeOnly,
+    formatDateTimeOrFallback,
     getRelativeTime,
     getCurrentDateTime
 } from './dateUtils';

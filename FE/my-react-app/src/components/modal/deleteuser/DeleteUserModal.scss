@@ -1,0 +1,224 @@
+@use '../../../styles/variables';
+
+.admin-delete-modal__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 14px;
+}
+
+.admin-delete-modal {
+  width: min(520px, 100%);
+  max-height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
+  background: variables.$background-color;
+  border-radius: 20px;
+  border: 1px solid variables.$divider-color;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+  overflow: hidden;
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+}
+
+.admin-delete-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 20px 24px;
+  border-bottom: 1px solid variables.$divider-color;
+
+  h3 {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #991b1b;
+  }
+
+  p {
+    margin: 6px 0 0;
+    color: variables.$border-color;
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+}
+
+.admin-delete-modal__close {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 8px;
+  background: rgba(113, 128, 150, 0.14);
+  color: #556170;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(113, 128, 150, 0.24);
+  }
+}
+
+.admin-delete-modal__form {
+  overflow-y: auto;
+  padding: 20px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-delete-modal__warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 10px;
+
+  svg {
+    width: 20px;
+    height: 20px;
+    color: #dc2626;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  span {
+    font-size: 0.9rem;
+    color: variables.$text-in-header-color;
+    line-height: 1.45;
+
+    strong {
+      font-weight: 600;
+      color: #991b1b;
+    }
+  }
+}
+
+.admin-delete-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+
+  span {
+    font-family: variables.$font-family-main;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: variables.$text-in-header-color;
+    line-height: 1.3;
+  }
+
+  input {
+    font-family: variables.$font-family-main;
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+    border: 2px solid variables.$divider-color;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 0.95rem;
+    line-height: 1.35;
+    background: variables.$background-color;
+    color: variables.$text-in-header-color;
+    transition: all 0.25s ease;
+
+    &::placeholder {
+      color: #a0aec0;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: #991b1b;
+      box-shadow: 0 0 0 3px rgba(153, 27, 27, 0.1);
+    }
+
+    &:disabled {
+      background: #f1f5f9;
+      color: #94a3b8;
+    }
+  }
+}
+
+.admin-delete-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+  padding-top: 16px;
+  border-top: 1px solid variables.$divider-color;
+}
+
+.admin-delete-modal__cancel,
+.admin-delete-modal__confirm {
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.admin-delete-modal__cancel {
+  background: variables.$hover-color;
+  color: variables.$text-in-header-color;
+
+  &:hover {
+    background: variables.$divider-color;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.admin-delete-modal__confirm {
+  background: #dc2626;
+  color: #fff;
+
+  &:hover:not(:disabled) {
+    background: #991b1b;
+    box-shadow: 0 8px 20px rgba(220, 38, 38, 0.25);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+@media (max-width: 520px) {
+  .admin-delete-modal {
+    border-radius: 16px;
+  }
+
+  .admin-delete-modal__header {
+    padding: 16px 18px;
+
+    h3 {
+      font-size: 1.2rem;
+    }
+
+    p {
+      font-size: 0.85rem;
+    }
+  }
+
+  .admin-delete-modal__form {
+    padding: 14px 18px 16px;
+    gap: 14px;
+  }
+}
+

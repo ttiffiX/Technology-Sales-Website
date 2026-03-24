@@ -6,6 +6,7 @@
 export const formatDate = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return '';
     return date.toLocaleString('vi-VN', {
         year: 'numeric',
         month: '2-digit',
@@ -23,6 +24,7 @@ export const formatDate = (dateString) => {
 export const formatDateOnly = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return '';
     return date.toLocaleDateString('vi-VN', {
         year: 'numeric',
         month: '2-digit',
@@ -38,10 +40,22 @@ export const formatDateOnly = (dateString) => {
 export const formatTimeOnly = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return '';
     return date.toLocaleTimeString('vi-VN', {
         hour: '2-digit',
         minute: '2-digit'
     });
+};
+
+/**
+ * Format datetime and return fallback when missing/invalid
+ * @param {string|Date} dateString - Date to format
+ * @param {string} fallback - Fallback text when value is empty or invalid
+ * @returns {string} Formatted datetime or fallback
+ */
+export const formatDateTimeOrFallback = (dateString, fallback = '-') => {
+    const formatted = formatDate(dateString);
+    return formatted || fallback;
 };
 
 /**
