@@ -59,4 +59,16 @@ public class AdminController {
         log.info("Admin - Update ban status: userId={}, status={}", id, status);
         return ResponseEntity.ok(adminServiceInterface.updateBanStatus(id, status));
     }
-}
+
+    @GetMapping("/users/search")
+    public ResponseEntity<List<UserDTO>> searchUsers(@RequestParam String keyword) {
+        log.info("Admin - Search users: keyword={}", keyword);
+        return ResponseEntity.ok(adminServiceInterface.searchUsersByUsernameOrEmail(keyword));
+    }
+
+    @GetMapping("/users/filter/role")
+    public ResponseEntity<List<UserDTO>> filterUsersByRole(@RequestParam Role role) {
+        log.info("Admin - Filter users by role: role={}", role);
+        return ResponseEntity.ok(adminServiceInterface.filterUsersByRole(role));
+    }
+    }

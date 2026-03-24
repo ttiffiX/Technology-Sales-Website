@@ -54,6 +54,10 @@ public class AdminService implements AdminServiceInterface {
             throw new ResponseStatusException(CONFLICT, "Email '" + request.getEmail() + "' already exists.");
         }
 
+        if (request.getRole() == Role.ADMIN) {
+            throw new ResponseStatusException(FORBIDDEN, "You are not allowed to create an administrator.");
+        }
+
         Users newUser = Users.builder()
                 .username(request.getUsername())
                 .email(request.getEmail())
@@ -139,6 +143,30 @@ public class AdminService implements AdminServiceInterface {
         return convertToUserDTO(user);
     }
 
+    @Override
+    public List<UserDTO> searchUsersByUsernameOrEmail(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            getAllUsers(); // Trả về tất cả users nếu keyword rỗng
+        }
+
+        assert keyword != null;
+        return userRepository.searchByUsernameOrEmail(keyword.trim())
+                .stream()
+                .map(this::convertToUserDTO)
+                .toList();
+    }
+
+    @Override
+    public List<UserDTO> filterUsersByRole(Role role) {
+        if (role == null) {
+            throw new ResponseStatusException(BAD_REQUEST, "Role cannot be null.");
+        }
+
+        return userRepository.findByRoleOrderByIdDesc(role)
+                .stream()
+                .map(this::convertToUserDTO)
+                .toList();
+    }
 
     /**
      * Helper Method
