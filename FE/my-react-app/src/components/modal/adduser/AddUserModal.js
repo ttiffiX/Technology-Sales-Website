@@ -9,6 +9,7 @@ function AddUserModal({
     form,
     roles,
     onChange,
+    errors = {},
 }) {
     if (!isOpen) {
         return null;
@@ -33,6 +34,10 @@ function AddUserModal({
                 </div>
 
                 <form className="admin-add-user-modal__form" onSubmit={onSubmit}>
+                    {errors.general && (
+                        <div className="admin-add-user-modal__error-box">{errors.general}</div>
+                    )}
+
                     <div className="admin-add-user-modal__grid">
                         <label className="admin-add-user-modal__field">
                             <span>Username</span>
@@ -42,8 +47,10 @@ function AddUserModal({
                                 onChange={onChange}
                                 placeholder="Enter username"
                                 autoComplete="username"
+                                className={errors.username ? 'error' : ''}
                                 required
                             />
+                            {errors.username && <small className="admin-add-user-modal__field-error">{errors.username}</small>}
                         </label>
 
                         <label className="admin-add-user-modal__field">
@@ -54,8 +61,10 @@ function AddUserModal({
                                 onChange={onChange}
                                 placeholder="Enter full name"
                                 autoComplete="name"
+                                className={errors.name ? 'error' : ''}
                                 required
                             />
+                            {errors.name && <small className="admin-add-user-modal__field-error">{errors.name}</small>}
                         </label>
 
                         <label className="admin-add-user-modal__field">
@@ -67,8 +76,10 @@ function AddUserModal({
                                 onChange={onChange}
                                 placeholder="example@email.com"
                                 autoComplete="email"
+                                className={errors.email ? 'error' : ''}
                                 required
                             />
+                            {errors.email && <small className="admin-add-user-modal__field-error">{errors.email}</small>}
                         </label>
 
                         <label className="admin-add-user-modal__field">
@@ -79,8 +90,10 @@ function AddUserModal({
                                 onChange={onChange}
                                 placeholder="Enter phone number"
                                 autoComplete="tel"
+                                className={errors.phone ? 'error' : ''}
                                 required
                             />
+                            {errors.phone && <small className="admin-add-user-modal__field-error">{errors.phone}</small>}
                         </label>
 
                         <label className="admin-add-user-modal__field">
@@ -92,8 +105,10 @@ function AddUserModal({
                                 onChange={onChange}
                                 placeholder="Enter password"
                                 autoComplete="new-password"
+                                className={errors.password ? 'error' : ''}
                                 required
                             />
+                            {errors.password && <small className="admin-add-user-modal__field-error">{errors.password}</small>}
                         </label>
 
                         <label className="admin-add-user-modal__field">
@@ -105,8 +120,12 @@ function AddUserModal({
                                 onChange={onChange}
                                 placeholder="Re-enter password"
                                 autoComplete="new-password"
+                                className={errors.confirmPassword ? 'error' : ''}
                                 required
                             />
+                            {errors.confirmPassword && (
+                                <small className="admin-add-user-modal__field-error">{errors.confirmPassword}</small>
+                            )}
                         </label>
 
                         <label className="admin-add-user-modal__field admin-add-user-modal__field--full">
@@ -115,6 +134,7 @@ function AddUserModal({
                                 name="role"
                                 value={form.role}
                                 onChange={onChange}
+                                className={errors.role ? 'error' : ''}
                                 required
                             >
                                 {roles.map((role) => (
@@ -123,6 +143,7 @@ function AddUserModal({
                                     </option>
                                 ))}
                             </select>
+                            {errors.role && <small className="admin-add-user-modal__field-error">{errors.role}</small>}
                         </label>
                     </div>
 

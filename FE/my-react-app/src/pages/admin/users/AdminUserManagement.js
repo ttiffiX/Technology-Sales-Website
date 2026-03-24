@@ -7,6 +7,7 @@ import {
     updateAdminUserBanStatus,
     updateAdminUserRole,
 } from '../../../api/AdminAPI';
+import { searchAdminUsers, filterAdminUsersByRole } from '../../../api/AdminAPI';
 import AddUserModal from '../../../components/modal/adduser/AddUserModal';
 import DeleteUserModal from '../../../components/modal/deleteuser/DeleteUserModal';
 import { useToast } from '../../../components/Toast/Toast';
@@ -31,12 +32,22 @@ function AdminUserManagement() {
     const [creatingUser, setCreatingUser] = useState(false);
     const [addUserModalOpen, setAddUserModalOpen] = useState(false);
     const [addUserForm, setAddUserForm] = useState(EMPTY_ADD_USER_FORM);
+    const [addUserErrors, setAddUserErrors] = useState({});
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [deletingUser, setDeletingUser] = useState(null);
     const [deletingUserId, setDeletingUserId] = useState(false);
     const { triggerToast } = useToast();
 
     const getDefaultRole = (roleOptions = roles) => roleOptions[0] || 'PM';
+
+    const [searchKeyword, setSearchKeyword] = useState('');
+    const [filterRole, setFilterRole] = useState('');
+    const [filteredUsers, setFilteredUsers] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [hasSearched, setHasSearched] = useState(false);
+
+    // Show filtered results ONLY if search/filter was actually performed
+    const displayUsers = hasSearched ? filteredUsers : users;
 
     const loadUsers = async () => {
         setLoading(true);
@@ -58,6 +69,71 @@ function AdminUserManagement() {
     useEffect(() => {
         loadUsers();
     }, []);
+
+    const handleSearchChange = (event) => {
+        const keyword = event.target.value;
+        setSearchKeyword(keyword);
+        setFilterRole('');
+    };
+
+    const handleFilterRoleChange = (event) => {
+        const role = event.target.value;
+        setFilterRole(role);
+        setSearchKeyword('');
+
+        if (role) {
+            performFilterByRole(role);
+        } else {
+            setFilteredUsers([]);
+        }
+    };
+
+    const performSearch = async (keyword) => {
+        if (!keyword.trim()) {
+            setFilteredUsers([]);
+            setHasSearched(false);
+            return;
+        }
+
+        setIsSearching(true);
+        setHasSearched(true);
+        try {
+            const results = await searchAdminUsers(keyword);
+            setFilteredUsers(results);
+        } catch (error) {
+            triggerToast('error', getApiErrorMessage(error, 'Failed to search users'));
+            setFilteredUsers([]);
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
+    const performFilterByRole = async (role) => {
+        setIsSearching(true);
+        setHasSearched(true);
+        try {
+            const results = await filterAdminUsersByRole(role);
+            setFilteredUsers(results);
+        } catch (error) {
+            triggerToast('error', getApiErrorMessage(error, 'Failed to filter users'));
+            setFilteredUsers([]);
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
+    const handleSearchSubmit = (event) => {
+        if (event.key === 'Enter') {
+            performSearch(searchKeyword);
+        }
+    };
+
+    const handleClearFilters = () => {
+        setSearchKeyword('');
+        setFilterRole('');
+        setFilteredUsers([]);
+        setHasSearched(false);
+    };
 
     const stats = useMemo(() => {
         const total = users.length;
@@ -98,12 +174,47 @@ function AdminUserManagement() {
     const handleAddUserInputChange = (event) => {
         const { name, value } = event.target;
         setAddUserForm((prev) => ({ ...prev, [name]: value }));
+        setAddUserErrors((prev) => {
+            if (!prev[name] && !prev.general) {
+                return prev;
+            }
+            const next = { ...prev };
+            delete next[name];
+            delete next.general;
+            return next;
+        });
+    };
+
+    const mapAddUserErrors = (error) => {
+        const errorBody = error?.response?.data;
+        const mapped = {};
+
+        if (Array.isArray(errorBody?.errors)) {
+            errorBody.errors.forEach((item) => {
+                const field = item?.field;
+                const message = item?.defaultMessage || item?.message;
+                if (field && message) {
+                    mapped[field] = message;
+                }
+            });
+        } else if (errorBody?.errors && typeof errorBody.errors === 'object') {
+            Object.assign(mapped, errorBody.errors);
+        }
+
+        const generalMessage = getApiErrorMessage(error, 'Failed to create user');
+        if (generalMessage && !Object.keys(mapped).length) {
+            mapped.general = generalMessage;
+        }
+
+        return mapped;
     };
 
     const handleCreateUser = async (event) => {
         event.preventDefault();
+        setAddUserErrors({});
 
         if (!passwordsMatch(addUserForm.password, addUserForm.confirmPassword)) {
+            setAddUserErrors({ confirmPassword: 'Passwords do not match' });
             triggerToast('error', 'Password and confirm password do not match');
             return;
         }
@@ -117,10 +228,13 @@ function AdminUserManagement() {
                 ...EMPTY_ADD_USER_FORM,
                 role: roles.includes(prev.role) ? prev.role : getDefaultRole(),
             }));
+            setAddUserErrors({});
             setAddUserModalOpen(false);
             triggerToast('success', 'User created successfully');
         } catch (error) {
-            triggerToast('error', getApiErrorMessage(error, 'Failed to create user'));
+            const mappedErrors = mapAddUserErrors(error);
+            setAddUserErrors(mappedErrors);
+            triggerToast('error', mappedErrors.general || getApiErrorMessage(error, 'Failed to create user'));
         } finally {
             setCreatingUser(false);
         }
@@ -165,6 +279,7 @@ function AdminUserManagement() {
                                 ...prev,
                                 role: roles.includes(prev.role) ? prev.role : getDefaultRole(),
                             }));
+                            setAddUserErrors({});
                             setAddUserModalOpen(true);
                         }}
                     >
@@ -176,17 +291,55 @@ function AdminUserManagement() {
                 </div>
             </header>
 
+            <div className="admin-users__filters">
+                <input
+                    type="text"
+                    className="admin-users__search-input"
+                    placeholder="Search by username or email..."
+                    value={searchKeyword}
+                    onChange={handleSearchChange}
+                    onKeyDown={handleSearchSubmit}
+                    disabled={isSearching}
+                />
+
+                <select
+                    className="admin-users__filter-select"
+                    value={filterRole}
+                    onChange={handleFilterRoleChange}
+                    disabled={isSearching}
+                >
+                    <option value="">All Roles</option>
+                    {roles.map((role) => (
+                        <option key={role} value={role}>
+                            {role}
+                        </option>
+                    ))}
+                </select>
+
+                {(searchKeyword || filterRole) && (
+                    <button
+                        className="admin-users__clear-filters"
+                        onClick={handleClearFilters}
+                        disabled={isSearching}
+                    >
+                        Clear
+                    </button>
+                )}
+            </div>
+
             <AddUserModal
                 isOpen={addUserModalOpen}
                 onClose={() => {
                     setAddUserModalOpen(false);
                     setAddUserForm({ ...EMPTY_ADD_USER_FORM, role: getDefaultRole() });
+                    setAddUserErrors({});
                 }}
                 onSubmit={handleCreateUser}
                 loading={creatingUser}
                 form={addUserForm}
                 roles={roles}
                 onChange={handleAddUserInputChange}
+                errors={addUserErrors}
             />
 
             <DeleteUserModal
@@ -203,7 +356,7 @@ function AdminUserManagement() {
             <div className="admin-users__stats">
                 <div className="admin-users__stat-card">
                     <span>Total users</span>
-                    <strong>{stats.total}</strong>
+                    <strong>{hasSearched ? displayUsers.length : stats.total}</strong>
                 </div>
                 <div className="admin-users__stat-card">
                     <span>Active users</span>
@@ -216,7 +369,16 @@ function AdminUserManagement() {
             </div>
 
             <div className="admin-users__table-wrapper">
-                <table className="admin-users__table">
+                {hasSearched && displayUsers.length === 0 ? (
+                    <div className="admin-users__empty-state">
+                        <p>No results found</p>
+                        <small>
+                            {searchKeyword && `No users match "${searchKeyword}"`}
+                            {filterRole && `No users with role "${filterRole}"`}
+                        </small>
+                    </div>
+                ) : (
+                    <table className="admin-users__table">
                     <thead>
                     <tr>
                         <th>ID</th>
@@ -230,7 +392,7 @@ function AdminUserManagement() {
                     </tr>
                     </thead>
                     <tbody>
-                    {users.map((user) => {
+                    {displayUsers.map((user) => {
                         const isUpdating = updatingId === user.id;
                         return (
                             <tr key={user.id}>
@@ -281,10 +443,11 @@ function AdminUserManagement() {
                     })}
                     </tbody>
                 </table>
+                )}
             </div>
         </section>
-    );
-}
+    );}
+
 
 export default AdminUserManagement;
 

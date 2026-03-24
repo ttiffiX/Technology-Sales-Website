@@ -1,6 +1,7 @@
 package com.example.sale_tech_web.feature.users.repository;
 
 import com.example.sale_tech_web.feature.users.entity.Users;
+import com.example.sale_tech_web.feature.users.enums.Role;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -32,6 +33,16 @@ public interface UserRepository extends JpaRepository<Users, Long> {
 
     @EntityGraph(attributePaths = {"cart"})
     List<Users> findAllByOrderByIdDesc();
+
+    @EntityGraph(attributePaths = {"cart"})
+    @Query("SELECT u FROM Users u WHERE " +
+            "u.username ILIKE %:keyword% OR " +
+            "u.email ILIKE %:keyword% " +
+            "ORDER BY u.id DESC")
+    List<Users> searchByUsernameOrEmail(@Param("keyword") String keyword);
+
+    @EntityGraph(attributePaths = {"cart"})
+    List<Users> findByRoleOrderByIdDesc(Role role);
 }
 
 

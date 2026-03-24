@@ -19,4 +19,8 @@ public interface AdminServiceInterface {
     String deleteUser(Long id, AdminPasswordRequest adminPassword);
 
     UserDTO updateBanStatus(Long id, Boolean status);
+
+    List<UserDTO> searchUsersByUsernameOrEmail(String keyword);
+
+    List<UserDTO> filterUsersByRole(Role role);
 }

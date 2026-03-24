@@ -34,3 +34,23 @@ export const deleteAdminUser = async (id, adminPassword) => {
     return response.data;
 };
 
+export const searchAdminUsers = async (keyword) => {
+    if (!keyword || keyword.trim() === '') {
+        return [];
+    }
+    const response = await apiClient.get('/admin/users/search', {
+        params: { keyword: keyword.trim() },
+    });
+    return Array.isArray(response.data) ? response.data : [];
+};
+
+export const filterAdminUsersByRole = async (role) => {
+    if (!role) {
+        return [];
+    }
+    const response = await apiClient.get('/admin/users/filter/role', {
+        params: { role },
+    });
+    return Array.isArray(response.data) ? response.data : [];
+};
+
