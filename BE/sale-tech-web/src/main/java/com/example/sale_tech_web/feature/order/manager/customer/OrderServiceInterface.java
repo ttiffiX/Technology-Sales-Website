@@ -1,8 +1,8 @@
-package com.example.sale_tech_web.feature.order.manager;
+package com.example.sale_tech_web.feature.order.manager.customer;
 
-import com.example.sale_tech_web.feature.order.dto.OrderDTO;
-import com.example.sale_tech_web.feature.order.dto.OrderDetailDTO;
-import com.example.sale_tech_web.feature.order.dto.PlaceOrderRequest;
+import com.example.sale_tech_web.feature.order.dto.customer.OrderDTO;
+import com.example.sale_tech_web.feature.order.dto.customer.OrderDetailDTO;
+import com.example.sale_tech_web.feature.order.dto.customer.PlaceOrderRequest;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;

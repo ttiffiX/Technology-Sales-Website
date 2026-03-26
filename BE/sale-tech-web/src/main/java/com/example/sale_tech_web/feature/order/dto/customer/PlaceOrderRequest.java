@@ -1,4 +1,4 @@
-package com.example.sale_tech_web.feature.order.dto;
+package com.example.sale_tech_web.feature.order.dto.customer;
 
 import com.example.sale_tech_web.feature.payment.enums.PaymentMethod;
 import jakarta.validation.constraints.*;

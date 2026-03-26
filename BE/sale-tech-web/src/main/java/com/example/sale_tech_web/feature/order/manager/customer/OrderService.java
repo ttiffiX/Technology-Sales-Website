@@ -1,13 +1,13 @@
-package com.example.sale_tech_web.feature.order.manager;
+package com.example.sale_tech_web.feature.order.manager.customer;
 
 import static org.springframework.http.HttpStatus.*;
 
 import com.example.sale_tech_web.feature.cart.entity.CartDetail;
 import com.example.sale_tech_web.feature.cart.repository.CartDetailRepository;
 import com.example.sale_tech_web.feature.jwt.SecurityUtils;
-import com.example.sale_tech_web.feature.order.dto.OrderDTO;
-import com.example.sale_tech_web.feature.order.dto.OrderDetailDTO;
-import com.example.sale_tech_web.feature.order.dto.PlaceOrderRequest;
+import com.example.sale_tech_web.feature.order.dto.customer.OrderDTO;
+import com.example.sale_tech_web.feature.order.dto.customer.OrderDetailDTO;
+import com.example.sale_tech_web.feature.order.dto.customer.PlaceOrderRequest;
 import com.example.sale_tech_web.feature.order.entity.orderdetails.OrderDetail;
 import com.example.sale_tech_web.feature.order.entity.orders.Order;
 import com.example.sale_tech_web.feature.order.enums.OrderStatus;

@@ -1,9 +1,9 @@
 package com.example.sale_tech_web.controller.customer;
 
-import com.example.sale_tech_web.feature.order.dto.OrderDTO;
-import com.example.sale_tech_web.feature.order.dto.OrderDetailDTO;
-import com.example.sale_tech_web.feature.order.dto.PlaceOrderRequest;
-import com.example.sale_tech_web.feature.order.manager.OrderServiceInterface;
+import com.example.sale_tech_web.feature.order.dto.customer.OrderDTO;
+import com.example.sale_tech_web.feature.order.dto.customer.OrderDetailDTO;
+import com.example.sale_tech_web.feature.order.dto.customer.PlaceOrderRequest;
+import com.example.sale_tech_web.feature.order.manager.customer.OrderServiceInterface;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
