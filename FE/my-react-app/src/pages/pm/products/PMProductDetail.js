@@ -1,7 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import Nav from '../../../components/navigation/Nav';
-import Header from '../../../components/header/Header';
 import { getAttributesByCategory, getPMProductDetail, updatePMProduct } from '../../../api/PMAPI';
 import { useToast } from '../../../components/Toast/Toast';
 import {
@@ -313,8 +311,10 @@ function PMProductDetail() {
 
     return (
         <div className="pm-product-detail-page">
-            <Nav count={0} />
-            <Header title="Product Detail" modeDisplay="default" />
+            <div className="pm-product-detail-header">
+                <h2>Product Detail</h2>
+                <p>Edit product information and attributes</p>
+            </div>
 
             <div className="pm-product-detail-content">
                 <div className="pm-product-detail-toolbar">
