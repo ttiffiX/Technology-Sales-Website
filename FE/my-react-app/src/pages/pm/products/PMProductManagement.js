@@ -1,7 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Nav from '../../../components/navigation/Nav';
-import Header from '../../../components/header/Header';
 import { getAllCategories } from '../../../api/ProductAPI';
 import {
     addProduct,
@@ -366,8 +364,10 @@ function PMProductManagement() {
 
     return (
         <div className="pm-page">
-            <Nav count={0} />
-            <Header title="Product Management" modeDisplay="default" />
+            <div className="pm-page-header">
+                <h2>Products</h2>
+                <p>Manage all products in your store</p>
+            </div>
 
             <div className="pm-content">
                 <div className="pm-toolbar">

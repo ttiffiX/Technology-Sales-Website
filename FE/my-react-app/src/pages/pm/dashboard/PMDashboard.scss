@@ -1,88 +1,19 @@
 @use '../../../styles/variables';
 
-.pm-dashboard-page {
+.pm-dashboard {
   min-height: 100vh;
-  background: variables.$background-color;
-  font-family: variables.$font-family-main;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  background: #f6f8fb;
 }
 
-.pm-dashboard-content {
-  padding: 48px 96px 80px;
-  max-width: 1200px;
-  margin: 0 auto;
+.pm-dashboard__content {
+  padding: 24px;
 }
 
-.pm-dashboard-title {
-  font-size: 26px;
-  font-weight: 700;
-  color: #222;
-  margin: 0 0 6px;
-}
-
-.pm-dashboard-subtitle {
-  font-size: 14px;
-  color: #888;
-  margin: 0 0 40px;
-}
-
-.pm-dashboard-cards {
-  display: flex;
-  gap: 28px;
-  flex-wrap: wrap;
-}
-
-.pm-dashboard-card {
-  flex: 1 1 260px;
-  max-width: 340px;
-  background: #fff;
-  border: 1.5px solid variables.$border-color;
-  border-radius: 14px;
-  padding: 32px 28px;
-  cursor: pointer;
-  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
-  position: relative;
-  outline: none;
-
-  &:hover,
-  &:focus {
-    border-color: variables.$primary-color;
-    box-shadow: 0 6px 24px rgba(66, 107, 31, 0.12);
-    transform: translateY(-3px);
-  }
-
-  &__icon {
-    font-size: 38px;
-    margin-bottom: 16px;
-    line-height: 1;
-  }
-
-  &__title {
-    font-size: 18px;
-    font-weight: 700;
-    color: #222;
-    margin: 0 0 10px;
-  }
-
-  &__desc {
-    font-size: 13px;
-    color: #666;
-    line-height: 1.6;
-    margin: 0 0 24px;
-  }
-
-  &__arrow {
-    position: absolute;
-    bottom: 22px;
-    right: 24px;
-    font-size: 20px;
-    color: variables.$primary-color;
-    font-weight: 700;
-    transition: transform 0.2s;
-  }
-
-  &:hover &__arrow,
-  &:focus &__arrow {
-    transform: translateX(5px);
+@media (max-width: 900px) {
+  .pm-dashboard {
+    grid-template-columns: 1fr;
   }
 }
 

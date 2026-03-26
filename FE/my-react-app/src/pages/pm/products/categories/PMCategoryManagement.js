@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Nav from '../../../../components/navigation/Nav';
-import Header from '../../../../components/header/Header';
 import { getAllCategories } from '../../../../api/ProductAPI';
 import { addCategory, deleteCategory, updateCategory } from '../../../../api/PMAPI';
 import { useToast } from '../../../../components/Toast/Toast';
@@ -124,8 +122,10 @@ function PMCategoryManagement() {
 
     return (
         <div className="pm-category-page">
-            <Nav count={0} />
-            <Header title="Category Management" modeDisplay="default" />
+            <div className="pm-category-header">
+                <h2>Categories</h2>
+                <p>Manage product categories</p>
+            </div>
 
             <div className="pm-category-content">
                 <div className="pm-category-toolbar">

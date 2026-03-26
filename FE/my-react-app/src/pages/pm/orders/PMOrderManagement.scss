@@ -1,51 +1,48 @@
 @use '../../../styles/variables';
 
-.pm-order-page {
-  min-height: 100vh;
-  background: variables.$background-color;
-  font-family: variables.$font-family-main;
+.pm-order-management {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
-.pm-order-content {
-  padding: 28px 96px 80px;
-  max-width: 1920px;
-  margin: 0 auto;
-}
+.pm-order-management__header {
+  margin-bottom: 28px;
 
-.pm-order-topbar {
-  margin-bottom: 32px;
-}
+  h2 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #222;
+    margin: 0 0 8px;
+  }
 
-.pm-order-back-btn {
-  background: none;
-  border: 1.5px solid variables.$border-color;
-  border-radius: 8px;
-  padding: 8px 18px;
-  font-size: 13px;
-  font-family: variables.$font-family-main;
-  font-weight: 600;
-  color: #444;
-  cursor: pointer;
-  transition: border-color 0.2s, color 0.2s;
-
-  &:hover {
-    border-color: variables.$primary-color;
-    color: variables.$primary-color;
+  p {
+    font-size: 14px;
+    color: #666;
+    margin: 0;
   }
 }
 
-.pm-order-placeholder {
-  border: 2px dashed variables.$border-color;
+.pm-order-management__content {
+  flex: 1;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e9edf3;
+  padding: 24px;
+}
+
+.pm-order-management__placeholder {
+  border: 2px dashed #ddd;
   border-radius: 10px;
   padding: 80px 40px;
   text-align: center;
-  color: #aaa;
+  color: #999;
   font-size: 15px;
+}
 
-  &__icon {
-    display: block;
-    font-size: 48px;
-    margin-bottom: 16px;
-  }
+.pm-order-management__placeholder-icon {
+  display: block;
+  font-size: 48px;
+  margin-bottom: 16px;
 }
 

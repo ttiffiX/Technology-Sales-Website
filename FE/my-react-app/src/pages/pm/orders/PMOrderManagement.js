@@ -1,27 +1,18 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import Nav from '../../../components/navigation/Nav';
-import Header from '../../../components/header/Header';
 import './PMOrderManagement.scss';
 
 function PMOrderManagement() {
-    const navigate = useNavigate();
-
     return (
-        <div className="pm-order-page">
-            <Nav count={0} />
-            <Header title="Order Management" modeDisplay="default" />
+        <div className="pm-order-management">
+            <div className="pm-order-management__header">
+                <h2>Order Management</h2>
+                <p>View and process customer orders</p>
+            </div>
 
-            <div className="pm-order-content">
-                <div className="pm-order-topbar">
-                    <button className="pm-order-back-btn" onClick={() => navigate('/pm')}>
-                        ← Back to Dashboard
-                    </button>
-                </div>
-
-                <div className="pm-order-placeholder">
-                    <span className="pm-order-placeholder__icon">🧾</span>
-                    <p>Order management is coming soon.</p>
+            <div className="pm-order-management__content">
+                <div className="pm-order-management__placeholder">
+                    <span className="pm-order-management__placeholder-icon">🧾</span>
+                    <p>Order management content will be displayed here</p>
                 </div>
             </div>
         </div>

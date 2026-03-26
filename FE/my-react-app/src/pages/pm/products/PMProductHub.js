@@ -1,7 +1,5 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import Nav from '../../../components/navigation/Nav';
-import Header from '../../../components/header/Header';
 import './PMProductHub.scss';
 
 function PMProductHub() {
@@ -16,46 +14,37 @@ function PMProductHub() {
         {
             title: 'Categories',
             description: 'Add, update, or delete categories.',
-            path: '/pm/products/categories',
+            path: '/pm/categories',
         },
         {
             title: 'Attribute Schema',
             description: 'Manage attribute fields by category.',
-            path: '/pm/products/attributes',
+            path: '/pm/attributes',
         },
     ];
 
     return (
-        <div className="pm-product-hub-page">
-            <Nav count={0} />
-            <Header title="Product Management" modeDisplay="default" />
+        <div className="pm-product-hub">
+            <div className="pm-product-hub__header">
+                <h2>Product Workspace</h2>
+                <p>Choose one section to manage</p>
+            </div>
 
-            <div className="pm-product-hub-content">
-                <div className="pm-product-hub-toolbar">
-                    <button className="pm-btn-back" onClick={() => navigate('/pm')}>
-                        ← Back to Dashboard
-                    </button>
-                </div>
-
-                <h2 className="pm-product-hub-title">Product Workspace</h2>
-                <p className="pm-product-hub-subtitle">Choose one section to manage</p>
-
-                <div className="pm-product-hub-cards">
-                    {cards.map((card) => (
-                        <div
-                            key={card.path}
-                            className="pm-product-hub-card"
-                            onClick={() => navigate(card.path)}
-                            role="button"
-                            tabIndex={0}
-                            onKeyDown={(event) => event.key === 'Enter' && navigate(card.path)}
-                        >
-                            <h3 className="pm-product-hub-card__title">{card.title}</h3>
-                            <p className="pm-product-hub-card__desc">{card.description}</p>
-                            <span className="pm-product-hub-card__arrow">→</span>
-                        </div>
-                    ))}
-                </div>
+            <div className="pm-product-hub__cards">
+                {cards.map((card) => (
+                    <div
+                        key={card.path}
+                        className="pm-product-hub__card"
+                        onClick={() => navigate(card.path)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(event) => event.key === 'Enter' && navigate(card.path)}
+                    >
+                        <h3 className="pm-product-hub__card-title">{card.title}</h3>
+                        <p className="pm-product-hub__card-desc">{card.description}</p>
+                        <span className="pm-product-hub__card-arrow">→</span>
+                    </div>
+                ))}
             </div>
         </div>
     );

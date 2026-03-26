@@ -1,64 +1,38 @@
 @use '../../../styles/variables';
 
-.pm-product-hub-page {
-  min-height: 100vh;
-  background: variables.$background-color;
-  font-family: variables.$font-family-main;
+.pm-product-hub {
+  display: flex;
+  flex-direction: column;
 }
 
-.pm-product-hub-content {
-  padding: 48px 96px 80px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
+.pm-product-hub__header {
+  margin-bottom: 28px;
 
-.pm-product-hub-toolbar {
-  margin-bottom: 20px;
+  h2 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #222;
+    margin: 0 0 8px;
+  }
 
-  .pm-btn-back {
-    background: none;
-    border: 1.5px solid variables.$border-color;
-    border-radius: 8px;
-    padding: 8px 16px;
-    font-size: 13px;
-    font-family: variables.$font-family-main;
-    font-weight: 600;
-    color: #444;
-    cursor: pointer;
-    transition: border-color 0.2s, color 0.2s;
-    white-space: nowrap;
-
-    &:hover {
-      border-color: variables.$primary-color;
-      color: variables.$primary-color;
-    }
+  p {
+    font-size: 14px;
+    color: #666;
+    margin: 0;
   }
 }
 
-.pm-product-hub-title {
-  font-size: 26px;
-  font-weight: 700;
-  color: #222;
-  margin: 0 0 6px;
-}
-
-.pm-product-hub-subtitle {
-  font-size: 14px;
-  color: #888;
-  margin: 0 0 36px;
-}
-
-.pm-product-hub-cards {
+.pm-product-hub__cards {
   display: flex;
   gap: 24px;
   flex-wrap: wrap;
 }
 
-.pm-product-hub-card {
+.pm-product-hub__card {
   flex: 1 1 260px;
   max-width: 340px;
   background: #fff;
-  border: 1.5px solid variables.$border-color;
+  border: 1.5px solid #e9edf3;
   border-radius: 14px;
   padding: 28px 24px;
   cursor: pointer;
@@ -104,11 +78,7 @@
 }
 
 @media (max-width: 768px) {
-  .pm-product-hub-content {
-    padding: 28px 20px 40px;
-  }
-
-  .pm-product-hub-card {
+  .pm-product-hub__card {
     max-width: none;
   }
 }

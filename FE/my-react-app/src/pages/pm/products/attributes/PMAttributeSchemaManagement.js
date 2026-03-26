@@ -1,7 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Nav from '../../../../components/navigation/Nav';
-import Header from '../../../../components/header/Header';
 import { getAllCategories } from '../../../../api/ProductAPI';
 import {
     addAttributeSchema,
@@ -184,8 +182,10 @@ function PMAttributeSchemaManagement() {
 
     return (
         <div className="pm-attr-page">
-            <Nav count={0} />
-            <Header title="Attribute Schema Management" modeDisplay="default" />
+            <div className="pm-attr-header">
+                <h2>Attributes</h2>
+                <p>Manage attribute schemas by category</p>
+            </div>
 
             <div className="pm-attr-content">
                 <div className="pm-attr-toolbar">

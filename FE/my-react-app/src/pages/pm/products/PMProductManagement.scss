@@ -6,6 +6,25 @@
   font-family: variables.$font-family-main;
 }
 
+.pm-page-header {
+  padding: 28px 96px 16px;
+  max-width: 1920px;
+  margin: 0 auto;
+
+  h2 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #222;
+    margin: 0 0 8px;
+  }
+
+  p {
+    font-size: 14px;
+    color: #666;
+    margin: 0;
+  }
+}
+
 .pm-content {
   padding: 28px 96px 80px;
   max-width: 1920px;
