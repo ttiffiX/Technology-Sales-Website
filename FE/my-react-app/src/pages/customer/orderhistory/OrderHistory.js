@@ -101,22 +101,35 @@ const OrderHistory = () => {
                             <p>No orders found</p>
                         </div>
                     ) : (
-                        orders.map(order => (
+                        orders.map(order => {
+                            const updatedAtValue = order.updatedAt || order.updated_at || order.createdAt;
+
+                            return (
                             <div key={order.id} className="order-card">
                                 <div className="order-header">
                                     <div className="order-info">
                                         <h3>Order #{order.id}</h3>
-                                        <p className="order-date">{formatDate(order.createdAt)}</p>
                                     </div>
+                                    <div className="order-times">
+                                        <span className="order-time-item">
+                                            <span className="time-label">Created:</span>
+                                            <span className="time-value">{formatDate(order.createdAt) || '-'}</span>
+                                        </span>
+                                        <span className="order-time-item">
+                                            <span className="time-label">Updated:</span>
+                                            <span className="time-value">{formatDate(updatedAtValue) || '-'}</span>
+                                        </span>
+                                    </div>
+
                                     <div className="order-badges">
-                                        Order Status:
+                                        <span className="badge-label">Order</span>
                                         <div
                                             className="order-status"
                                             style={{backgroundColor: getStatusColor(order.status)}}
                                         >
                                             {order.status}
                                         </div>
-                                        Payment Status:
+                                        <span className="badge-label">Payment</span>
                                         <div
                                             className="payment-status"
                                             style={{backgroundColor: getPaymentStatusColor(order.paymentStatus)}}
@@ -127,36 +140,48 @@ const OrderHistory = () => {
                                 </div>
 
                                 <div className="order-body">
-                                    <div className="order-details">
-                                        <div className="detail-row">
-                                            <span className="label">Customer:</span>
-                                            <span>{order.customerName}</span>
+                                    <div className="order-main-grid">
+                                        <div className="detail-col detail-col--left">
+                                            <div className="detail-row">
+                                                <span className="label">Customer:</span>
+                                                <span className="value">{order.customerName || '-'}</span>
+                                            </div>
+                                            <div className="detail-row">
+                                                <span className="label">Email:</span>
+                                                <span className="value">{order.email || '-'}</span>
+                                            </div>
+                                            <div className="detail-row">
+                                                <span className="label">Phone:</span>
+                                                <span className="value">{order.phone || '-'}</span>
+                                            </div>
+                                            <div className="detail-row detail-row--description">
+                                                <span className="label">Description:</span>
+                                                <span className="value text-wrap">{order.description?.trim() || '-'}</span>
+                                            </div>
                                         </div>
-                                        <div className="detail-row">
-                                            <span className="label">Phone:</span>
-                                            <span>{order.phone}</span>
-                                        </div>
-                                        <div className="detail-row">
-                                            <span className="label">Email:</span>
-                                            <span>{order.email}</span>
-                                        </div>
-                                        <div className="detail-row">
-                                            <span className="label">Address:</span>
-                                            <span>{order.address}, {order.province}</span>
-                                        </div>
-                                        <div className="detail-row">
-                                            <span className="label">Delivery Fee:</span>
-                                            <span>{formatPrice(order.deliveryFee)}</span>
-                                        </div>
-                                        <div className="detail-row">
-                                            <span className="label">Payment Method : </span>
-                                            <span className="payment-method">{order.paymentMethod}</span>
+
+                                        <div className="detail-col detail-col--middle">
+                                            <div className="detail-row detail-row--payment">
+                                                <span className="label">Payment:</span>
+                                                <span className="value payment-method">{order.paymentMethod || '-'}</span>
+                                            </div>
+                                            <div className="detail-row">
+                                                <span className="label">Address:</span>
+                                                <span className="value text-wrap">{order.address}, {order.province}</span>
+                                            </div>
                                         </div>
                                     </div>
 
                                     <div className="order-total">
-                                        <div className="total-label">Total Amount:</div>
-                                        <div className="total-price">{formatPrice(order.totalPrice)}</div>
+                                        <div className="total-line">
+                                            <span className="total-label">Delivery Fee</span>
+                                            <span className="total-sub-price">{formatPrice(order.deliveryFee)}</span>
+                                        </div>
+                                        <div className="total-divider"/>
+                                        <div className="total-line total-line--grand">
+                                            <span className="total-label">Grand Total</span>
+                                            <span className="total-price">{formatPrice(order.totalPrice)}</span>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -178,7 +203,8 @@ const OrderHistory = () => {
                                     )}
                                 </div>
                             </div>
-                        ))
+                            );
+                        })
                     )}
                 </div>
             </div>

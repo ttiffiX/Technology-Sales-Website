@@ -3,7 +3,7 @@
 
 .orderHistory {
   max-width: 1200px;
-  margin: 2rem auto;
+  margin: 1.5rem auto;
   padding: 0 1rem;
 
   .status-tabs {
@@ -49,53 +49,87 @@
     }
 
     .order-card {
-      background: $background-color;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      margin-bottom: 1.5rem;
+      background: #ffffff;
+      border-radius: 14px;
+      border: 1px solid #dfe6ee;
+      box-shadow: 0 8px 24px rgba(38, 50, 56, 0.08);
+      margin-bottom: 1rem;
       overflow: hidden;
       transition: transform 0.3s ease, box-shadow 0.3s ease;
 
       &:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 10px 24px rgba(38, 50, 56, 0.14);
       }
 
       .order-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 1.25rem 1.5rem;
-        background: #495057;
-        border-bottom: 1px solid #e9ecef;
+        display: grid;
+        grid-template-columns: auto auto 1fr;
+        align-items: end;
+        column-gap: 0.6rem;
+        padding: 0.95rem 1.1rem;
+        background: $primary-color;
+        border-bottom: 1px solid #d7dee8;
 
         .order-info {
           h3 {
             margin: 0;
-            font-size: 1.2rem;
+            font-size: 1.05rem;
+            line-height: 1.2;
             color: $background-color;
           }
+        }
 
-          .order-date {
-            margin: 0.25rem 0 0 0;
-            font-size: 0.9rem;
-            color: $divider-color;
+        .order-times {
+          display: flex;
+          gap: 0.55rem;
+          flex-wrap: nowrap;
+          justify-content: flex-start;
+          justify-self: start;
+          align-self: end;
+          min-width: 0;
+
+          .order-time-item {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 0.3rem;
+            font-size: 0.78rem;
+            color: #d5e2ef;
+            white-space: nowrap;
+          }
+
+          .time-label {
+            color: #ffffff;
+            font-weight: 700;
+          }
+
+          .time-value {
+            color: #d5e2ef;
+            font-weight: 500;
           }
         }
 
         .order-badges {
           color: $background-color;
           display: flex;
-          gap: 0.75rem;
+          gap: 0.45rem;
           align-items: center;
+          flex-wrap: wrap;
+          justify-self: end;
+
+          .badge-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            opacity: 0.9;
+          }
         }
 
         .order-status,
         .payment-status {
-          padding: 0.5rem 1rem;
+          padding: 0.38rem 0.75rem;
           border-radius: 20px;
           color: white;
-          font-size: 0.85rem;
+          font-size: 0.72rem;
           font-weight: 600;
           text-transform: uppercase;
           white-space: nowrap;
@@ -103,74 +137,133 @@
       }
 
       .order-body {
-        padding: 1.5rem;
+        padding: 0.95rem 1.1rem;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 0.9rem;
+        background: #f9fbfd;
 
-        .order-details {
+        .order-main-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(240px, 1fr));
+          gap: 0.7rem 1rem;
+
+          .detail-col {
+            display: grid;
+            gap: 0.48rem;
+            align-content: start;
+          }
+
           .detail-row {
-            display: flex;
-            margin-bottom: 0.75rem;
-            font-size: 0.95rem;
+            display: grid;
+            grid-template-columns: 108px minmax(0, 1fr);
+            align-items: start;
+            column-gap: 0.45rem;
+            font-size: 0.88rem;
 
             .label {
-              min-width: 150px;
               font-weight: 600;
-              color: $text-in-header-color;
+              color: #5f6b76;
+              white-space: nowrap;
             }
 
-            span:last-child {
+            .value {
               color: $text-in-header-color;
+              min-width: 0;
+              overflow-wrap: anywhere;
+            }
+
+            .text-wrap {
+              line-height: 1.3;
+              white-space: pre-wrap;
+              word-break: break-word;
             }
 
             .payment-method {
-              font-weight: 600;
+              display: inline-block;
+              max-width: 100%;
+              font-weight: 700;
+              font-size: 0.88rem;
+              line-height: 1.3;
               color: $primary-color;
+              background: transparent;
+            }
+
+            &.detail-row--description {
+              margin-top: 0.12rem;
+            }
+
+            &.detail-row--payment .value {
+              min-width: 0;
+              display: block;
             }
           }
         }
 
         .order-total {
-          margin-top: 1.5rem;
-          padding-top: 1rem;
-          border-top: 2px solid #e9ecef;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
+          min-width: 160px;
+          align-self: center;
+          background: #ffffff;
+          border: 1px solid #dce4ee;
+          border-radius: 10px;
+          padding: 0.65rem 0.75rem;
+          text-align: left;
 
-          .total-label {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: $text-in-header-color;
+          .total-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.75rem;
+
+            .total-label {
+              font-size: 0.76rem;
+              font-weight: 700;
+              color: #627181;
+              text-transform: uppercase;
+              letter-spacing: 0.02em;
+            }
+
+            .total-sub-price {
+              font-size: 0.9rem;
+              font-weight: 600;
+              color: #455462;
+            }
+          }
+
+          .total-divider {
+            border-top: 1px dashed #cfdae6;
+            margin: 0.45rem 0;
           }
 
           .total-price {
-            font-size: 1.5rem;
-            font-weight: 700;
+            font-size: 1.18rem;
+            font-weight: 800;
             color: $primary-color;
           }
         }
       }
 
       .order-actions {
-        padding: 1rem 1.5rem;
-        background: #495057;
-        border-top: 1px solid #e9ecef;
+        padding: 0.8rem 1.1rem;
+        background: #eef3f8;
+        border-top: 1px solid #d7dee8;
         display: flex;
-        gap: 1rem;
+        gap: 0.7rem;
         justify-content: flex-end;
 
         button {
-          padding: 0.65rem 1.5rem;
+          padding: 0.55rem 1.1rem;
           border: none;
           border-radius: 6px;
-          font-size: 0.9rem;
+          font-size: 0.82rem;
           font-weight: 600;
           cursor: pointer;
           transition: all 0.3s ease;
 
           &.btn-details {
-            background: $background-color;
+            background: #ffffff;
             color: $primary-color;
-            //box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 1px solid #c6d4e4;
 
             &:hover {
               background: $primary-color;
@@ -301,24 +394,42 @@
   .orderHistory {
     .order-card {
       .order-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.75rem;
+        grid-template-columns: 1fr;
+        row-gap: 0.55rem;
+        justify-items: start;
+
+        .order-times {
+          justify-self: start;
+          flex-wrap: wrap;
+          justify-content: flex-start;
+        }
 
         .order-badges {
           width: 100%;
           flex-wrap: wrap;
+          justify-self: start;
         }
       }
 
       .order-body {
-        .detail-row {
-          flex-direction: column;
-          gap: 0.25rem;
+        grid-template-columns: 1fr;
 
-          .label {
-            min-width: auto;
+        .order-main-grid {
+          grid-template-columns: 1fr;
+
+          .detail-row {
+            grid-template-columns: 96px 1fr;
+            gap: 0.3rem;
+
+            .label {
+              min-width: auto;
+            }
           }
+        }
+
+        .order-total {
+          min-width: 0;
+          text-align: left;
         }
       }
 
