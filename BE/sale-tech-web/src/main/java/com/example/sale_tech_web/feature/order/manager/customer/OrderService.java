@@ -302,6 +302,8 @@ public class OrderService implements OrderServiceInterface {
                 .totalPrice(order.getTotalPrice())
                 .createdAt(order.getCreatedAt())
                 .status(order.getStatus().name())
+                .description(order.getDescription())
+                .updatedAt(order.getUpdatedAt())
                 .paymentMethod(order.getPaymentMethod().name())
                 .paymentStatus(paymentStatus)
                 .build();
