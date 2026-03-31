@@ -6,8 +6,8 @@ import {
     updateAddress,
     deleteAddress,
     setDefaultAddress
-} from "../../../api/AddressAPI";
-import {getAllProvinces, getWardsByProvinceCode} from "../../../api/ProvinceAPI";
+} from "../../../api/customer/AddressAPI";
+import {getAllProvinces, getWardsByProvinceCode} from "../../../api/customer/ProvinceAPI";
 import {useToast} from "../../Toast/Toast";
 
 const AddressManagement = ({isOpen, onClose, onSuccess}) => {

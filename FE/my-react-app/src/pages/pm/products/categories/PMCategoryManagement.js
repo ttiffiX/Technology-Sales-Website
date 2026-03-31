@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAllCategories } from '../../../../api/ProductAPI';
-import { addCategory, deleteCategory, updateCategory } from '../../../../api/PMAPI';
+import { getAllCategories } from '../../../../api/customer/ProductAPI';
+import { addCategory, deleteCategory, updateCategory } from '../../../../api/pm/product/CategoryAPI';
 import { useToast } from '../../../../components/Toast/Toast';
 import { getApiErrorMessage } from '../../../../utils';
 import './PMCategoryManagement.scss';

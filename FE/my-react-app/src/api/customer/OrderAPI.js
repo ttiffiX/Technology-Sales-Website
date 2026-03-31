@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import apiClient from "./apiClient";
+import apiClient from "../apiClient";
 
 const BASE_URL = '/orders';
 

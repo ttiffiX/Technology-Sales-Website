@@ -7,7 +7,7 @@ import ProductGrid from "../../../components/productgrid/ProductGrid";
 import Nav from "../../../components/navigation/Nav";
 import Header from "../../../components/header/Header";
 import FilterSidebar from "../../../components/filtersidebar/FilterSidebar";
-import useFetchProducts, {filterProducts, searchProducts, getAllCategories} from "../../../api/ProductAPI";
+import useFetchProducts, {filterProducts, searchProducts, getAllCategories} from "../../../api/customer/ProductAPI";
 import {useCart} from "../../../contexts/CartContext";
 import CompareBar from "../../../components/comparebar/CompareBar";
 

@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAllCategories } from '../../../api/ProductAPI';
+import { getAllCategories } from '../../../api/customer/ProductAPI';
 import {
     addProduct,
     deletePMProduct,
-    getAttributesByCategory,
     getPMProducts,
     updatePMProductState,
-} from '../../../api/PMAPI';
+} from '../../../api/pm/product/ProductAPI';
+import { getAttributesByCategory } from '../../../api/pm/product/AttributeAPI';
 import { useToast } from '../../../components/Toast/Toast';
 import AddProductModal from '../../../components/modal/addproduct/AddProductModal';
 import { formatPrice } from '../../../utils';

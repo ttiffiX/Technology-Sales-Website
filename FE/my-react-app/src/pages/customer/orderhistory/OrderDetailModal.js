@@ -1,6 +1,6 @@
 import React, {useEffect} from 'react';
 import './OrderDetailModal.scss';
-import {useGetOrderDetails} from "../../../api/OrderAPI";
+import {useGetOrderDetails} from "../../../api/customer/OrderAPI";
 import {formatPrice} from "../../../utils";
 
 const OrderDetailModal = ({orderId, onClose}) => {

@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAllCategories } from '../../../../api/ProductAPI';
+import { getAllCategories } from '../../../../api/customer/ProductAPI';
 import {
     addAttributeSchema,
     deleteAttributeSchema,
     getAttributeSchemasByCategory,
     updateAttributeSchema,
-} from '../../../../api/PMAPI';
+} from '../../../../api/pm/product/AttributeAPI';
 import { useToast } from '../../../../components/Toast/Toast';
 import {
     EMPTY_ATTRIBUTE_SCHEMA_FORM,

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getAttributesByCategory, getPMProductDetail, updatePMProduct } from '../../../api/PMAPI';
+import { getPMProductDetail, updatePMProduct } from '../../../api/pm/product/ProductAPI';
+import { getAttributesByCategory } from '../../../api/pm/product/AttributeAPI';
 import { useToast } from '../../../components/Toast/Toast';
 import {
     buildPMDetailAttributeValues,

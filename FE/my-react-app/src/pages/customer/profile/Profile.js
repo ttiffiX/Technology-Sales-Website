@@ -6,7 +6,7 @@ import {useCart} from "../../../contexts/CartContext";
 import ChangePasswordModal from "../../../components/modal/changepass/ChangePasswordModal";
 import AddressManagement from "../../../components/modal/address/AddressManagement";
 import {useToast} from "../../../components/Toast/Toast";
-import {getProfile, updateProfile} from "../../../api/ProfileAPI";
+import {getProfile, updateProfile} from "../../../api/customer/ProfileAPI";
 import {isRequired, isValidPhone} from "../../../utils";
 
 const Profile = () => {

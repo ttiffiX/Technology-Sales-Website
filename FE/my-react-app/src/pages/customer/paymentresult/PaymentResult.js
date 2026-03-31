@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { verifyVNPayPayment } from '../../../api/PaymentAPI';
+import { verifyVNPayPayment } from '../../../api/customer/PaymentAPI';
 import { useToast } from '../../../components/Toast/Toast';
 import PaymentSuccess from '../../../components/paymentProcess/PaymentSuccess';
 import PaymentFailed from '../../../components/paymentProcess/PaymentFailed';

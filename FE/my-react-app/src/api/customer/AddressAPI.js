@@ -1,4 +1,4 @@
-import apiClient from './apiClient';
+import apiClient from '../apiClient';
 
 // Lấy tất cả địa chỉ của user
 export const getAllAddresses = async () => {

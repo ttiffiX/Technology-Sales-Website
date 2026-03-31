@@ -1,4 +1,4 @@
-import apiClient from './apiClient';
+import apiClient from '../apiClient';
 
 // Lấy thông tin profile của user hiện tại
 export const getProfile = async () => {

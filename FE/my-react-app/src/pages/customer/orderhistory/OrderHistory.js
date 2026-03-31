@@ -2,7 +2,7 @@ import React, {useState} from 'react';
 import './OrderHistory.scss';
 import Nav from "../../../components/navigation/Nav";
 import Header from "../../../components/header/Header";
-import {useGetOrders, useCancelOrder} from "../../../api/OrderAPI";
+import {useGetOrders, useCancelOrder} from "../../../api/customer/OrderAPI";
 import {useToast} from "../../../components/Toast/Toast";
 import OrderDetailModal from "./OrderDetailModal";
 import {formatDate, formatPrice, getStatusColor, getPaymentStatusColor} from "../../../utils";

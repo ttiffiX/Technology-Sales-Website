@@ -6,7 +6,7 @@ import {
     updateCartQuantity,
     toggleProductSelection,
     toggleAllProducts
-} from "../../api/CartAPI";
+} from "../../api/customer/CartAPI";
 import {useToast} from "../Toast/Toast";
 import {formatPrice, getImage} from "../../utils";
 

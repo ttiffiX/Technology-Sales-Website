@@ -6,8 +6,8 @@ import {
     getAdminUsers,
     updateAdminUserBanStatus,
     updateAdminUserRole,
-} from '../../../api/AdminAPI';
-import { searchAdminUsers, filterAdminUsersByRole } from '../../../api/AdminAPI';
+} from '../../../api/admin/AdminAPI';
+import { searchAdminUsers, filterAdminUsersByRole } from '../../../api/admin/AdminAPI';
 import AddUserModal from '../../../components/modal/adduser/AddUserModal';
 import DeleteUserModal from '../../../components/modal/deleteuser/DeleteUserModal';
 import { useToast } from '../../../components/Toast/Toast';

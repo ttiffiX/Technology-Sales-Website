@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { getFilterOptions } from '../../api/ProductAPI';
+import { getFilterOptions } from '../../api/customer/ProductAPI';
 import { formatPrice, formatProductAttributeValue } from '../../utils';
 import './FilterSidebar.scss';
 

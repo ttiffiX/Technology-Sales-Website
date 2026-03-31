@@ -1,4 +1,4 @@
-import apiClient from './apiClient';
+import apiClient from '../apiClient';
 
 // Lấy tất cả tỉnh/thành phố
 export const getAllProvinces = async () => {

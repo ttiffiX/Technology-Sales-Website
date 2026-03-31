@@ -1,4 +1,4 @@
-import apiClient from './apiClient';
+import apiClient from '../apiClient';
 
 export const getAdminUsers = async () => {
     const response = await apiClient.get('/admin/users');
