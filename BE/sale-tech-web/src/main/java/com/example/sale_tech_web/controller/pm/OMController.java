@@ -1,7 +1,6 @@
 package com.example.sale_tech_web.controller.pm;
 
 import com.example.sale_tech_web.feature.order.dto.customer.OrderDTO;
-import com.example.sale_tech_web.feature.order.enums.OrderStatus;
 import com.example.sale_tech_web.feature.order.manager.pm.OMServiceInterface;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +19,7 @@ public class OMController {
     private final OMServiceInterface omServiceInterface;
 
     @GetMapping()
-    public ResponseEntity<List<OrderDTO>> getOrdersForPM(@RequestParam(required = false) OrderStatus status) {
+    public ResponseEntity<List<OrderDTO>> getOrdersForPM(@RequestParam(required = false) String status) {
         log.info("PM - Get orders, status={}", status);
         return ResponseEntity.ok(omServiceInterface.getAllOrderByStatus(status));
     }

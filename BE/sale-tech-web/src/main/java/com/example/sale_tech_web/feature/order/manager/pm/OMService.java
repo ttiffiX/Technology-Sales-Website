@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -26,8 +27,19 @@ public class OMService implements OMServiceInterface {
     private final ProductRepository productRepository;
 
     @Override
-    public List<OrderDTO> getAllOrderByStatus(OrderStatus orderStatus) {
-        return orderRepository.findByOptionalStatus(orderStatus).stream()
+    public List<OrderDTO> getAllOrderByStatus(String orderStatus) {
+        OrderStatus status = null;
+        if (orderStatus != null && !orderStatus.trim().isEmpty()) {
+            try {
+                status = OrderStatus.valueOf(orderStatus.trim().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new ResponseStatusException(BAD_REQUEST,
+                        "Invalid status '" + orderStatus + "'. Valid values: " +
+                                Arrays.toString(OrderStatus.values()));
+            }
+        }
+
+        return orderRepository.findByOptionalStatus(status).stream()
                 .map(order -> {
                     String paymentStatus = order.getPayment() != null
                             ? order.getPayment().getStatus().name()
