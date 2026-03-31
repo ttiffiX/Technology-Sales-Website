@@ -1,15 +1,4 @@
 /**
- * Order status constants
- */
-export const ORDER_STATUS = {
-    PENDING: 'PENDING',
-    APPROVED: 'APPROVED',
-    SUCCESS: 'SUCCESS',
-    CANCELLED: 'CANCELLED',
-    REJECTED: 'REJECTED'
-};
-
-/**
  * Payment method constants
  */
 export const PAYMENT_METHOD = {
@@ -18,14 +7,14 @@ export const PAYMENT_METHOD = {
 };
 
 /**
- * Payment status constants
+ * Payment status constants (match BE PaymentStatus enum)
  */
 export const PAYMENT_STATUS = {
-    PENDING: 'PENDING',
-    PAID: 'PAID',
-    FAILED: 'FAILED',
     REFUND: 'REFUND',
-    UNKNOWN: 'UNKNOWN'
+    FAILED: 'FAILED',
+    PAID: 'PAID',
+    PENDING: 'PENDING',
+    REFUND_FAILED: 'REFUND_FAILED'
 };
 
 /**
@@ -37,36 +26,12 @@ export const getStatusColor = (status) => {
     const colors = {
         PENDING: '#FFA500',
         APPROVED: '#1E90FF',
-        SUCCESS: '#28a745',
+        SHIPPING: '#17a2b8',
+        REJECTED: '#6c757d',
         CANCELLED: '#dc3545',
-        REJECTED: '#6c757d'
+        COMPLETED: '#28a745'
     };
     return colors[status] || '#6c757d';
-};
-
-/**
- * Get status text in Vietnamese
- * @param {string} status - Order status
- * @returns {string} Status text
- */
-export const getStatusText = (status) => {
-    const texts = {
-        PENDING: 'Đang chờ',
-        APPROVED: 'Đã duyệt',
-        SUCCESS: 'Đã giao',
-        CANCELLED: 'Đã hủy',
-        REJECTED: 'Từ chối'
-    };
-    return texts[status] || status;
-};
-
-/**
- * Check if order can be cancelled
- * @param {string} status - Order status
- * @returns {boolean} True if can cancel
- */
-export const canCancelOrder = (status) => {
-    return status === ORDER_STATUS.PENDING;
 };
 
 /**
@@ -76,12 +41,24 @@ export const canCancelOrder = (status) => {
  */
 export const getPaymentStatusColor = (status) => {
     const colors = {
-        PENDING: '#FFA500',
-        PAID: '#28a745',
-        FAILED: '#dc3545',
         REFUND: '#6c757d',
-        UNKNOWN: '#6c757d'
+        FAILED: '#dc3545',
+        PAID: '#28a745',
+        PENDING: '#FFA500',
+        REFUND_FAILED: '#b02a37'
     };
     return colors[status] || '#6c757d';
 };
 
+/**
+ * Shared status filters for customer order history tabs
+ */
+export const ORDER_STATUS_FILTERS = [
+    {value: null, label: 'All Orders'},
+    {value: 'PENDING', label: 'Pending'},
+    {value: 'APPROVED', label: 'Preparing'},
+    {value: 'SHIPPING', label: 'Shipping'},
+    {value: 'COMPLETED', label: 'Delivered'},
+    {value: 'CANCELLED', label: 'Cancelled'},
+    {value: 'REJECTED', label: 'Rejected'}
+];

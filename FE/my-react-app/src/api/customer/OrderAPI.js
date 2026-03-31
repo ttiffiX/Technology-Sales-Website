@@ -145,3 +145,12 @@ export const useCancelOrder = () => {
     return { cancelOrder, loading };
 };
 
+export const getOrderCountByStatus = async () => {
+    const response = await apiClient.get(`${BASE_URL}/status-count`);
+    const data = response.data || {};
+
+    return {
+        orderStatusCountMap: data.orderStatusCountMap || {},
+        totalStatusCount: data.totalStatusCount ?? 0,
+    };
+};

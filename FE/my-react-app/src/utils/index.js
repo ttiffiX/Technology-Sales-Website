@@ -75,13 +75,11 @@ export {
 // Order utilities
 
 export {
-    ORDER_STATUS,
     PAYMENT_METHOD,
     PAYMENT_STATUS,
+    ORDER_STATUS_FILTERS,
     getStatusColor,
-    getStatusText,
-    getPaymentStatusColor,
-    canCancelOrder
+    getPaymentStatusColor
 } from './orderUtils';
 
 // PM product utilities
@@ -113,4 +111,3 @@ export {
     validateAttributeSchemaForm,
     buildAttributeSchemaPayload
 } from './pmAttributeSchemaUtils';
-

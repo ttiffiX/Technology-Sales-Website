@@ -1,15 +1,18 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import './OrderHistory.scss';
 import Nav from "../../../components/navigation/Nav";
 import Header from "../../../components/header/Header";
-import {useGetOrders, useCancelOrder} from "../../../api/customer/OrderAPI";
+import {useGetOrders, useCancelOrder, getOrderCountByStatus} from "../../../api/customer/OrderAPI";
 import {useToast} from "../../../components/Toast/Toast";
 import OrderDetailModal from "./OrderDetailModal";
-import {formatDate, formatPrice, getStatusColor, getPaymentStatusColor} from "../../../utils";
+import {formatDate, formatPrice, getStatusColor, getPaymentStatusColor, ORDER_STATUS_FILTERS} from "../../../utils";
 import {useCart} from "../../../contexts/CartContext";
 
 const OrderHistory = () => {
     const [statusFilter, setStatusFilter] = useState(null);
+    const [statusCounts, setStatusCounts] = useState({});
+    const [totalStatusCount, setTotalStatusCount] = useState(0);
+    const [isStatusCountLoaded, setIsStatusCountLoaded] = useState(false);
     const {orders, loading, error, refetch} = useGetOrders(statusFilter);
     const {cancelOrder, loading: cancelling} = useCancelOrder();
     const {triggerToast} = useToast();
@@ -51,6 +54,7 @@ const OrderHistory = () => {
 
             // Refetch orders to update the list smoothly
             await refetch();
+            await fetchStatusCounts();
 
             // Restore scroll position after a short delay to ensure DOM is updated
             setTimeout(() => {
@@ -61,15 +65,25 @@ const OrderHistory = () => {
         }
     };
 
-    const statusFilters = [
-        {value: null, label: 'All Orders'},
-        {value: 'PENDING', label: 'Pending'},
-        {value: 'APPROVED', label: 'Preparing'},
-        {value: 'SHIPPING', label: 'Shipping'},
-        {value: 'COMPLETED', label: 'Delivered'},
-        {value: 'CANCELLED', label: 'Cancelled'},
-        {value: 'REJECTED', label: 'Rejected'}
-    ];
+    const fetchStatusCounts = async () => {
+        try {
+            const data = await getOrderCountByStatus();
+            setStatusCounts(data.orderStatusCountMap || {});
+            setTotalStatusCount(data.totalStatusCount ?? 0);
+            setIsStatusCountLoaded(true);
+        } catch (_err) {
+            setIsStatusCountLoaded(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchStatusCounts();
+    }, []);
+
+    const getFilterCount = (statusValue) => {
+        if (statusValue === null) return totalStatusCount;
+        return statusCounts?.[statusValue] ?? 0;
+    };
 
     return (
         <>
@@ -79,13 +93,14 @@ const OrderHistory = () => {
             <div className="orderHistory">
                 {/* Status Filter Tabs */}
                 <div className="status-tabs">
-                    {statusFilters.map(filter => (
+                    {ORDER_STATUS_FILTERS.map(filter => (
                         <button
                             key={filter.label}
                             className={`tab ${statusFilter === filter.value ? 'active' : ''}`}
                             onClick={() => setStatusFilter(filter.value)}
                         >
                             {filter.label}
+                            {isStatusCountLoaded ? ` (${getFilterCount(filter.value)})` : ''}
                         </button>
                     ))}
                 </div>
@@ -178,9 +193,9 @@ const OrderHistory = () => {
                                             <span className="total-sub-price">{formatPrice(order.deliveryFee)}</span>
                                         </div>
                                         <div className="total-divider"/>
-                                        <div className="total-line total-line--grand">
+                                        <div className="total-price">
                                             <span className="total-label">Grand Total</span>
-                                            <span className="total-price">{formatPrice(order.totalPrice)}</span>
+                                            <span className="price-value">{formatPrice(order.totalPrice)}</span>
                                         </div>
                                     </div>
                                 </div>
