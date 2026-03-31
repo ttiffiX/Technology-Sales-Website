@@ -1,5 +1,6 @@
 package com.example.sale_tech_web.feature.order.manager.pm;
 
+import com.example.sale_tech_web.feature.order.dto.StatusCountDTO;
 import com.example.sale_tech_web.feature.order.dto.customer.OrderDTO;
 import com.example.sale_tech_web.feature.order.entity.orderdetails.OrderDetail;
 import com.example.sale_tech_web.feature.order.entity.orders.Order;
@@ -13,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -90,6 +92,24 @@ public class OMService implements OMServiceInterface {
         orderRepository.save(order);
 
         return "Order #" + orderId + " marked as COMPLETED";
+    }
+
+    @Override
+    public StatusCountDTO getOrderCountByStatus() {
+        Map<OrderStatus, Integer> result = OrderStatus.initStatusCountMap();
+        int allCount = 0;
+
+        for (Object[] row : orderRepository.countAllGroupByStatus()) {
+            OrderStatus status = (OrderStatus) row[0];
+            Number count = (Number) row[1];
+            result.put(status, count.intValue());
+            allCount += count.intValue();
+        }
+
+        return StatusCountDTO.builder()
+                .totalStatusCount(allCount)
+                .orderStatusCountMap(result)
+                .build();
     }
 
     private Order findOrderById(Long orderId) {

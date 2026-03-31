@@ -1,5 +1,6 @@
 package com.example.sale_tech_web.feature.order.manager.customer;
 
+import com.example.sale_tech_web.feature.order.dto.StatusCountDTO;
 import com.example.sale_tech_web.feature.order.dto.customer.OrderDTO;
 import com.example.sale_tech_web.feature.order.dto.customer.OrderDetailDTO;
 import com.example.sale_tech_web.feature.order.dto.customer.PlaceOrderRequest;
@@ -15,5 +16,7 @@ public interface OrderServiceInterface {
     Object placeOrder(PlaceOrderRequest request, HttpServletRequest httpRequest);
 
     String cancelOrder(Long orderId, HttpServletRequest request);
+
+    StatusCountDTO getOrderCountByStatus();
 }
 

@@ -49,6 +49,13 @@ public class OrderController {
         return ResponseEntity.ok(orderDetails);
     }
 
+    @GetMapping("/status-count")
+    public ResponseEntity<Object> getOrderCountByStatus() {
+        log.info("Get order count by status for current user");
+        Object result = orderServiceInterface.getOrderCountByStatus();
+        return ResponseEntity.ok(result);
+    }
+
     @PostMapping
     public ResponseEntity<Object> placeOrder(
             @Valid @RequestBody PlaceOrderRequest request,

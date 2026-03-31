@@ -5,6 +5,7 @@ import static org.springframework.http.HttpStatus.*;
 import com.example.sale_tech_web.feature.cart.entity.CartDetail;
 import com.example.sale_tech_web.feature.cart.repository.CartDetailRepository;
 import com.example.sale_tech_web.feature.jwt.SecurityUtils;
+import com.example.sale_tech_web.feature.order.dto.StatusCountDTO;
 import com.example.sale_tech_web.feature.order.dto.customer.OrderDTO;
 import com.example.sale_tech_web.feature.order.dto.customer.OrderDetailDTO;
 import com.example.sale_tech_web.feature.order.dto.customer.PlaceOrderRequest;
@@ -278,6 +279,26 @@ public class OrderService implements OrderServiceInterface {
         orderRepository.save(order);
 
         return "Order #" + orderId + " has been cancelled successfully" + refundMessage;
+    }
+
+    @Override
+    public StatusCountDTO getOrderCountByStatus() {
+        Long userId = getUserIdFromToken();
+        Map<OrderStatus, Integer> result = OrderStatus.initStatusCountMap();
+        int allCount = 0;
+
+        for (Object[] row : orderRepository.countByUserIdGroupByStatus(userId)) {
+            OrderStatus status = (OrderStatus) row[0];
+            Number count = (Number) row[1];
+            result.put(status, count.intValue());
+            allCount += count.intValue();
+        }
+
+
+        return StatusCountDTO.builder()
+                .totalStatusCount(allCount)
+                .orderStatusCountMap(result)
+                .build();
     }
 
 
