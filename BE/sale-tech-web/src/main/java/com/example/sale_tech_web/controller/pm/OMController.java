@@ -1,6 +1,7 @@
 package com.example.sale_tech_web.controller.pm;
 
 import com.example.sale_tech_web.feature.order.dto.customer.OrderDTO;
+import com.example.sale_tech_web.feature.order.dto.customer.OrderDetailDTO;
 import com.example.sale_tech_web.feature.order.manager.pm.OMServiceInterface;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,13 @@ public class OMController {
     public ResponseEntity<List<OrderDTO>> getOrdersForPM(@RequestParam(required = false) String status) {
         log.info("PM - Get orders, status={}", status);
         return ResponseEntity.ok(omServiceInterface.getAllOrderByStatus(status));
+    }
+
+    @GetMapping("/{orderId}")
+    public ResponseEntity<List<OrderDetailDTO>> getOrderDetails(@PathVariable Long orderId) {
+        log.info("Get order details for order ID: {}", orderId);
+        List<OrderDetailDTO> orderDetails = omServiceInterface.getOrderDetailsByOrderId(orderId);
+        return ResponseEntity.ok(orderDetails);
     }
 
     @GetMapping("/status-count")

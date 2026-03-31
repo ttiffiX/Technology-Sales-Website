@@ -2,6 +2,7 @@ package com.example.sale_tech_web.feature.order.manager.pm;
 
 import com.example.sale_tech_web.feature.order.dto.StatusCountDTO;
 import com.example.sale_tech_web.feature.order.dto.customer.OrderDTO;
+import com.example.sale_tech_web.feature.order.dto.customer.OrderDetailDTO;
 import com.example.sale_tech_web.feature.order.entity.orderdetails.OrderDetail;
 import com.example.sale_tech_web.feature.order.entity.orders.Order;
 import com.example.sale_tech_web.feature.order.enums.OrderStatus;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +49,28 @@ public class OMService implements OMServiceInterface {
                     return convertToDTO(order, paymentStatus);
                 })
                 .toList();
+    }
+
+    @Override
+    public List<OrderDetailDTO> getOrderDetailsByOrderId(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Order not found"));
+
+        List<OrderDetail> orderDetails = order.getOrderDetails();
+
+        List<OrderDetailDTO> orderDetailDTOs = new ArrayList<>();
+        for (OrderDetail detail : orderDetails) {
+            OrderDetailDTO dto = OrderDetailDTO.builder()
+                    .id(detail.getId())
+                    .productTitle(detail.getProductTitle())
+                    .categoryName(detail.getCategoryName())
+                    .quantity(detail.getQuantity())
+                    .price(detail.getPrice())
+                    .build();
+            orderDetailDTOs.add(dto);
+        }
+
+        return orderDetailDTOs;
     }
 
     @Override
