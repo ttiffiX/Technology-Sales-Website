@@ -7,11 +7,10 @@ import java.util.List;
 
 public interface PMServiceInterface {
 
+    //product
     List<PMProductListDTO> getAllProductsForPM();
 
     PMProductDetailDTO getProductDetailForPM(Long productId);
-
-    List<AttributeResponse> getAttrByCategoryId(Long categoryId);
 
     PMProductListDTO addProduct(ProductRequest request);
 
@@ -21,9 +20,11 @@ public interface PMServiceInterface {
 
     String deleteProduct(Long productId);
 
+    // Attribute Schema methods
     List<CategoryAttribute> getAttributeByCategory(Long categoryId);
 
-    // Attribute Schema methods
+    List<AttributeResponse> getAttrByCategoryId(Long categoryId);
+
     CategoryAttribute addAttributeSchema(Long categoryId, CategoryAttributeRequest request);
 
     CategoryAttribute updateAttributeSchema(Long categoryId, CategoryAttributeRequest request);

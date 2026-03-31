@@ -17,13 +17,6 @@ import java.util.*;
 public class ProductController {
     private final ProductServiceInterface productServiceInterface;
 
-    @GetMapping("/categories")
-    public ResponseEntity<List<CategoryDTO>> getAllCategories() {
-        List<CategoryDTO> categories = productServiceInterface.getAllCategories();
-        log.info("Get all categories: {} categories found", categories.size());
-        return ResponseEntity.ok(categories);
-    }
-
     @GetMapping
     public ResponseEntity<List<ProductListDTO>> getAllProducts() {
         List<ProductListDTO> products = productServiceInterface.getAllProducts();
@@ -41,6 +34,13 @@ public class ProductController {
         return ResponseEntity.ok(product);
     }
 
+    @GetMapping("/categories")
+    public ResponseEntity<List<CategoryDTO>> getAllCategories() {
+        List<CategoryDTO> categories = productServiceInterface.getAllCategories();
+        log.info("Get all categories: {} categories found", categories.size());
+        return ResponseEntity.ok(categories);
+    }
+
     /**
      * GET /product/category/{categoryId} - Filter products by category
      */
@@ -48,16 +48,6 @@ public class ProductController {
     public ResponseEntity<List<ProductListDTO>> getProductsByCategory(@PathVariable Long categoryId) {
         List<ProductListDTO> products = productServiceInterface.getProductsByCategory(categoryId);
         log.info("Found {} products in category {}", products.size(), categoryId);
-        return ResponseEntity.ok(products);
-    }
-
-    /**
-     * GET /product/search?keyword=xxx - Search products by keyword
-     */
-    @GetMapping("/search")
-    public ResponseEntity<List<ProductListDTO>> searchProducts(@RequestParam String keyword) {
-        log.info("Search products - Keyword: {}", keyword);
-        List<ProductListDTO> products = productServiceInterface.searchProducts(keyword);
         return ResponseEntity.ok(products);
     }
 
@@ -106,6 +96,16 @@ public class ProductController {
                 sort
         );
 
+        return ResponseEntity.ok(products);
+    }
+
+    /**
+     * GET /product/search?keyword=xxx - Search products by keyword
+     */
+    @GetMapping("/search")
+    public ResponseEntity<List<ProductListDTO>> searchProducts(@RequestParam String keyword) {
+        log.info("Search products - Keyword: {}", keyword);
+        List<ProductListDTO> products = productServiceInterface.searchProducts(keyword);
         return ResponseEntity.ok(products);
     }
 
