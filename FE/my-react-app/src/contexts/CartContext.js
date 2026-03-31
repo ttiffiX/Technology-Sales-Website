@@ -7,8 +7,21 @@ export const CartProvider = ({ children }) => {
     const [cartCount, setCartCount] = useState(0);
     const [loading, setLoading] = useState(true);
 
+    const shouldLoadCartCount = useCallback(() => {
+        const path = window.location.pathname;
+
+        // Skip cart API only in backoffice pages
+        return !(path.startsWith('/admin') || path.startsWith('/pm'));
+    }, []);
+
     // Fetch cart count on mount
     const fetchCartCount = useCallback(async () => {
+        if (!shouldLoadCartCount()) {
+            setCartCount(0);
+            setLoading(false);
+            return;
+        }
+
         try {
             const count = await getTotalQuantity();
             setCartCount(count);
@@ -18,7 +31,7 @@ export const CartProvider = ({ children }) => {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [shouldLoadCartCount]);
 
     useEffect(() => {
         fetchCartCount();
@@ -26,13 +39,18 @@ export const CartProvider = ({ children }) => {
 
     // Refresh cart count (call this after adding/removing items)
     const refreshCartCount = useCallback(async () => {
+        if (!shouldLoadCartCount()) {
+            setCartCount(0);
+            return;
+        }
+
         try {
             const count = await getTotalQuantity();
             setCartCount(count);
         } catch (err) {
             console.log('Failed to refresh cart count:', err);
         }
-    }, []);
+    }, [shouldLoadCartCount]);
 
     // Update cart count locally (optimistic update)
     const updateCartCount = useCallback((newCount) => {
@@ -73,4 +91,3 @@ export const useCart = () => {
     }
     return context;
 };
-
