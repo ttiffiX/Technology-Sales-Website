@@ -266,7 +266,7 @@ public class ProductService implements ProductServiceInterface {
                 .build();
     }
 
-    public Map<String, List<String>> getFilterValuesMap(Long categoryId) {
+    private Map<String, List<String>> getFilterValuesMap(Long categoryId) {
         List<FilterProjection> rawData = productRepository.findAllFilterValuesAggregated(categoryId);
 
         return rawData.stream().collect(Collectors.toMap(

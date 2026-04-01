@@ -17,24 +17,24 @@ import java.util.List;
 @Slf4j
 @PreAuthorize("hasRole('PM') or hasRole('ADMIN')")
 public class PMController {
-    private final PMServiceInterface pmServiceInterface;
+    private final PMServiceInterface productPMService;
 
     @GetMapping()
     public ResponseEntity<List<PMProductListDTO>> getAllProductsForPM() {
         log.info("PM - Get all products (basic info)");
-        return ResponseEntity.ok(pmServiceInterface.getAllProductsForPM());
+        return ResponseEntity.ok(productPMService.getAllProductsForPM());
     }
 
     @GetMapping("/{productId}")
     public ResponseEntity<PMProductDetailDTO> getProductDetailForPM(@PathVariable Long productId) {
         log.info("PM - Get product detail: id={}", productId);
-        return ResponseEntity.ok(pmServiceInterface.getProductDetailForPM(productId));
+        return ResponseEntity.ok(productPMService.getProductDetailForPM(productId));
     }
 
     @PostMapping()
     public ResponseEntity<PMProductListDTO> addProduct(@Valid @RequestBody ProductRequest request) {
         log.info("PM - Add product: title={}, categoryId={}", request.getTitle(), request.getCategoryId());
-        return ResponseEntity.ok(pmServiceInterface.addProduct(request));
+        return ResponseEntity.ok(productPMService.addProduct(request));
     }
 
     @PutMapping("/{productId}")
@@ -42,7 +42,7 @@ public class PMController {
             @PathVariable Long productId,
             @Valid @RequestBody ProductRequest request) {
         log.info("PM - Update product: id={}", productId);
-        return ResponseEntity.ok(pmServiceInterface.updateProduct(productId, request));
+        return ResponseEntity.ok(productPMService.updateProduct(productId, request));
     }
 
     @PatchMapping("/{productId}/state")
@@ -50,14 +50,14 @@ public class PMController {
             @PathVariable Long productId,
             @RequestParam boolean active) {
         log.info("PM - Update product state: id={}, active={}", productId, active);
-        String mes = pmServiceInterface.updateState(productId, active);
+        String mes = productPMService.updateState(productId, active);
         return ResponseEntity.ok(mes);
     }
 
     @DeleteMapping("/{productId}")
     public ResponseEntity<String> deleteProduct(@PathVariable Long productId) {
         log.info("PM - Delete product: id={}", productId);
-        String mes = pmServiceInterface.deleteProduct(productId);
+        String mes = productPMService.deleteProduct(productId);
         return ResponseEntity.ok(mes);
     }
 }
