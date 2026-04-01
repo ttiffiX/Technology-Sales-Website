@@ -1,45 +1,13 @@
--- Tăng tốc lọc sản phẩm theo danh mục
-CREATE INDEX idx_product_category ON product (category_id);
-
--- Tăng tốc tìm kiếm theo tên sản phẩm (Cơ bản)
-CREATE INDEX idx_product_title ON product (title);
-
--- Tăng tốc lọc theo khoảng giá (WHERE price BETWEEN x AND y)
-CREATE INDEX idx_product_price ON product (price);
-
--- Tăng tốc sắp xếp sản phẩm mới nhất (ORDER BY created_at DESC)
-CREATE INDEX idx_product_created_at ON product (created_at DESC);
-
--- Giúp User xem lịch sử mua hàng nhanh hơn
-CREATE INDEX idx_orders_user_id ON orders (user_id);
-
--- Giúp Admin/PM lọc đơn hàng theo trạng thái (VD: Lấy đơn PENDING để duyệt)
-CREATE INDEX idx_orders_status ON orders (status);
-
--- Tối ưu hóa khi JOIN bảng Order và OrderDetail
-CREATE INDEX idx_order_detail_order_id ON order_detail (order_id);
-
--- Tối ưu hóa khi load giỏ hàng (JOIN Cart và CartDetail)
-CREATE INDEX idx_cart_detail_cart_id ON cart_detail (cart_id);
-
--- Tối ưu hóa tìm kiếm token xác thực email
-CREATE INDEX idx_evt_token ON email_verification_tokens (token);
-
--- Tối ưu load danh sách địa chỉ của User
-CREATE INDEX idx_user_address_user_id ON user_address (user_id);
-
--- Tìm kiếm hóa đơn theo mã giao dịch (của VNPAY/PayOS trả về)
-CREATE INDEX idx_invoice_transaction_id ON invoice (transaction_id);
-
-CREATE INDEX idx_product_attributes ON product USING GIN (attributes);
-
--- Enums
+-- ========================================================
+-- ENUMS & DATA TYPES
+-- ========================================================
 drop type user_role_enum;
 CREATE TYPE user_role_enum AS ENUM (
     'ADMIN',
     'USER',
     'PM'
     );
+
 drop type order_status_enum;
 CREATE TYPE order_status_enum AS ENUM (
     'PENDING', -- Chờ PM duyệt (đã thanh toán hoặc chọn COD)
@@ -65,12 +33,12 @@ CREATE TYPE payment_status_enum AS ENUM (
 --     'VNPAY'
 --     );
 
---------------------------
--- BẢNG CHÍNH (MASTER TABLES)
---------------------------
 
--- 1. Bảng User
-drop table users;
+-- ========================================================
+-- MASTER TABLES (BẢNG CHÍNH)
+-- ========================================================
+
+-- 1. USERS TABLE
 CREATE TABLE users
 (
     id         SERIAL PRIMARY KEY,
@@ -86,16 +54,16 @@ CREATE TABLE users
     image_url  VARCHAR(255)
 );
 
--- 2. Bảng Categories
-drop table categories;
+
+-- 2. CATEGORIES TABLE
 CREATE TABLE categories
 (
     id   SERIAL PRIMARY KEY,
     name VARCHAR(100)
 );
 
--- 4. Bảng Product
-drop table product;
+
+-- 3. PRODUCT TABLE
 CREATE TABLE product
 (
     id            SERIAL PRIMARY KEY,
@@ -113,10 +81,45 @@ CREATE TABLE product
     CONSTRAINT fk_product_category FOREIGN KEY (category_id) REFERENCES categories (id)
 );
 
---------------------------
--- BẢNG QUAN HỆ (RELATIONSHIP TABLES)
---------------------------
+-- INDEXES FOR PRODUCT TABLE
+-- Tăng tốc lọc sản phẩm theo danh mục
+CREATE INDEX idx_product_category ON product (category_id);
 
+-- Tăng tốc tìm kiếm theo tên sản phẩm (Cơ bản)
+CREATE INDEX idx_product_title ON product (title);
+
+-- Tăng tốc lọc theo khoảng giá (WHERE price BETWEEN x AND y)
+CREATE INDEX idx_product_price ON product (price);
+
+-- Tăng tốc sắp xếp sản phẩm mới nhất (ORDER BY created_at DESC)
+CREATE INDEX idx_product_created_at ON product (created_at DESC);
+
+-- Tối ưu hóa tìm kiếm JSONB attributes
+CREATE INDEX idx_product_attributes ON product USING GIN (attributes);
+
+
+
+-- ========================================================
+-- RELATIONSHIP TABLES (BẢNG QUAN HỆ)
+-- ========================================================
+
+-- 4. CATEGORY ATTRIBUTE GROUP TABLE
+drop table category_attribute_group;
+CREATE TABLE category_attribute_group
+(
+    id          SERIAL PRIMARY KEY,
+    category_id INT         NOT NULL,
+    name        VARCHAR(50) NOT NULL,
+    group_order INT DEFAULT 0,
+    CONSTRAINT fk_cag_category FOREIGN KEY (category_id) REFERENCES categories (id),
+    UNIQUE (category_id, name)
+);
+
+-- INDEXES FOR CATEGORY ATTRIBUTE GROUP TABLE
+CREATE INDEX idx_cag_category_group_order ON category_attribute_group (category_id, group_order);
+
+
+-- 5. CATEGORY ATTRIBUTE SCHEMA TABLE
 drop table category_attribute_schema;
 CREATE TABLE category_attribute_schema
 (
@@ -127,18 +130,33 @@ CREATE TABLE category_attribute_schema
     data_type     VARCHAR(20),          -- "Text" | "Number"
     is_filterable BOOLEAN DEFAULT false,
     code          VARCHAR(50) NOT NULL,
-    group_name    VARCHAR(50),          -- "Bộ xử lý", "RAM & Ổ cứng", "Màn hình"...
-    group_order   INT     DEFAULT 0,    -- thứ tự của NHÓM
+    group_id      INT,
     display_order INT     DEFAULT 0,    -- thứ tự của ATTRIBUTE trong nhóm
     CONSTRAINT fk_cas_category FOREIGN KEY (category_id) REFERENCES categories (id),
+    CONSTRAINT fk_cas_group FOREIGN KEY (group_id) REFERENCES category_attribute_group (id),
     UNIQUE (category_id, code)
 );
 
---------------------------
--- BẢNG GIAO DỊCH (TRANSACTION TABLES)
---------------------------
+-- 1. Hỗ trợ lấy Schema để hiển thị (Quan trọng nhất)
+CREATE INDEX idx_cas_display
+    ON category_attribute_schema (category_id, group_id, display_order);
 
--- 7. Bảng Order
+-- 2. Hỗ trợ lấy các thuộc tính dùng để làm bộ lọc (Filter)
+CREATE INDEX idx_cas_filter_lookup
+    ON category_attribute_schema (category_id)
+    WHERE is_filterable = TRUE;
+
+-- 3. Hỗ trợ các thao tác liên quan đến Group
+CREATE INDEX idx_cas_group_fk
+    ON category_attribute_schema (group_id);
+
+
+
+-- ========================================================
+-- TRANSACTION TABLES (BẢNG GIAO DỊCH)
+-- ========================================================
+
+-- 5. ORDERS TABLE
 drop table orders;
 CREATE TABLE orders
 (
@@ -161,7 +179,14 @@ CREATE TABLE orders
     CONSTRAINT fk_order_user FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
--- 8. Bảng OrderDetail
+-- INDEXES FOR ORDERS TABLE
+-- Giúp User xem lịch sử mua hàng nhanh hơn
+CREATE INDEX idx_orders_user_id ON orders (user_id);
+-- Giúp Admin/PM lọc đơn hàng theo trạng thái (VD: Lấy đơn PENDING để duyệt)
+CREATE INDEX idx_orders_status ON orders (status);
+
+
+-- 6. ORDER DETAIL TABLE
 drop table order_detail;
 CREATE TABLE order_detail
 (
@@ -178,7 +203,12 @@ CREATE TABLE order_detail
     CONSTRAINT fk_od_product FOREIGN KEY (product_id) REFERENCES product (id)
 );
 
--- 9. Bảng Invoice
+-- INDEXES FOR ORDER DETAIL TABLE
+-- Tối ưu hóa khi JOIN bảng Order và OrderDetail
+CREATE INDEX idx_order_detail_order_id ON order_detail (order_id);
+
+
+-- 7. INVOICE TABLE
 DROP table invoice;
 CREATE TABLE invoice
 (
@@ -197,7 +227,12 @@ CREATE TABLE invoice
     CONSTRAINT fk_invoice_order FOREIGN KEY (order_id) REFERENCES orders (id)
 );
 
--- 10. Bảng Cart
+-- INDEXES FOR INVOICE TABLE
+-- Tìm kiếm hóa đơn theo mã giao dịch (của VNPAY/PayOS trả về)
+CREATE INDEX idx_invoice_transaction_id ON invoice (transaction_id);
+
+
+-- 8. CART TABLE
 drop table cart;
 CREATE TABLE cart
 (
@@ -208,7 +243,8 @@ CREATE TABLE cart
     CONSTRAINT fk_cart_user FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
--- 11. Bảng CartDetail
+
+-- 9. CART DETAIL TABLE
 drop table cart_detail;
 CREATE TABLE cart_detail
 (
@@ -226,6 +262,13 @@ CREATE TABLE cart_detail
     UNIQUE (cart_id, product_id)
 );
 
+
+
+-- ========================================================
+-- SECURITY & UTILITY TABLES
+-- ========================================================
+
+-- 10. EMAIL VERIFICATION TOKENS TABLE
 drop table email_verification_tokens;
 CREATE TABLE email_verification_tokens
 (
@@ -240,6 +283,12 @@ CREATE TABLE email_verification_tokens
     CONSTRAINT fk_evt_user FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
+-- INDEXES FOR EMAIL VERIFICATION TOKENS TABLE
+-- Tối ưu tìm kiếm token xác thực email
+CREATE INDEX idx_evt_token ON email_verification_tokens (token);
+
+
+-- 11. USER ADDRESS TABLE
 drop table user_address;
 CREATE TABLE user_address
 (
@@ -254,6 +303,12 @@ CREATE TABLE user_address
     CONSTRAINT fk_user_address FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
+-- INDEXES FOR USER ADDRESS TABLE
+-- Load danh sách địa chỉ của User
+CREATE INDEX idx_user_address_user_id ON user_address (user_id);
+
+
+-- 12. REFRESH TOKENS TABLE
 drop table refresh_tokens;
 CREATE TABLE refresh_tokens
 (
@@ -268,7 +323,10 @@ CREATE TABLE refresh_tokens
 );
 
 
--- DATA
+-- ========================================================
+-- DATA (DỮ LIỆU DEMO)
+-- ========================================================
+
 INSERT INTO categories (name)
 VALUES ('Máy tính xách tay'),
        ('Điện thoại di động'),
@@ -307,93 +365,159 @@ VALUES
 -- ============================================================
 
 -- ----------------------------------------------------------------
--- 1. CATEGORY_ATTRIBUTE_SCHEMA
+-- 1. CATEGORY_ATTRIBUTE_GROUP + CATEGORY_ATTRIBUTE_SCHEMA
 --    Mỗi category có schema riêng, gồm: code (key JSONB),
---    name (hiển thị UI), group_name, group_order, display_order
+--    name (hiển thị UI), group_id, display_order
 -- ----------------------------------------------------------------
+
+INSERT INTO category_attribute_group (category_id, name, group_order)
+VALUES
+-- Category 1: Máy tính xách tay
+(1, 'Bộ xử lý & Đồ họa', 1),
+(1, 'RAM & Ổ cứng', 2),
+(1, 'Màn hình', 3),
+(1, 'Thông số khác', 4),
+-- Category 2: Điện thoại di động
+(2, 'Bộ xử lý', 1),
+(2, 'Bộ nhớ', 2),
+(2, 'Màn hình', 3),
+(2, 'Thông số khác', 4),
+-- Category 3: Bàn phím
+(3, 'Kết nối', 1),
+(3, 'Thông số phím', 2),
+(3, 'Thông số khác', 3),
+-- Category 4: Chuột
+(4, 'Kết nối', 1),
+(4, 'Thông số chuột', 2),
+(4, 'Thông số khác', 3),
+-- Category 5: Tai nghe
+(5, 'Kết nối', 1),
+(5, 'Thông số tai nghe', 2),
+(5, 'Thông số khác', 3);
 
 -- Category 1: Máy tính xách tay
 INSERT INTO category_attribute_schema
-(category_id, code, name, unit, data_type, is_filterable, group_name, group_order, display_order)
+(category_id, code, name, unit, data_type, is_filterable, group_id, display_order)
 VALUES
 -- Nhóm 1: Bộ xử lý
-(1, 'cpu_tech', 'Công nghệ CPU', NULL, 'Text', true, 'Bộ xử lý & Đồ họa', 1, 1),
-(1, 'cpu_name', 'Tên đầy đủ CPU', NULL, 'Text', false, 'Bộ xử lý & Đồ họa', 1, 2),
-(1, 'cpu_cores', 'Số nhân / Số luồng', NULL, 'Text', false, 'Bộ xử lý & Đồ họa', 1, 3),
-(1, 'gpu_onboard', 'Card đồ họa (onboard)', NULL, 'Text', false, 'Bộ xử lý & Đồ họa', 1, 4),
-(1, 'gpu_discrete', 'Card đồ họa (rời)', NULL, 'Text', true, 'Bộ xử lý & Đồ họa', 1, 5),
+(1, 'cpu_tech', 'Công nghệ CPU', NULL, 'Text', true,
+ (SELECT id FROM category_attribute_group WHERE category_id = 1 AND name = 'Bộ xử lý & Đồ họa'), 1),
+(1, 'cpu_name', 'Tên đầy đủ CPU', NULL, 'Text', false,
+ (SELECT id FROM category_attribute_group WHERE category_id = 1 AND name = 'Bộ xử lý & Đồ họa'), 2),
+(1, 'cpu_cores', 'Số nhân / Số luồng', NULL, 'Text', false,
+ (SELECT id FROM category_attribute_group WHERE category_id = 1 AND name = 'Bộ xử lý & Đồ họa'), 3),
+(1, 'gpu_onboard', 'Card đồ họa (onboard)', NULL, 'Text', false,
+ (SELECT id FROM category_attribute_group WHERE category_id = 1 AND name = 'Bộ xử lý & Đồ họa'), 4),
+(1, 'gpu_discrete', 'Card đồ họa (rời)', NULL, 'Text', true,
+ (SELECT id FROM category_attribute_group WHERE category_id = 1 AND name = 'Bộ xử lý & Đồ họa'), 5),
 -- Nhóm 2: RAM & Ổ cứng
-(1, 'ram_size', 'Dung lượng RAM', 'GB', 'Number', true, 'RAM & Ổ cứng', 2, 1),
-(1, 'storage', 'Dung lượng SSD', 'GB', 'Number', true, 'RAM & Ổ cứng', 2, 2),
+(1, 'ram_size', 'Dung lượng RAM', 'GB', 'Number', true,
+ (SELECT id FROM category_attribute_group WHERE category_id = 1 AND name = 'RAM & Ổ cứng'), 1),
+(1, 'storage', 'Dung lượng SSD', 'GB', 'Number', true,
+ (SELECT id FROM category_attribute_group WHERE category_id = 1 AND name = 'RAM & Ổ cứng'), 2),
 -- Nhóm 3: Màn hình
-(1, 'screen_size', 'Kích thước màn hình', 'inch', 'Number', true, 'Màn hình', 3, 1),
-(1, 'screen_res', 'Độ phân giải', NULL, 'Text', false, 'Màn hình', 3, 2),
-(1, 'screen_refresh', 'Tần số quét', 'Hz', 'Number', true, 'Màn hình', 3, 3),
+(1, 'screen_size', 'Kích thước màn hình', 'inch', 'Number', true,
+ (SELECT id FROM category_attribute_group WHERE category_id = 1 AND name = 'Màn hình'), 1),
+(1, 'screen_res', 'Độ phân giải', NULL, 'Text', false,
+ (SELECT id FROM category_attribute_group WHERE category_id = 1 AND name = 'Màn hình'), 2),
+(1, 'screen_refresh', 'Tần số quét', 'Hz', 'Number', true,
+ (SELECT id FROM category_attribute_group WHERE category_id = 1 AND name = 'Màn hình'), 3),
 -- Nhóm 4: Thông số khác
-(1, 'os', 'Hệ điều hành', NULL, 'Text', true, 'Thông số khác', 4, 1),
-(1, 'weight', 'Trọng lượng', 'kg', 'Number', false, 'Thông số khác', 4, 2),
-(1, 'battery', 'Dung lượng pin', NULL, 'Text', false, 'Thông số khác', 4, 3);
+(1, 'os', 'Hệ điều hành', NULL, 'Text', true,
+ (SELECT id FROM category_attribute_group WHERE category_id = 1 AND name = 'Thông số khác'), 1),
+(1, 'weight', 'Trọng lượng', 'kg', 'Number', false,
+ (SELECT id FROM category_attribute_group WHERE category_id = 1 AND name = 'Thông số khác'), 2),
+(1, 'battery', 'Dung lượng pin', NULL, 'Text', false,
+ (SELECT id FROM category_attribute_group WHERE category_id = 1 AND name = 'Thông số khác'), 3);
 
 -- Category 2: Điện thoại di động
 INSERT INTO category_attribute_schema
-(category_id, code, name, unit, data_type, is_filterable, group_name, group_order, display_order)
+(category_id, code, name, unit, data_type, is_filterable, group_id, display_order)
 VALUES
 -- Nhóm 1: Bộ xử lý
-(2, 'cpu_tech', 'Công nghệ CPU', NULL, 'Text', true, 'Bộ xử lý', 1, 1),
-(2, 'cpu_name', 'Tên đầy đủ CPU', NULL, 'Text', false, 'Bộ xử lý', 1, 2),
+(2, 'cpu_tech', 'Công nghệ CPU', NULL, 'Text', true,
+ (SELECT id FROM category_attribute_group WHERE category_id = 2 AND name = 'Bộ xử lý'), 1),
+(2, 'cpu_name', 'Tên đầy đủ CPU', NULL, 'Text', false,
+ (SELECT id FROM category_attribute_group WHERE category_id = 2 AND name = 'Bộ xử lý'), 2),
 -- Nhóm 2: Bộ nhớ
-(2, 'ram_size', 'Dung lượng RAM', 'GB', 'Number', true, 'Bộ nhớ', 2, 1),
-(2, 'rom_size', 'Dung lượng ROM', 'GB', 'Number', true, 'Bộ nhớ', 2, 2),
+(2, 'ram_size', 'Dung lượng RAM', 'GB', 'Number', true,
+ (SELECT id FROM category_attribute_group WHERE category_id = 2 AND name = 'Bộ nhớ'), 1),
+(2, 'rom_size', 'Dung lượng ROM', 'GB', 'Number', true,
+ (SELECT id FROM category_attribute_group WHERE category_id = 2 AND name = 'Bộ nhớ'), 2),
 -- Nhóm 3: Màn hình
-(2, 'screen_size', 'Kích thước màn hình', 'inch', 'Number', true, 'Màn hình', 3, 1),
-(2, 'screen_res', 'Độ phân giải', NULL, 'Text', false, 'Màn hình', 3, 2),
-(2, 'screen_refresh', 'Tần số quét', 'Hz', 'Number', true, 'Màn hình', 3, 3),
+(2, 'screen_size', 'Kích thước màn hình', 'inch', 'Number', true,
+ (SELECT id FROM category_attribute_group WHERE category_id = 2 AND name = 'Màn hình'), 1),
+(2, 'screen_res', 'Độ phân giải', NULL, 'Text', false,
+ (SELECT id FROM category_attribute_group WHERE category_id = 2 AND name = 'Màn hình'), 2),
+(2, 'screen_refresh', 'Tần số quét', 'Hz', 'Number', true,
+ (SELECT id FROM category_attribute_group WHERE category_id = 2 AND name = 'Màn hình'), 3),
 -- Nhóm 4: Thông số khác
-(2, 'os', 'Hệ điều hành', NULL, 'Text', true, 'Thông số khác', 4, 1),
-(2, 'battery', 'Dung lượng pin', NULL, 'Text', false, 'Thông số khác', 4, 2),
-(2, 'weight', 'Trọng lượng', 'kg', 'Number', false, 'Thông số khác', 4, 3);
+(2, 'os', 'Hệ điều hành', NULL, 'Text', true,
+ (SELECT id FROM category_attribute_group WHERE category_id = 2 AND name = 'Thông số khác'), 1),
+(2, 'battery', 'Dung lượng pin', NULL, 'Text', false,
+ (SELECT id FROM category_attribute_group WHERE category_id = 2 AND name = 'Thông số khác'), 2),
+(2, 'weight', 'Trọng lượng', 'kg', 'Number', false,
+ (SELECT id FROM category_attribute_group WHERE category_id = 2 AND name = 'Thông số khác'), 3);
 
 -- Category 3: Bàn phím
 INSERT INTO category_attribute_schema
-(category_id, code, name, unit, data_type, is_filterable, group_name, group_order, display_order)
+(category_id, code, name, unit, data_type, is_filterable, group_id, display_order)
 VALUES
 -- Nhóm 1: Kết nối
-(3, 'connections', 'Kiểu kết nối', NULL, 'Text', true, 'Kết nối', 1, 1),
+(3, 'connections', 'Kiểu kết nối', NULL, 'List', true,
+ (SELECT id FROM category_attribute_group WHERE category_id = 3 AND name = 'Kết nối'), 1),
 -- Nhóm 2: Thông số phím
-(3, 'switch_type', 'Loại Switch', NULL, 'Text', true, 'Thông số phím', 2, 1),
-(3, 'led', 'LED', NULL, 'Text', true, 'Thông số phím', 2, 2),
-(3, 'product_type', 'Loại sản phẩm', NULL, 'Text', true, 'Thông số phím', 2, 3),
+(3, 'switch_type', 'Loại Switch', NULL, 'Text', true,
+ (SELECT id FROM category_attribute_group WHERE category_id = 3 AND name = 'Thông số phím'), 1),
+(3, 'led', 'LED', NULL, 'Boolean', true,
+ (SELECT id FROM category_attribute_group WHERE category_id = 3 AND name = 'Thông số phím'), 2),
+(3, 'product_type', 'Loại sản phẩm', NULL, 'Text', true,
+ (SELECT id FROM category_attribute_group WHERE category_id = 3 AND name = 'Thông số phím'), 3),
 -- Nhóm 3: Thông số khác
-(3, 'battery_life', 'Thời gian dùng pin', 'giờ', 'Number', false, 'Thông số khác', 3, 1),
-(3, 'weight', 'Trọng lượng', 'kg', 'Number', false, 'Thông số khác', 3, 2);
+(3, 'battery_life', 'Thời gian dùng pin', 'giờ', 'Number', false,
+ (SELECT id FROM category_attribute_group WHERE category_id = 3 AND name = 'Thông số khác'), 1),
+(3, 'weight', 'Trọng lượng', 'kg', 'Number', false,
+ (SELECT id FROM category_attribute_group WHERE category_id = 3 AND name = 'Thông số khác'), 2);
 
 -- Category 4: Chuột
 INSERT INTO category_attribute_schema
-(category_id, code, name, unit, data_type, is_filterable, group_name, group_order, display_order)
+(category_id, code, name, unit, data_type, is_filterable, group_id, display_order)
 VALUES
 -- Nhóm 1: Kết nối
-(4, 'connections', 'Kiểu kết nối', NULL, 'Text', true, 'Kết nối', 1, 1),
+(4, 'connections', 'Kiểu kết nối', NULL, 'List', true,
+ (SELECT id FROM category_attribute_group WHERE category_id = 4 AND name = 'Kết nối'), 1),
 -- Nhóm 2: Thông số chuột
-(4, 'dpi', 'DPI', NULL, 'Text', true, 'Thông số chuột', 2, 1),
-(4, 'led', 'LED', NULL, 'Text', true, 'Thông số chuột', 2, 2),
-(4, 'product_type', 'Loại sản phẩm', NULL, 'Text', true, 'Thông số chuột', 2, 3),
-(4, 'features', 'Tính năng', NULL, 'Text', false, 'Thông số chuột', 2, 4),
+(4, 'dpi', 'DPI', NULL, 'Number', true,
+ (SELECT id FROM category_attribute_group WHERE category_id = 4 AND name = 'Thông số chuột'), 1),
+(4, 'led', 'LED', NULL, 'Boolean', true,
+ (SELECT id FROM category_attribute_group WHERE category_id = 4 AND name = 'Thông số chuột'), 2),
+(4, 'product_type', 'Loại sản phẩm', NULL, 'Text', true,
+ (SELECT id FROM category_attribute_group WHERE category_id = 4 AND name = 'Thông số chuột'), 3),
+(4, 'features', 'Tính năng', NULL, 'Text', false,
+ (SELECT id FROM category_attribute_group WHERE category_id = 4 AND name = 'Thông số chuột'), 4),
 -- Nhóm 3: Thông số khác
-(4, 'battery_life', 'Thời gian dùng pin', 'giờ', 'Number', false, 'Thông số khác', 3, 1),
-(4, 'weight', 'Trọng lượng', 'kg', 'Number', false, 'Thông số khác', 3, 2);
+(4, 'battery_life', 'Thời gian dùng pin', 'giờ', 'Number', false,
+ (SELECT id FROM category_attribute_group WHERE category_id = 4 AND name = 'Thông số khác'), 1),
+(4, 'weight', 'Trọng lượng', 'kg', 'Number', false,
+ (SELECT id FROM category_attribute_group WHERE category_id = 4 AND name = 'Thông số khác'), 2);
 
 -- Category 5: Tai nghe
 INSERT INTO category_attribute_schema
-(category_id, code, name, unit, data_type, is_filterable, group_name, group_order, display_order)
+(category_id, code, name, unit, data_type, is_filterable, group_id, display_order)
 VALUES
 -- Nhóm 1: Kết nối
-(5, 'connections', 'Kiểu kết nối', NULL, 'Text', true, 'Kết nối', 1, 1),
+(5, 'connections', 'Kiểu kết nối', NULL, 'List', true,
+ (SELECT id FROM category_attribute_group WHERE category_id = 5 AND name = 'Kết nối'), 1),
 -- Nhóm 2: Thông số tai nghe
-(5, 'product_type', 'Loại sản phẩm', NULL, 'Text', true, 'Thông số tai nghe', 2, 1),
-(5, 'features', 'Tính năng', NULL, 'Text', false, 'Thông số tai nghe', 2, 2),
+(5, 'product_type', 'Loại sản phẩm', NULL, 'Text', true,
+ (SELECT id FROM category_attribute_group WHERE category_id = 5 AND name = 'Thông số tai nghe'), 1),
+(5, 'features', 'Tính năng', NULL, 'Text', false,
+ (SELECT id FROM category_attribute_group WHERE category_id = 5 AND name = 'Thông số tai nghe'), 2),
 -- Nhóm 3: Thông số khác
-(5, 'battery_life', 'Thời gian dùng pin', 'giờ', 'Number', true, 'Thông số khác', 3, 1),
-(5, 'weight', 'Trọng lượng', 'kg', 'Number', false, 'Thông số khác', 3, 2);
+(5, 'battery_life', 'Thời gian dùng pin', 'giờ', 'Number', true,
+ (SELECT id FROM category_attribute_group WHERE category_id = 5 AND name = 'Thông số khác'), 1),
+(5, 'weight', 'Trọng lượng', 'kg', 'Number', false,
+ (SELECT id FROM category_attribute_group WHERE category_id = 5 AND name = 'Thông số khác'), 2);
 
 
 -- ----------------------------------------------------------------
