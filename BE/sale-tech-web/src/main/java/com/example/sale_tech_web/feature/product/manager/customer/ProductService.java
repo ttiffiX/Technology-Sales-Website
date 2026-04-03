@@ -2,6 +2,7 @@ package com.example.sale_tech_web.feature.product.manager.customer;
 
 import com.example.sale_tech_web.config.CacheNames;
 import com.example.sale_tech_web.feature.product.dto.customer.*;
+import com.example.sale_tech_web.feature.product.entity.CategoryAttributeGroup;
 import com.example.sale_tech_web.feature.product.entity.CategoryAttributeSchema;
 import com.example.sale_tech_web.feature.product.entity.Product;
 import com.example.sale_tech_web.feature.product.repository.CategoryAttributeSchemaRepository;
@@ -68,9 +69,14 @@ public class ProductService implements ProductServiceInterface {
         schemas.stream()
                 .filter(s -> attributeValuesMap.containsKey(s.getCode()))
                 .forEach(s -> {
-                    FilterGroupDTO group = groups.computeIfAbsent(s.getGroupOrder(), _ ->
+                    CategoryAttributeGroup group = s.getCategoryAttributeGroup();
+                    if (group == null) {
+                        return;
+                    }
+
+                    FilterGroupDTO groupDTO = groups.computeIfAbsent(group.getGroupOrder(), _ ->
                             FilterGroupDTO.builder()
-                                    .groupName(s.getGroupName())
+                                    .groupName(group.getName())
                                     .filterAttributes(new ArrayList<>())
                                     .build()
                     );
@@ -82,11 +88,10 @@ public class ProductService implements ProductServiceInterface {
                             .availableValues(attributeValuesMap.get(s.getCode()))
                             .build();
 
-                    group.getFilterAttributes().add(attrDTO);
+                    groupDTO.getFilterAttributes().add(attrDTO);
                 });
 
         return groups;
-
     }
 
     @Override
@@ -235,6 +240,11 @@ public class ProductService implements ProductServiceInterface {
 
         Map<Integer, ProductFilterGroupDTO> attributes = new LinkedHashMap<>();
         for (CategoryAttributeSchema s : schemas) {
+            CategoryAttributeGroup group = s.getCategoryAttributeGroup();
+            if (group == null) {
+                continue;
+            }
+
             Object value = raw.get(s.getCode());
             if (value == null) continue;
 
@@ -244,14 +254,14 @@ public class ProductService implements ProductServiceInterface {
                     .availableValues(value)
                     .build();
 
-            attributes.computeIfAbsent(s.getGroupOrder(), _ -> {
+            ProductFilterGroupDTO groupDTO = attributes.computeIfAbsent(group.getGroupOrder(), _ -> {
                 ProductFilterGroupDTO newGroup = new ProductFilterGroupDTO();
-                newGroup.setGroupName(s.getGroupName());
+                newGroup.setGroupName(group.getName());
                 newGroup.setFilterAttributes(new ArrayList<>());
                 return newGroup;
             });
 
-            attributes.get(s.getGroupOrder()).getFilterAttributes().add(attrDTO);
+            groupDTO.getFilterAttributes().add(attrDTO);
         }
 
         return ProductDetailDTO.builder()
@@ -273,7 +283,7 @@ public class ProductService implements ProductServiceInterface {
                 FilterProjection::getCode,
                 p -> {
                     try {
-                        List<String> list = objectMapper.readValue(p.getValues(), new TypeReference<List<String>>() {
+                        List<String> list = objectMapper.readValue(p.getValues(), new TypeReference<>() {
                         });
 
                         return list.stream()

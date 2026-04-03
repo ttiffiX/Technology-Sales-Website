@@ -130,16 +130,16 @@ CREATE TABLE category_attribute_schema
     data_type     VARCHAR(20),          -- "Text" | "Number"
     is_filterable BOOLEAN DEFAULT false,
     code          VARCHAR(50) NOT NULL,
-    group_id      INT,
+    category_attribute_group_id      INT,
     display_order INT     DEFAULT 0,    -- thứ tự của ATTRIBUTE trong nhóm
     CONSTRAINT fk_cas_category FOREIGN KEY (category_id) REFERENCES categories (id),
-    CONSTRAINT fk_cas_group FOREIGN KEY (group_id) REFERENCES category_attribute_group (id),
+    CONSTRAINT fk_cas_group FOREIGN KEY (category_attribute_group_id) REFERENCES category_attribute_group (id),
     UNIQUE (category_id, code)
 );
 
 -- 1. Hỗ trợ lấy Schema để hiển thị (Quan trọng nhất)
 CREATE INDEX idx_cas_display
-    ON category_attribute_schema (category_id, group_id, display_order);
+    ON category_attribute_schema (category_id, category_attribute_group_id, display_order);
 
 -- 2. Hỗ trợ lấy các thuộc tính dùng để làm bộ lọc (Filter)
 CREATE INDEX idx_cas_filter_lookup
@@ -148,7 +148,7 @@ CREATE INDEX idx_cas_filter_lookup
 
 -- 3. Hỗ trợ các thao tác liên quan đến Group
 CREATE INDEX idx_cas_group_fk
-    ON category_attribute_schema (group_id);
+    ON category_attribute_schema (category_attribute_group_id);
 
 
 
@@ -397,7 +397,7 @@ VALUES
 
 -- Category 1: Máy tính xách tay
 INSERT INTO category_attribute_schema
-(category_id, code, name, unit, data_type, is_filterable, group_id, display_order)
+(category_id, code, name, unit, data_type, is_filterable, category_attribute_group_id, display_order)
 VALUES
 -- Nhóm 1: Bộ xử lý
 (1, 'cpu_tech', 'Công nghệ CPU', NULL, 'Text', true,
@@ -432,7 +432,7 @@ VALUES
 
 -- Category 2: Điện thoại di động
 INSERT INTO category_attribute_schema
-(category_id, code, name, unit, data_type, is_filterable, group_id, display_order)
+(category_id, code, name, unit, data_type, is_filterable, category_attribute_group_id, display_order)
 VALUES
 -- Nhóm 1: Bộ xử lý
 (2, 'cpu_tech', 'Công nghệ CPU', NULL, 'Text', true,
@@ -461,7 +461,7 @@ VALUES
 
 -- Category 3: Bàn phím
 INSERT INTO category_attribute_schema
-(category_id, code, name, unit, data_type, is_filterable, group_id, display_order)
+(category_id, code, name, unit, data_type, is_filterable, category_attribute_group_id, display_order)
 VALUES
 -- Nhóm 1: Kết nối
 (3, 'connections', 'Kiểu kết nối', NULL, 'List', true,
@@ -481,7 +481,7 @@ VALUES
 
 -- Category 4: Chuột
 INSERT INTO category_attribute_schema
-(category_id, code, name, unit, data_type, is_filterable, group_id, display_order)
+(category_id, code, name, unit, data_type, is_filterable, category_attribute_group_id, display_order)
 VALUES
 -- Nhóm 1: Kết nối
 (4, 'connections', 'Kiểu kết nối', NULL, 'List', true,
@@ -503,7 +503,7 @@ VALUES
 
 -- Category 5: Tai nghe
 INSERT INTO category_attribute_schema
-(category_id, code, name, unit, data_type, is_filterable, group_id, display_order)
+(category_id, code, name, unit, data_type, is_filterable, category_attribute_group_id, display_order)
 VALUES
 -- Nhóm 1: Kết nối
 (5, 'connections', 'Kiểu kết nối', NULL, 'List', true,

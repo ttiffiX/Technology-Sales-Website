@@ -12,6 +12,8 @@ public interface ProductServiceInterface {
 
     ProductDetailDTO getProductById(Long productId);
 
+    List<ProductListDTO> getProductsByCategory(Long categoryId);
+
     Map<Integer, FilterGroupDTO> getFilterOptions(Long categoryId);
 
     List<ProductListDTO> filterByAttributes(Long categoryId,
@@ -19,8 +21,6 @@ public interface ProductServiceInterface {
                                             Integer minPrice,
                                             Integer maxPrice,
                                             String sort);
-
-    List<ProductListDTO> getProductsByCategory(Long categoryId);
 
     List<ProductListDTO> searchProducts(String keyword);
 

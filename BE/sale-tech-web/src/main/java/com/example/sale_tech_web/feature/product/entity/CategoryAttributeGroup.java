@@ -11,26 +11,15 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-@Table(name = "category_attribute_schema")
-public class CategoryAttributeSchema {
+@Table(name = "category_attribute_group")
+public class CategoryAttributeGroup {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Long id;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Category category;
 
-    @Column(nullable = false)
     private String name;
-    private String unit;
-    private String dataType;
-    private Boolean isFilterable;
-
-    @Column(nullable = false, unique = true)
-    private String code;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    private CategoryAttributeGroup categoryAttributeGroup;
-
-    private Integer displayOrder;
+    private Integer groupOrder;
 }

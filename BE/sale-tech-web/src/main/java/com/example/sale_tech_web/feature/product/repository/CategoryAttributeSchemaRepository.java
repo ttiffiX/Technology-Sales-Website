@@ -11,8 +11,10 @@ import java.util.List;
 
 @Repository
 public interface CategoryAttributeSchemaRepository extends JpaRepository<CategoryAttributeSchema, Long> {
-    @Query("SELECT s FROM CategoryAttributeSchema s WHERE s.category.id = :categoryId " +
-            "ORDER BY s.groupOrder ASC, s.displayOrder ASC")
+    @Query("SELECT s FROM CategoryAttributeSchema s " +
+            "JOIN FETCH s.categoryAttributeGroup g " +
+            "WHERE s.category.id = :categoryId " +
+            "ORDER BY g.groupOrder ASC, s.displayOrder ASC")
     List<CategoryAttributeSchema> findByCategoryIdOrdered(@Param("categoryId") Long categoryId);
 
     CategoryAttributeSchema findByCategoryIdAndCode(Long categoryId, String code);
