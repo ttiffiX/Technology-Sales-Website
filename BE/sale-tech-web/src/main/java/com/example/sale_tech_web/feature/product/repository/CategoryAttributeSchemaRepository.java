@@ -17,9 +17,13 @@ public interface CategoryAttributeSchemaRepository extends JpaRepository<Categor
             "ORDER BY g.groupOrder ASC, s.displayOrder ASC")
     List<CategoryAttributeSchema> findByCategoryIdOrdered(@Param("categoryId") Long categoryId);
 
-    CategoryAttributeSchema findByCategoryIdAndCode(Long categoryId, String code);
+//    @EntityGraph(attributePaths = {"categoryAttributeGroup"})
+//    Optional<CategoryAttributeSchema> findById(Long id);
 
     Boolean existsByCategoryIdAndCode(Long categoryId, String code);
 
     Boolean existsByCategory(Category category);
+
+    @Query("SELECT MAX(s.displayOrder) FROM CategoryAttributeSchema s WHERE s.categoryAttributeGroup.id = :groupId")
+    Integer findMaxDisplayOrderByGroupId(@Param("groupId") Long groupId);
 }

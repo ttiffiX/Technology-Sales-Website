@@ -1,6 +1,8 @@
 package com.example.sale_tech_web.controller.pm.product;
 
-import com.example.sale_tech_web.feature.product.dto.pm.*;
+import com.example.sale_tech_web.feature.product.dto.pm.product_dto.PMProductDetailDTO;
+import com.example.sale_tech_web.feature.product.dto.pm.product_dto.PMProductListDTO;
+import com.example.sale_tech_web.feature.product.dto.pm.product_dto.ProductRequest;
 import com.example.sale_tech_web.feature.product.manager.pm.PMServiceInterface;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

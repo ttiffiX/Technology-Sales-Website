@@ -26,7 +26,7 @@ public class CategoryAttributeSchema {
     private String dataType;
     private Boolean isFilterable;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String code;
 
     @ManyToOne(fetch = FetchType.LAZY)

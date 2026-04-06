@@ -2,10 +2,11 @@ package com.example.sale_tech_web.feature.product.manager.pm;
 
 import com.example.sale_tech_web.config.CacheNames;
 import com.example.sale_tech_web.feature.product.dto.customer.ProductFilterGroupDTO;
-import com.example.sale_tech_web.feature.product.dto.pm.PMProductDetailDTO;
-import com.example.sale_tech_web.feature.product.dto.pm.PMProductListDTO;
-import com.example.sale_tech_web.feature.product.dto.pm.ProductRequest;
+import com.example.sale_tech_web.feature.product.dto.pm.product_dto.PMProductDetailDTO;
+import com.example.sale_tech_web.feature.product.dto.pm.product_dto.PMProductListDTO;
+import com.example.sale_tech_web.feature.product.dto.pm.product_dto.ProductRequest;
 import com.example.sale_tech_web.feature.product.entity.Category;
+import com.example.sale_tech_web.feature.product.entity.CategoryAttributeGroup;
 import com.example.sale_tech_web.feature.product.entity.CategoryAttributeSchema;
 import com.example.sale_tech_web.feature.product.entity.Product;
 import com.example.sale_tech_web.feature.product.repository.CategoryAttributeSchemaRepository;
@@ -115,7 +116,7 @@ public class PMService implements PMServiceInterface {
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .price(request.getPrice())
-                .imageUrl(request.getImageUrl() == null ? existing.getImageUrl() : request.getImageUrl())
+                .imageUrl(request.getImageUrl() == null || request.getImageUrl().isBlank() ? existing.getImageUrl() : request.getImageUrl())
                 .quantity(request.getQuantity())
                 .quantitySold(request.getQuantitySold() == null ? existing.getQuantitySold() : request.getQuantitySold())
                 .isActive(request.getIsActive())
@@ -268,6 +269,11 @@ public class PMService implements PMServiceInterface {
 
         Map<Integer, ProductFilterGroupDTO> attributes = new LinkedHashMap<>();
         for (CategoryAttributeSchema s : schemas) {
+            CategoryAttributeGroup group = s.getCategoryAttributeGroup();
+            if (group == null) {
+                continue;
+            }
+
             Object value = raw.get(s.getCode());
             if (value == null) continue;
 
@@ -277,14 +283,14 @@ public class PMService implements PMServiceInterface {
                     .availableValues(value)
                     .build();
 
-            attributes.computeIfAbsent(s.getGroupOrder(), _ -> {
+            ProductFilterGroupDTO groupDTO = attributes.computeIfAbsent(group.getGroupOrder(), _ -> {
                 ProductFilterGroupDTO newGroup = new ProductFilterGroupDTO();
-                newGroup.setGroupName(s.getGroupName());
+                newGroup.setGroupName(group.getName());
                 newGroup.setFilterAttributes(new ArrayList<>());
                 return newGroup;
             });
 
-            attributes.get(s.getGroupOrder()).getFilterAttributes().add(attrDTO);
+            groupDTO.getFilterAttributes().add(attrDTO);
         }
 
         return PMProductDetailDTO.builder()

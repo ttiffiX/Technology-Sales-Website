@@ -1,11 +1,13 @@
 package com.example.sale_tech_web.feature.product.manager.pm;
 
 import com.example.sale_tech_web.config.CacheNames;
-import com.example.sale_tech_web.feature.product.dto.pm.AttributeResponse;
-import com.example.sale_tech_web.feature.product.dto.pm.CategoryAttribute;
-import com.example.sale_tech_web.feature.product.dto.pm.CategoryAttributeRequest;
+import com.example.sale_tech_web.feature.product.dto.pm.attribute_dto.AttributeResponse;
+import com.example.sale_tech_web.feature.product.dto.pm.attribute_dto.CategoryAttribute;
+import com.example.sale_tech_web.feature.product.dto.pm.attribute_dto.CategoryAttributeRequest;
 import com.example.sale_tech_web.feature.product.entity.Category;
+import com.example.sale_tech_web.feature.product.entity.CategoryAttributeGroup;
 import com.example.sale_tech_web.feature.product.entity.CategoryAttributeSchema;
+import com.example.sale_tech_web.feature.product.repository.CategoryAttributeGroupRepository;
 import com.example.sale_tech_web.feature.product.repository.CategoryAttributeSchemaRepository;
 import com.example.sale_tech_web.feature.product.repository.CategoryRepository;
 import com.example.sale_tech_web.feature.product.repository.ProductRepository;
@@ -34,6 +36,8 @@ public class AttributePMService implements AttributePMServiceInterface {
 
     @Autowired
     private CacheManager cacheManager;
+    @Autowired
+    private CategoryAttributeGroupRepository categoryAttributeGroupRepository;
 
     @Override
     public List<AttributeResponse> getAttrByCategoryId(Long categoryId) {
@@ -46,25 +50,27 @@ public class AttributePMService implements AttributePMServiceInterface {
                         .name(schema.getName())
                         .unit(schema.getUnit())
                         .dataType(schema.getDataType())
-                        .groupName(schema.getGroupName())
+                        .groupName(schema.getCategoryAttributeGroup().getName())
                         .build())
                 .toList();
     }
 
     @Override
     public List<CategoryAttribute> getAttributeByCategory(Long categoryId) {
-        List<CategoryAttributeSchema> schema = categoryAttributeSchemaRepository.findByCategoryIdOrdered(categoryId);
-        return schema.stream().map(s -> CategoryAttribute.builder()
-                .attributeId(s.getId())
-                .code(s.getCode())
-                .name(s.getName())
-                .unit(s.getUnit())
-                .dataType(s.getDataType())
-                .isFilterable(s.getIsFilterable())
-                .groupName(s.getGroupName())
-                .groupOrder(s.getGroupOrder())
-                .displayOrder(s.getDisplayOrder())
-                .build()).toList();
+        return categoryAttributeSchemaRepository
+                .findByCategoryIdOrdered(categoryId)
+                .stream()
+                .map(s -> CategoryAttribute.builder()
+                        .attributeId(s.getId())
+                        .code(s.getCode())
+                        .name(s.getName())
+                        .unit(s.getUnit())
+                        .dataType(s.getDataType())
+                        .isFilterable(s.getIsFilterable())
+                        .groupName(s.getCategoryAttributeGroup().getName())
+                        .groupOrder(s.getCategoryAttributeGroup().getGroupOrder())
+                        .displayOrder(s.getDisplayOrder())
+                        .build()).toList();
     }
 
     @Override
@@ -81,6 +87,14 @@ public class AttributePMService implements AttributePMServiceInterface {
             throw new ResponseStatusException(BAD_REQUEST, "Attribute code already exists in this category");
         }
 
+        CategoryAttributeGroup group = categoryAttributeGroupRepository.findByIdAndCategoryId(request.getGroupId(), categoryId);
+
+        if (group == null) {
+            throw new ResponseStatusException(NOT_FOUND, "Attribute group not found.");
+        }
+
+        int displayOrder = getNextDisplayOrder(group.getId());
+
         CategoryAttributeSchema schema = CategoryAttributeSchema.builder()
                 .category(category)
                 .name(request.getName())
@@ -88,9 +102,8 @@ public class AttributePMService implements AttributePMServiceInterface {
                 .dataType(request.getDataType())
                 .isFilterable(request.getIsFilterable())
                 .code(request.getCode())
-                .groupName(request.getGroupName())
-                .groupOrder(request.getGroupOrder())
-                .displayOrder(request.getDisplayOrder())
+                .categoryAttributeGroup(group)
+                .displayOrder(displayOrder)
                 .build();
 
         schema = categoryAttributeSchemaRepository.save(schema);
@@ -101,14 +114,13 @@ public class AttributePMService implements AttributePMServiceInterface {
     @Transactional
     @Caching(evict = {
             @CacheEvict(value = CacheNames.PRODUCT_BY_ID, allEntries = true),
-            @CacheEvict(value = CacheNames.FILTER_OPTIONS, key = "#categoryId")
+//            @CacheEvict(value = CacheNames.FILTER_OPTIONS, key = "#categoryId")
     })
-    public CategoryAttribute updateAttributeSchema(Long categoryId, CategoryAttributeRequest request) {
-        CategoryAttributeSchema schema = categoryAttributeSchemaRepository.findByCategoryIdAndCode(categoryId, request.getCode());
+    public CategoryAttribute updateAttributeSchema(Long attributeId, CategoryAttributeRequest request) {
+        CategoryAttributeSchema schema = categoryAttributeSchemaRepository.findById(attributeId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Attribute not found"));
 
-        if (schema == null) {
-            throw new ResponseStatusException(NOT_FOUND, "Attribute schema not found for category id=" + categoryId + " and code='" + request.getCode() + "'");
-        }
+        long categoryId = schema.getCategory().getId();
 
         if (!schema.getDataType().equals(request.getDataType()) || !schema.getCode().equals(request.getCode())) {
             boolean isUsed = productRepository.existsByAttributeCodeAndCategoryId(schema.getCode(), categoryId);
@@ -117,16 +129,32 @@ public class AttributePMService implements AttributePMServiceInterface {
             }
         }
 
+        if (!schema.getCode().equals(request.getCode()) && categoryAttributeSchemaRepository.existsByCategoryIdAndCode(categoryId, request.getCode())) {
+            throw new ResponseStatusException(BAD_REQUEST, "Attribute code already exists in this category");
+        }
+
+        CategoryAttributeGroup group = schema.getCategoryAttributeGroup();
+        if (!Objects.equals(group.getId(), request.getGroupId())) {
+            CategoryAttributeGroup newGroup = categoryAttributeGroupRepository.findByIdAndCategoryId(request.getGroupId(), categoryId);
+
+            if (newGroup == null) {
+                throw new ResponseStatusException(NOT_FOUND, "Attribute group not found.");
+            }
+
+            schema.setCategoryAttributeGroup(newGroup);
+            schema.setDisplayOrder(getNextDisplayOrder(newGroup.getId()));
+        }
+
         schema.setName(request.getName());
         schema.setUnit(request.getUnit());
         schema.setCode(request.getCode());
         schema.setDataType(request.getDataType());
         schema.setIsFilterable(request.getIsFilterable());
-        schema.setGroupName(request.getGroupName());
-        schema.setGroupOrder(request.getGroupOrder());
-        schema.setDisplayOrder(request.getDisplayOrder());
 
         schema = categoryAttributeSchemaRepository.save(schema);
+
+        Objects.requireNonNull(cacheManager.getCache(CacheNames.FILTER_OPTIONS)).evict(categoryId);
+
         return convertToCADTO(schema);
     }
 
@@ -156,6 +184,7 @@ public class AttributePMService implements AttributePMServiceInterface {
     }
 
     private CategoryAttribute convertToCADTO(CategoryAttributeSchema schema) {
+        CategoryAttributeGroup group = schema.getCategoryAttributeGroup();
         return CategoryAttribute.builder()
                 .attributeId(schema.getId())
                 .code(schema.getCode())
@@ -163,10 +192,15 @@ public class AttributePMService implements AttributePMServiceInterface {
                 .unit(schema.getUnit())
                 .dataType(schema.getDataType())
                 .isFilterable(schema.getIsFilterable())
-                .groupName(schema.getGroupName())
-                .groupOrder(schema.getGroupOrder())
+                .groupName(group.getName())
+                .groupOrder(group.getGroupOrder())
                 .displayOrder(schema.getDisplayOrder())
                 .build();
+    }
+
+    private int getNextDisplayOrder(Long groupId) {
+        Integer maxOrder = categoryAttributeSchemaRepository.findMaxDisplayOrderByGroupId(groupId);
+        return (maxOrder == null) ? 1 : maxOrder + 1;
     }
 }
 

@@ -1,4 +1,4 @@
-package com.example.sale_tech_web.feature.product.dto.pm;
+package com.example.sale_tech_web.feature.product.dto.pm.attribute_dto;
 
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -30,13 +30,6 @@ public class CategoryAttributeRequest {
     @NotNull(message = "isFilterable status is required")
     private Boolean isFilterable;
 
-    @NotBlank(message = "Group name is required")
-    @Size(max = 50, message = "Group name is too long")
-    private String groupName;
-
-    @Min(value = 1, message = "Group Order must be >= 1")
-    private Integer groupOrder;
-
-    @Min(value = 1, message = "Display Order must be >= 1")
-    private Integer displayOrder;
+    @NotNull(message = "Group ID is required")
+    private Long groupId;
 }

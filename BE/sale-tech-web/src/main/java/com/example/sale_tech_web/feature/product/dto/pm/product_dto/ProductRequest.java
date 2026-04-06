@@ -1,4 +1,4 @@
-package com.example.sale_tech_web.feature.product.dto.pm;
+package com.example.sale_tech_web.feature.product.dto.pm.product_dto;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;

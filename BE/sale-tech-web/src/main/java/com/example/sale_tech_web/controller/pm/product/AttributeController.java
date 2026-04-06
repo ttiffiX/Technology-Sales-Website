@@ -1,8 +1,8 @@
 package com.example.sale_tech_web.controller.pm.product;
 
-import com.example.sale_tech_web.feature.product.dto.pm.AttributeResponse;
-import com.example.sale_tech_web.feature.product.dto.pm.CategoryAttribute;
-import com.example.sale_tech_web.feature.product.dto.pm.CategoryAttributeRequest;
+import com.example.sale_tech_web.feature.product.dto.pm.attribute_dto.AttributeResponse;
+import com.example.sale_tech_web.feature.product.dto.pm.attribute_dto.CategoryAttribute;
+import com.example.sale_tech_web.feature.product.dto.pm.attribute_dto.CategoryAttributeRequest;
 import com.example.sale_tech_web.feature.product.manager.pm.AttributePMServiceInterface;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -15,26 +15,26 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/pm")
+@RequestMapping("/pm/category-attributes")
 @Slf4j
 @PreAuthorize("hasRole('PM') or hasRole('ADMIN')")
 public class AttributeController {
     private final AttributePMServiceInterface attributePMService;
-    //todo
-    @GetMapping("/category/{categoryId}/attributes")
+
+    @GetMapping("/category/{categoryId}")
     public ResponseEntity<List<AttributeResponse>> getAttrByCategoryId(@PathVariable Long categoryId) {
         log.info("PM - Get attributes for categoryId: {}", categoryId);
         return ResponseEntity.ok(attributePMService.getAttrByCategoryId(categoryId));
     }
 
-    @GetMapping("/category/{categoryId}/attributes-schema")
+    @GetMapping("/category/{categoryId}/schemas")
     public ResponseEntity<List<CategoryAttribute>> getAttributeByCategory(@PathVariable Long categoryId) {
         log.info("PM - Get category attributes: categoryId={}", categoryId);
         return ResponseEntity.ok(attributePMService.getAttributeByCategory(categoryId));
     }
 
     // Attribute Schema endpoints
-    @PostMapping("/category/{categoryId}/attributes-schema")
+    @PostMapping("/category/{categoryId}")
     public ResponseEntity<CategoryAttribute> addAttributeSchema(
             @PathVariable Long categoryId,
             @Valid @RequestBody CategoryAttributeRequest request) {
@@ -42,15 +42,15 @@ public class AttributeController {
         return ResponseEntity.ok(attributePMService.addAttributeSchema(categoryId, request));
     }
 
-    @PutMapping("/category/{categoryId}/attributes-schema")
+    @PutMapping("/{attributeId}")
     public ResponseEntity<CategoryAttribute> updateAttributeSchema(
-            @PathVariable Long categoryId,
+            @PathVariable Long attributeId,
             @Valid @RequestBody CategoryAttributeRequest request) {
-        log.info("PM - Update attribute schema: categoryId={}", categoryId);
-        return ResponseEntity.ok(attributePMService.updateAttributeSchema(categoryId, request));
+        log.info("PM - Update attribute schema: attributeId={}", attributeId);
+        return ResponseEntity.ok(attributePMService.updateAttributeSchema(attributeId, request));
     }
 
-    @DeleteMapping("/attributes-schema/{attributeId}")
+    @DeleteMapping("/{attributeId}")
     public ResponseEntity<String> deleteAttributeSchema(@PathVariable Long attributeId) {
         log.info("PM - Delete attribute schema: attributeId={}", attributeId);
         return ResponseEntity.ok(attributePMService.deleteAttributeSchema(attributeId));

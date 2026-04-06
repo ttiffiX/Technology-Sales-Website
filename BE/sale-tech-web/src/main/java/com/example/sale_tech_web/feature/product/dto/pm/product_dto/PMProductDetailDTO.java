@@ -1,4 +1,4 @@
-package com.example.sale_tech_web.feature.product.dto.pm;
+package com.example.sale_tech_web.feature.product.dto.pm.product_dto;
 
 import com.example.sale_tech_web.feature.product.dto.customer.ProductFilterGroupDTO;
 import lombok.AllArgsConstructor;
