@@ -5,16 +5,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class CategoryAttribute {
-    private Long attributeId;
-    private String code;
-    private String name;
-    private String unit;
-    private String dataType;
-    private Boolean isFilterable;
-    private Integer displayOrder;
+public class CategoryAttributeResponse {
+    private Long groupId;
+    private String groupName;
+    private Integer groupOrder;
+    List<CategoryAttribute> categoryAttributeList;
 }

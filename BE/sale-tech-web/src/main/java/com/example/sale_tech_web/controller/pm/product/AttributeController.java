@@ -3,6 +3,7 @@ package com.example.sale_tech_web.controller.pm.product;
 import com.example.sale_tech_web.feature.product.dto.pm.attribute_dto.AttributeResponse;
 import com.example.sale_tech_web.feature.product.dto.pm.attribute_dto.CategoryAttribute;
 import com.example.sale_tech_web.feature.product.dto.pm.attribute_dto.CategoryAttributeRequest;
+import com.example.sale_tech_web.feature.product.dto.pm.attribute_dto.CategoryAttributeResponse;
 import com.example.sale_tech_web.feature.product.manager.pm.AttributePMServiceInterface;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +29,7 @@ public class AttributeController {
     }
 
     @GetMapping("/category/{categoryId}/schemas")
-    public ResponseEntity<List<CategoryAttribute>> getAttributeByCategory(@PathVariable Long categoryId) {
+    public ResponseEntity<List<CategoryAttributeResponse>> getAttributeByCategory(@PathVariable Long categoryId) {
         log.info("PM - Get category attributes: categoryId={}", categoryId);
         return ResponseEntity.ok(attributePMService.getAttributeByCategory(categoryId));
     }
@@ -48,6 +49,14 @@ public class AttributeController {
             @Valid @RequestBody CategoryAttributeRequest request) {
         log.info("PM - Update attribute schema: attributeId={}", attributeId);
         return ResponseEntity.ok(attributePMService.updateAttributeSchema(attributeId, request));
+    }
+
+    @PatchMapping("/{groupId}/reorder")
+    public ResponseEntity<String> updateDisplayOrder(
+            @PathVariable Long groupId,
+            @RequestBody List<Long> attributeIds) {
+        log.info("PM - Update attribute display order: groupId={}, attributeIds={}", groupId, attributeIds);
+        return ResponseEntity.ok(attributePMService.updateDisplayOrder(groupId, attributeIds));
     }
 
     @DeleteMapping("/{attributeId}")

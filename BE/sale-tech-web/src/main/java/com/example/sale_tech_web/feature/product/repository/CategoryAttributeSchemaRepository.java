@@ -25,4 +25,6 @@ public interface CategoryAttributeSchemaRepository extends JpaRepository<Categor
     Integer findMaxDisplayOrderByGroupId(@Param("groupId") Long groupId);
 
     Boolean existsByCategoryAttributeGroupId(Long groupId);
+
+    List<CategoryAttributeSchema> findByCategoryAttributeGroupId(Long groupId);
 }

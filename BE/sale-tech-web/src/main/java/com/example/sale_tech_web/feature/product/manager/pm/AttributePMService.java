@@ -3,6 +3,7 @@ package com.example.sale_tech_web.feature.product.manager.pm;
 import com.example.sale_tech_web.config.CacheNames;
 import com.example.sale_tech_web.feature.product.dto.pm.attribute_dto.AttributeResponse;
 import com.example.sale_tech_web.feature.product.dto.pm.attribute_dto.CategoryAttribute;
+import com.example.sale_tech_web.feature.product.dto.pm.attribute_dto.CategoryAttributeResponse;
 import com.example.sale_tech_web.feature.product.dto.pm.attribute_dto.CategoryAttributeRequest;
 import com.example.sale_tech_web.feature.product.entity.Category;
 import com.example.sale_tech_web.feature.product.entity.CategoryAttributeGroup;
@@ -20,8 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -56,21 +57,32 @@ public class AttributePMService implements AttributePMServiceInterface {
     }
 
     @Override
-    public List<CategoryAttribute> getAttributeByCategory(Long categoryId) {
-        return categoryAttributeSchemaRepository
-                .findByCategoryIdOrdered(categoryId)
-                .stream()
-                .map(s -> CategoryAttribute.builder()
-                        .attributeId(s.getId())
-                        .code(s.getCode())
-                        .name(s.getName())
-                        .unit(s.getUnit())
-                        .dataType(s.getDataType())
-                        .isFilterable(s.getIsFilterable())
-                        .groupName(s.getCategoryAttributeGroup().getName())
-                        .groupOrder(s.getCategoryAttributeGroup().getGroupOrder())
-                        .displayOrder(s.getDisplayOrder())
-                        .build()).toList();
+    public List<CategoryAttributeResponse> getAttributeByCategory(Long categoryId) {
+        List<CategoryAttributeSchema> schemas = categoryAttributeSchemaRepository.findByCategoryIdOrdered(categoryId);
+
+        List<CategoryAttributeResponse> finalResult = new ArrayList<>();
+        CategoryAttributeResponse currentGroup = null;
+
+        for (CategoryAttributeSchema schema : schemas) {
+            Long groupId = schema.getCategoryAttributeGroup().getId();
+
+            // Nếu là phần tử đầu tiên (currentGroup == null)
+            // HOẶC ID của Group hiện tại khác với ID của Group trước đó
+            if (currentGroup == null || !currentGroup.getGroupId().equals(groupId)) {
+
+                currentGroup = CategoryAttributeResponse.builder()
+                        .groupId(groupId)
+                        .groupName(schema.getCategoryAttributeGroup().getName())
+                        .groupOrder(schema.getCategoryAttributeGroup().getGroupOrder())
+                        .categoryAttributeList(new ArrayList<>())
+                        .build();
+
+                finalResult.add(currentGroup);
+            }
+            currentGroup.getCategoryAttributeList().add(convertToCADTO(schema));
+        }
+
+        return finalResult;
     }
 
     @Override
@@ -138,7 +150,7 @@ public class AttributePMService implements AttributePMServiceInterface {
             CategoryAttributeGroup newGroup = categoryAttributeGroupRepository.findByIdAndCategoryId(request.getGroupId(), categoryId);
 
             if (newGroup == null) {
-                throw new ResponseStatusException(NOT_FOUND, "Attribute group not found.");
+                throw new ResponseStatusException(NOT_FOUND, "Attribute group not found or category not match.");
             }
 
             schema.setCategoryAttributeGroup(newGroup);
@@ -156,6 +168,39 @@ public class AttributePMService implements AttributePMServiceInterface {
         Objects.requireNonNull(cacheManager.getCache(CacheNames.FILTER_OPTIONS)).evict(categoryId);
 
         return convertToCADTO(schema);
+    }
+
+    @Override
+    @Transactional
+    public String updateDisplayOrder(Long groupId, List<Long> attributeIds) {
+        if (attributeIds == null || attributeIds.isEmpty()) {
+            return "Attribute ID list is null or empty.";
+        }
+
+        List<CategoryAttributeSchema> currentAttributes = categoryAttributeSchemaRepository.findByCategoryAttributeGroupId(groupId);
+
+        Map<Long, CategoryAttributeSchema> attributeMap = currentAttributes.stream()
+                .collect(Collectors.toMap(CategoryAttributeSchema::getId, a -> a));
+
+        if (currentAttributes.size() != attributeIds.size()) {
+            throw new ResponseStatusException(BAD_REQUEST,
+                    "Attribute Id list size does not match the number of attributes in system.");
+        }
+
+        for (int i = 0; i < attributeIds.size(); i++) {
+            Long id = attributeIds.get(i);
+            CategoryAttributeSchema attr = attributeMap.get(id);
+
+            if (attr == null) {
+                throw new ResponseStatusException(BAD_REQUEST,
+                        "Attribute ID " + id + " does not exist in this category.");
+            }
+
+            attr.setDisplayOrder(i + 1);
+        }
+
+        categoryAttributeSchemaRepository.saveAll(currentAttributes);
+        return "Display order updated successfully.";
     }
 
     @Override
@@ -184,7 +229,6 @@ public class AttributePMService implements AttributePMServiceInterface {
     }
 
     private CategoryAttribute convertToCADTO(CategoryAttributeSchema schema) {
-        CategoryAttributeGroup group = schema.getCategoryAttributeGroup();
         return CategoryAttribute.builder()
                 .attributeId(schema.getId())
                 .code(schema.getCode())
@@ -192,8 +236,6 @@ public class AttributePMService implements AttributePMServiceInterface {
                 .unit(schema.getUnit())
                 .dataType(schema.getDataType())
                 .isFilterable(schema.getIsFilterable())
-                .groupName(group.getName())
-                .groupOrder(group.getGroupOrder())
                 .displayOrder(schema.getDisplayOrder())
                 .build();
     }
