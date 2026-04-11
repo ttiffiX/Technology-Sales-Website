@@ -5,13 +5,17 @@ function AttributeSchemaModal({
     isOpen,
     title,
     form,
+    errors = {},
     loading,
     isCodeLocked = false,
     onChange,
     onClose,
     onSubmit,
+    attributeGroups = [],
 }) {
     if (!isOpen) return null;
+
+    const showGroupSelect = true;
 
     return (
         <div className="pm-attr-modal-overlay" onClick={onClose}>
@@ -25,9 +29,14 @@ function AttributeSchemaModal({
 
                 <AttributeSchemaFormFields
                     form={form}
+                    errors={errors}
                     onChange={onChange}
                     isCodeLocked={isCodeLocked}
+                    attributeGroups={attributeGroups}
+                    showGroupSelect={showGroupSelect}
                 />
+
+                {errors.general && <p className="pm-form-general-error">{errors.general}</p>}
 
                 <div className="pm-attr-modal__actions">
                     <button

@@ -91,7 +91,7 @@ public class AttributePMService implements AttributePMServiceInterface {
             @CacheEvict(value = CacheNames.PRODUCT_BY_ID, allEntries = true),
             @CacheEvict(value = CacheNames.FILTER_OPTIONS, key = "#categoryId")
     })
-    public CategoryAttribute addAttributeSchema(Long categoryId, CategoryAttributeRequest request) {
+    public String addAttributeSchema(Long categoryId, CategoryAttributeRequest request) {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Category not found"));
 
@@ -118,8 +118,8 @@ public class AttributePMService implements AttributePMServiceInterface {
                 .displayOrder(displayOrder)
                 .build();
 
-        schema = categoryAttributeSchemaRepository.save(schema);
-        return convertToCADTO(schema);
+        categoryAttributeSchemaRepository.save(schema);
+        return "Attribute schema added successfully with ID: " + schema.getId();
     }
 
     @Override
@@ -128,7 +128,7 @@ public class AttributePMService implements AttributePMServiceInterface {
             @CacheEvict(value = CacheNames.PRODUCT_BY_ID, allEntries = true),
 //            @CacheEvict(value = CacheNames.FILTER_OPTIONS, key = "#categoryId")
     })
-    public CategoryAttribute updateAttributeSchema(Long attributeId, CategoryAttributeRequest request) {
+    public String updateAttributeSchema(Long attributeId, CategoryAttributeRequest request) {
         CategoryAttributeSchema schema = categoryAttributeSchemaRepository.findById(attributeId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Attribute not found"));
 
@@ -153,8 +153,10 @@ public class AttributePMService implements AttributePMServiceInterface {
                 throw new ResponseStatusException(NOT_FOUND, "Attribute group not found or category not match.");
             }
 
+            int displayOrder = getNextDisplayOrder(newGroup.getId());
+
             schema.setCategoryAttributeGroup(newGroup);
-            schema.setDisplayOrder(getNextDisplayOrder(newGroup.getId()));
+            schema.setDisplayOrder(displayOrder);
         }
 
         schema.setName(request.getName());
@@ -163,11 +165,11 @@ public class AttributePMService implements AttributePMServiceInterface {
         schema.setDataType(request.getDataType());
         schema.setIsFilterable(request.getIsFilterable());
 
-        schema = categoryAttributeSchemaRepository.save(schema);
+        categoryAttributeSchemaRepository.save(schema);
 
         Objects.requireNonNull(cacheManager.getCache(CacheNames.FILTER_OPTIONS)).evict(categoryId);
 
-        return convertToCADTO(schema);
+        return "Attribute schema updated successfully with ID: " + schema.getId();
     }
 
     @Override

@@ -1,7 +1,6 @@
 package com.example.sale_tech_web.controller.pm.product;
 
 import com.example.sale_tech_web.feature.product.dto.pm.attribute_dto.AttributeResponse;
-import com.example.sale_tech_web.feature.product.dto.pm.attribute_dto.CategoryAttribute;
 import com.example.sale_tech_web.feature.product.dto.pm.attribute_dto.CategoryAttributeRequest;
 import com.example.sale_tech_web.feature.product.dto.pm.attribute_dto.CategoryAttributeResponse;
 import com.example.sale_tech_web.feature.product.manager.pm.AttributePMServiceInterface;
@@ -36,7 +35,7 @@ public class AttributeController {
 
     // Attribute Schema endpoints
     @PostMapping("/category/{categoryId}")
-    public ResponseEntity<CategoryAttribute> addAttributeSchema(
+    public ResponseEntity<String> addAttributeSchema(
             @PathVariable Long categoryId,
             @Valid @RequestBody CategoryAttributeRequest request) {
         log.info("PM - Add attribute schema: categoryId={}, code={}", categoryId, request.getCode());
@@ -44,7 +43,7 @@ public class AttributeController {
     }
 
     @PutMapping("/{attributeId}")
-    public ResponseEntity<CategoryAttribute> updateAttributeSchema(
+    public ResponseEntity<String> updateAttributeSchema(
             @PathVariable Long attributeId,
             @Valid @RequestBody CategoryAttributeRequest request) {
         log.info("PM - Update attribute schema: attributeId={}", attributeId);

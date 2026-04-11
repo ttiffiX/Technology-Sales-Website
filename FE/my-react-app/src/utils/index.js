@@ -100,8 +100,10 @@ export {
 
 // API error utilities
 export {
-    getApiErrorMessage
-} from './apiErrorUtils';
+    getApiErrorMessage,
+    mapApiFieldErrors,
+    getSuccessMessage
+} from './apiUtils';
 
 // PM attribute schema utilities
 export {
@@ -109,5 +111,5 @@ export {
     EMPTY_ATTRIBUTE_SCHEMA_FORM,
     mapAttributeSchemaToForm,
     validateAttributeSchemaForm,
-    buildAttributeSchemaPayload
+    buildAttributeSchemaPayload,
 } from './pmAttributeSchemaUtils';
