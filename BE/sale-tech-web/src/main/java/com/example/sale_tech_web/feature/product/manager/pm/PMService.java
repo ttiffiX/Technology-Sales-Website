@@ -17,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -43,16 +45,17 @@ public class PMService implements PMServiceInterface {
     @Autowired
     private CacheManager cacheManager;
 
+
     @Override
-    @Transactional(readOnly = true)
-    public List<PMProductListDTO> getAllProductsForPM() {
-        return productRepository.findAllByOrderByIdDesc().stream()
-                .map(this::toListDTO)
-                .toList();
+    public Page<PMProductListDTO> getAllProductsForPM(String keyword, Integer categoryId, Boolean isActive,
+                                                      Integer minPrice, Integer maxPrice, Pageable pageable) {
+        Page<Product> productPage = productRepository.findProductsCustom(
+                keyword, categoryId, isActive, minPrice, maxPrice, pageable);
+
+        return productPage.map(this::toListDTO);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public PMProductDetailDTO getProductDetailForPM(Long productId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Product not found"));

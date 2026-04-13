@@ -7,11 +7,13 @@ import com.example.sale_tech_web.feature.product.manager.pm.PMServiceInterface;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -22,9 +24,16 @@ public class PMController {
     private final PMServiceInterface productPMService;
 
     @GetMapping()
-    public ResponseEntity<List<PMProductListDTO>> getAllProductsForPM() {
+    public ResponseEntity<Page  <PMProductListDTO>> getAllProductsForPM(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Integer categoryId,
+            @RequestParam(required = false) Boolean isActive,
+            @RequestParam(required = false) Integer minPrice,
+            @RequestParam(required = false) Integer maxPrice,
+            @PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
         log.info("PM - Get all products (basic info)");
-        return ResponseEntity.ok(productPMService.getAllProductsForPM());
+        return ResponseEntity.ok(productPMService.getAllProductsForPM(keyword, categoryId, isActive, minPrice, maxPrice, pageable));
     }
 
     @GetMapping("/{productId}")

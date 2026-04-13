@@ -3,6 +3,8 @@ package com.example.sale_tech_web.feature.product.repository;
 import com.example.sale_tech_web.feature.product.dto.customer.FilterProjection;
 import com.example.sale_tech_web.feature.product.entity.Category;
 import com.example.sale_tech_web.feature.product.entity.Product;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -77,10 +79,20 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
             """)
     void incrementStockOnRevert(@Param("productId") Long productId, @Param("quantity") Integer quantity);
 
-    @EntityGraph(attributePaths = {
-            "category"
-    })
-    List<Product> findAllByOrderByIdDesc();
+    @EntityGraph(attributePaths = {"category"})
+    @Query("SELECT p FROM Product p WHERE " +
+            "(CAST(:kw AS string) IS NULL OR LOWER(p.title) LIKE LOWER(CONCAT('%', CAST(:kw AS string), '%'))) AND " +
+            "(:cateId IS NULL OR p.category.id = :cateId) AND " +
+            "(:active IS NULL OR p.isActive = :active) AND " +
+            "(:minPrice IS NULL OR p.price >= :minPrice) AND " +
+            "(:maxPrice IS NULL OR p.price <= :maxPrice)")
+    Page<Product> findProductsCustom(
+            @Param("kw") String keyword,
+            @Param("cateId") Integer categoryId,
+            @Param("active") Boolean isActive,
+            @Param("minPrice") Integer minPrice,
+            @Param("maxPrice") Integer maxPrice,
+            Pageable pageable);
 
     @Query(value = "SELECT EXISTS(SELECT 1 FROM product " +
             "WHERE category_id = :categoryId " +
