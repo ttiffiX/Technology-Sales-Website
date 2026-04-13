@@ -372,7 +372,7 @@ function PMProductManagement() {
             <div className="pm-content">
                 <div className="pm-toolbar">
                     <button className="pm-btn-back" onClick={() => navigate('/pm/products')}>
-                        ← Product workspace
+                        ← Product Workspace
                     </button>
 
                     <button className="pm-btn-add" onClick={openAddModal}>

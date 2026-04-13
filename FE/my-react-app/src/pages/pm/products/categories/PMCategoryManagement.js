@@ -130,7 +130,7 @@ function PMCategoryManagement() {
             <div className="pm-category-content">
                 <div className="pm-category-toolbar">
                     <button className="pm-btn-back" onClick={() => navigate('/pm/products')}>
-                        ← Back to Product Workspace
+                        ← Product Workspace
                     </button>
                     <button className="pm-btn-add" onClick={() => setIsAddOpen((prev) => !prev)}>
                         {isAddOpen ? 'Close Add Form' : '+ Add Category'}

@@ -1,14 +1,14 @@
 import React from 'react';
-import { ATTRIBUTE_DATA_TYPES } from '../../../utils';
+import {ATTRIBUTE_DATA_TYPES} from '../../../utils';
 
 function AttributeSchemaFormFields({
-    form,
-    errors = {},
-    onChange,
-    isCodeLocked = false,
-    attributeGroups = [],
-    showGroupSelect = false,
-}) {
+                                       form,
+                                       errors = {},
+                                       onChange,
+                                       isCodeLocked = false,
+                                       attributeGroups = [],
+                                       showGroupSelect = false,
+                                   }) {
     return (
         <div className="pm-attr-form-grid">
             <div className="pm-form-field">
@@ -30,7 +30,8 @@ function AttributeSchemaFormFields({
                 <label htmlFor="attr-name" className="pm-field-label">
                     Name <span className="pm-required">*</span>
                 </label>
-                <input id="attr-name" name="name" value={form.name} onChange={onChange} className={errors.name ? 'is-invalid' : ''} />
+                <input id="attr-name" name="name" value={form.name} onChange={onChange}
+                       className={errors.name ? 'is-invalid' : ''}/>
                 {errors.name && <span className="pm-field-error">{errors.name}</span>}
             </div>
 
@@ -59,7 +60,8 @@ function AttributeSchemaFormFields({
 
             <div className="pm-form-field">
                 <label htmlFor="attr-unit" className="pm-field-label">Unit</label>
-                <input id="attr-unit" name="unit" value={form.unit} onChange={onChange} className={errors.unit ? 'is-invalid' : ''} />
+                <input id="attr-unit" name="unit" value={form.unit} onChange={onChange}
+                       className={errors.unit ? 'is-invalid' : ''}/>
                 {errors.unit && <span className="pm-field-error">{errors.unit}</span>}
             </div>
 
@@ -67,7 +69,8 @@ function AttributeSchemaFormFields({
                 <label htmlFor="attr-data-type" className="pm-field-label">
                     Data Type <span className="pm-required">*</span>
                 </label>
-                <select id="attr-data-type" name="dataType" value={form.dataType} onChange={onChange} className={errors.dataType ? 'is-invalid' : ''}>
+                <select id="attr-data-type" name="dataType" value={form.dataType} onChange={onChange}
+                        className={errors.dataType ? 'is-invalid' : ''}>
                     {ATTRIBUTE_DATA_TYPES.map((dataType) => (
                         <option key={dataType} value={dataType}>
                             {dataType}
@@ -87,7 +90,7 @@ function AttributeSchemaFormFields({
                         checked={form.isFilterable}
                         onChange={onChange}
                     />
-                    <span className="pm-toggle-slider" />
+                    <span className="pm-toggle-slider"/>
                 </span>
             </div>
         </div>

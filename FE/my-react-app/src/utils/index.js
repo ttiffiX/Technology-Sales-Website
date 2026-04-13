@@ -109,7 +109,13 @@ export {
 export {
     ATTRIBUTE_DATA_TYPES,
     EMPTY_ATTRIBUTE_SCHEMA_FORM,
+    EMPTY_ATTRIBUTE_GROUP_FORM,
     mapAttributeSchemaToForm,
     validateAttributeSchemaForm,
+    mapAttributeSchemaValidationMessageToFieldError,
     buildAttributeSchemaPayload,
+    validateAttributeGroupForm,
+    buildAttributeGroupPayload,
+    reorderIdsByDnD,
+    mapDraftIdsToItems,
 } from './pmAttributeSchemaUtils';
