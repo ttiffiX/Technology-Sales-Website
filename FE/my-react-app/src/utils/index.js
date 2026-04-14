@@ -77,9 +77,12 @@ export {
 export {
     PAYMENT_METHOD,
     PAYMENT_STATUS,
+    PAYMENT_STATUS_FILTERS,
     ORDER_STATUS_FILTERS,
     getStatusColor,
-    getPaymentStatusColor
+    getPaymentStatusColor,
+    normalizePMOrderFilterParams,
+    normalizePMOrderPageResponse,
 } from './orderUtils';
 
 // PM product utilities

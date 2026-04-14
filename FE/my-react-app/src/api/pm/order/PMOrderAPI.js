@@ -1,10 +1,8 @@
 import apiClient from '../../apiClient';
 
-export const getPMOrders = async (status = null) => {
-    const response = await apiClient.get('/pm/orders', {
-        params: status ? {status} : undefined,
-    });
-    return Array.isArray(response.data) ? response.data : [];
+export const getPMOrders = async (params = {}) => {
+    const response = await apiClient.get('/pm/orders', { params });
+    return response.data;
 };
 
 export const getOrderCountByStatus = async () => {

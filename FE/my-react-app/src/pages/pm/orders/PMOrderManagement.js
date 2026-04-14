@@ -5,12 +5,17 @@ import {
     getPaymentStatusColor,
     getStatusColor,
     ORDER_STATUS_FILTERS,
+    PAYMENT_STATUS_FILTERS,
+    normalizePMOrderFilterParams,
+    normalizePMOrderPageResponse,
 } from '../../../utils';
 import { useToast } from '../../../components/Toast/Toast';
+import PaginationControls from '../../../components/pagination/PaginationControls';
 import {
     approvePMOrder,
     completePMOrder,
-    getOrderCountByStatus,
+    // TEMP COMMENT: hide order-status counters to avoid filter misunderstanding.
+    // getOrderCountByStatus,
     getPMOrders,
     movePMOrderToShipping,
     rejectPMOrder,
@@ -27,11 +32,26 @@ function PMOrderManagement() {
     }, [triggerToast]);
 
     const [statusFilter, setStatusFilter] = React.useState(null);
-    const [statusCounts, setStatusCounts] = React.useState({});
-    const [totalStatusCount, setTotalStatusCount] = React.useState(0);
-    const [isStatusCountLoaded, setIsStatusCountLoaded] = React.useState(false);
+    // TEMP COMMENT: status counter state is disabled for now.
+    // const [statusCounts, setStatusCounts] = React.useState({});
+    // const [totalStatusCount, setTotalStatusCount] = React.useState(0);
+    // const [isStatusCountLoaded, setIsStatusCountLoaded] = React.useState(false);
 
     const [orders, setOrders] = React.useState([]);
+    const [pageNumber, setPageNumber] = React.useState(0);
+    const [pageSize] = React.useState(10);
+    const [totalPages, setTotalPages] = React.useState(0);
+    const [totalElements, setTotalElements] = React.useState(0);
+
+    const [keywordInput, setKeywordInput] = React.useState('');
+    const [appliedKeyword, setAppliedKeyword] = React.useState('');
+    const [paymentStatusInput, setPaymentStatusInput] = React.useState('');
+    const [appliedPaymentStatus, setAppliedPaymentStatus] = React.useState('');
+    const [startDateInput, setStartDateInput] = React.useState('');
+    const [endDateInput, setEndDateInput] = React.useState('');
+    const [appliedStartDate, setAppliedStartDate] = React.useState('');
+    const [appliedEndDate, setAppliedEndDate] = React.useState('');
+
     const [loading, setLoading] = React.useState(true);
     const [error, setError] = React.useState('');
 
@@ -39,51 +59,72 @@ function PMOrderManagement() {
     const [selectedOrderId, setSelectedOrderId] = React.useState(null);
     const [showDetailModal, setShowDetailModal] = React.useState(false);
 
-    const loadOrders = React.useCallback(async () => {
+    const loadOrders = React.useCallback(async (nextPage = 0) => {
         setLoading(true);
         setError('');
         try {
-            const data = await getPMOrders(statusFilter);
-            setOrders(Array.isArray(data) ? data : []);
+            const params = normalizePMOrderFilterParams({
+                orderStatus: statusFilter,
+                paymentStatus: appliedPaymentStatus,
+                keyword: appliedKeyword,
+                startDate: appliedStartDate,
+                endDate: appliedEndDate,
+                page: nextPage,
+                size: pageSize,
+            });
+            const rawData = await getPMOrders(params);
+            const pageData = normalizePMOrderPageResponse(rawData);
+            const rows = Array.isArray(pageData.content) ? pageData.content : [];
+
+            setOrders(rows);
+            setPageNumber(Number.isFinite(pageData.pageNumber) ? pageData.pageNumber : nextPage);
+            setTotalPages(Number.isFinite(pageData.totalPages) ? pageData.totalPages : 0);
+            setTotalElements(Number.isFinite(pageData.totalElements) ? pageData.totalElements : rows.length);
         } catch (err) {
             const message = err?.response?.data?.message || 'Failed to load orders';
             setError(message);
+            setOrders([]);
+            setTotalPages(0);
+            setTotalElements(0);
             triggerToastRef.current('error', message);
         } finally {
             setLoading(false);
         }
-    }, [statusFilter]);
+    }, [statusFilter, appliedPaymentStatus, appliedKeyword, appliedStartDate, appliedEndDate, pageSize]);
 
-    const loadStatusCounts = React.useCallback(async () => {
-        try {
-            const data = await getOrderCountByStatus();
-            setStatusCounts(data.orderStatusCountMap || {});
-            setTotalStatusCount(data.totalStatusCount ?? 0);
-            setIsStatusCountLoaded(true);
-        } catch (_) {
-            setIsStatusCountLoaded(false);
-        }
-    }, []);
-
-    React.useEffect(() => {
-        loadOrders();
-    }, [loadOrders]);
+    // TEMP COMMENT: disable status-count fetching until counter UX is clarified.
+    // const loadStatusCounts = React.useCallback(async () => {
+    //     try {
+    //         const data = await getOrderCountByStatus();
+    //         setStatusCounts(data.orderStatusCountMap || {});
+    //         setTotalStatusCount(data.totalStatusCount ?? 0);
+    //         setIsStatusCountLoaded(true);
+    //     } catch (_) {
+    //         setIsStatusCountLoaded(false);
+    //     }
+    // }, []);
 
     React.useEffect(() => {
-        loadStatusCounts();
-    }, [loadStatusCounts]);
+        loadOrders(pageNumber);
+    }, [loadOrders, pageNumber]);
 
-    const getFilterCount = React.useCallback((statusValue) => {
-        if (statusValue === null) return totalStatusCount;
-        return statusCounts?.[statusValue] ?? 0;
-    }, [statusCounts, totalStatusCount]);
+    // TEMP COMMENT: do not auto-load status counters.
+    // React.useEffect(() => {
+    //     loadStatusCounts();
+    // }, [loadStatusCounts]);
+
+    // TEMP COMMENT: counter helper disabled with status counters.
+    // const getFilterCount = React.useCallback((statusValue) => {
+    //     if (statusValue === null) return totalStatusCount;
+    //     return statusCounts?.[statusValue] ?? 0;
+    // }, [statusCounts, totalStatusCount]);
 
     const runAction = async (orderId, action) => {
         setActingOrderId(orderId);
         try {
             const message = await action();
             triggerToast('success', typeof message === 'string' ? message : 'Order updated successfully');
-            await Promise.all([loadOrders(), loadStatusCounts()]);
+            await loadOrders(pageNumber);
         } catch (err) {
             const message = err?.response?.data?.message || 'Failed to update order';
             triggerToast('error', message);
@@ -103,6 +144,31 @@ function PMOrderManagement() {
         setShowDetailModal(true);
     };
 
+    const applySearchFilters = () => {
+        if (startDateInput && endDateInput && startDateInput > endDateInput) {
+            triggerToast('error', 'Start date must be before or equal to end date');
+            return;
+        }
+
+        setAppliedKeyword(keywordInput.trim());
+        setAppliedPaymentStatus(paymentStatusInput);
+        setAppliedStartDate(startDateInput);
+        setAppliedEndDate(endDateInput);
+        setPageNumber(0);
+    };
+
+    const resetSearchFilters = () => {
+        setKeywordInput('');
+        setAppliedKeyword('');
+        setPaymentStatusInput('');
+        setAppliedPaymentStatus('');
+        setStartDateInput('');
+        setEndDateInput('');
+        setAppliedStartDate('');
+        setAppliedEndDate('');
+        setPageNumber(0);
+    };
+
     return (
         <div className="pm-order-management">
             <div className="pm-order-management__header">
@@ -116,12 +182,77 @@ function PMOrderManagement() {
                         key={filter.label}
                         type="button"
                         className={`pm-order-management__filter-btn${statusFilter === filter.value ? ' active' : ''}`}
-                        onClick={() => setStatusFilter(filter.value)}
+                        onClick={() => {
+                            setStatusFilter(filter.value);
+                            setPageNumber(0);
+                        }}
                     >
                         {filter.label}
-                        {isStatusCountLoaded ? ` (${getFilterCount(filter.value)})` : ''}
+                        {/* TEMP COMMENT: hide count badge to avoid misunderstanding while filtering */}
+                        {/* {isStatusCountLoaded ? ` (${getFilterCount(filter.value)})` : ''} */}
                     </button>
                 ))}
+            </div>
+
+            <div className="pm-order-management__search-panel">
+                <div className="pm-order-management__search-grid">
+                    <input
+                        type="text"
+                        className="pm-order-management__search-input pm-order-management__search-input--keyword"
+                        placeholder="Search by customer name, email, or phone"
+                        value={keywordInput}
+                        onChange={(event) => setKeywordInput(event.target.value)}
+                        onKeyDown={(event) => {
+                            if (event.key === 'Enter') {
+                                applySearchFilters();
+                            }
+                        }}
+                    />
+
+                    <select
+                        className="pm-order-management__search-input"
+                        value={paymentStatusInput}
+                        onChange={(event) => setPaymentStatusInput(event.target.value)}
+                    >
+                        {PAYMENT_STATUS_FILTERS.map((option) => (
+                            <option key={option.value || 'all'} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
+                    </select>
+
+                    <input
+                        type="date"
+                        className="pm-order-management__search-input"
+                        value={startDateInput}
+                        onChange={(event) => setStartDateInput(event.target.value)}
+                        aria-label="Start date"
+                    />
+
+                    <input
+                        type="date"
+                        className="pm-order-management__search-input"
+                        value={endDateInput}
+                        onChange={(event) => setEndDateInput(event.target.value)}
+                        aria-label="End date"
+                    />
+
+                    <button
+                        type="button"
+                        className="pm-order-management__search-btn"
+                        onClick={applySearchFilters}
+                    >
+                        Search
+                    </button>
+
+                    <button
+                        type="button"
+                        className="pm-order-management__search-btn pm-order-management__search-btn--ghost"
+                        onClick={resetSearchFilters}
+                    >
+                        Reset
+                    </button>
+                </div>
             </div>
 
             <div className="pm-order-management__content">
@@ -257,6 +388,16 @@ function PMOrderManagement() {
                             );
                         })}
                     </div>
+                )}
+
+                {!loading && !error && (
+                    <PaginationControls
+                        page={pageNumber}
+                        totalPages={totalPages}
+                        totalElements={totalElements}
+                        onPageChange={setPageNumber}
+                        disabled={loading}
+                    />
                 )}
             </div>
 
