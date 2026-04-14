@@ -10,7 +10,13 @@ import {
 import { getAttributesByCategory } from '../../../api/pm/product/AttributeAPI';
 import { useToast } from '../../../components/Toast/Toast';
 import AddProductModal from '../../../components/modal/addproduct/AddProductModal';
-import { formatPrice } from '../../../utils';
+import PaginationControls from '../../../components/pagination/PaginationControls';
+import {
+    formatPrice,
+    normalizePMProductFilterParams,
+    normalizePMProductPageResponse,
+    validatePMProductForm,
+} from '../../../utils';
 import './PMProductManagement.scss';
 
 const INITIAL_FORM = {
@@ -52,19 +58,42 @@ function PMProductManagement() {
     const [products, setProducts] = useState([]);
     const [loadingProducts, setLoadingProducts] = useState(true);
     const [productsError, setProductsError] = useState(null);
+     const [keywordInput, setKeywordInput] = useState('');
+     const [appliedKeyword, setAppliedKeyword] = useState('');
+     const [categoryFilterId, setCategoryFilterId] = useState('');
+     const [sortBy, setSortBy] = useState('id,desc');
+    const [pageNumber, setPageNumber] = useState(0);
+    const [pageSize] = useState(10);
+    const [totalPages, setTotalPages] = useState(0);
+    const [totalElements, setTotalElements] = useState(0);
     const [deletingProductId, setDeletingProductId] = useState(null);
     const [activatingProductId, setActivatingProductId] = useState(null);
     const hasFetchedInitialDataRef = useRef(false);
 
-    const loadProducts = async () => {
+    const loadProducts = async (nextPage = pageNumber) => {
         setLoadingProducts(true);
         setProductsError(null);
 
         try {
-            const data = await getPMProducts();
-            setProducts((Array.isArray(data) ? data : []).map(normalizePMListProduct));
+            const params = normalizePMProductFilterParams({
+                keyword: appliedKeyword,
+                categoryId: categoryFilterId,
+                sort: sortBy,
+                page: nextPage,
+                size: pageSize,
+            });
+            const rawData = await getPMProducts(params);
+            const pageData = normalizePMProductPageResponse(rawData);
+            const rows = Array.isArray(pageData.content) ? pageData.content : [];
+
+            setProducts(rows.map(normalizePMListProduct));
+            setPageNumber(Number.isFinite(pageData.pageNumber) ? pageData.pageNumber : nextPage);
+            setTotalPages(Number.isFinite(pageData.totalPages) ? pageData.totalPages : 0);
+            setTotalElements(Number.isFinite(pageData.totalElements) ? pageData.totalElements : rows.length);
         } catch (_error) {
             setProducts([]);
+            setTotalPages(0);
+            setTotalElements(0);
             setProductsError('Failed to load product list');
         } finally {
             setLoadingProducts(false);
@@ -235,44 +264,12 @@ function PMProductManagement() {
         });
     };
 
-    const validateForm = () => {
-        const nextErrors = {};
-
-        if (!productForm.categoryId) {
-            nextErrors.categoryId = 'Please choose a category';
-        }
-
-        if (!productForm.title.trim()) {
-            nextErrors.title = 'Title is required';
-        }
-
-        if (productForm.price === '') {
-            nextErrors.price = 'Price is required';
-        } else if (Number.isNaN(Number(productForm.price)) || Number(productForm.price) < 0) {
-            nextErrors.price = 'Price must be a valid number >= 0';
-        }
-
-        if (productForm.quantity === '') {
-            nextErrors.quantity = 'Quantity is required';
-        } else if (Number.isNaN(Number(productForm.quantity)) || Number(productForm.quantity) < 0) {
-            nextErrors.quantity = 'Quantity must be a valid number >= 0';
-        }
-
-        if (
-            productForm.quantitySold !== '' &&
-            (Number.isNaN(Number(productForm.quantitySold)) || Number(productForm.quantitySold) < 0)
-        ) {
-            nextErrors.quantitySold = 'Quantity sold must be a valid number >= 0';
-        }
-
-        setFormErrors(nextErrors);
-        return Object.keys(nextErrors).length === 0;
-    };
-
     const handleAddProduct = async (event) => {
         event.preventDefault();
 
-        if (!validateForm()) {
+        const nextErrors = validatePMProductForm(productForm);
+        setFormErrors(nextErrors);
+        if (Object.keys(nextErrors).length > 0) {
             return;
         }
 
@@ -291,13 +288,15 @@ function PMProductManagement() {
 
             if (createdProduct?.id) {
                 const nextProduct = normalizePMListProduct(createdProduct);
-                setProducts((prev) => [
-                    nextProduct,
-                    ...prev.filter((item) => item.id !== nextProduct.id),
-                ]);
+                if (pageNumber === 0) {
+                    setProducts((prev) => [
+                        nextProduct,
+                        ...prev.filter((item) => item.id !== nextProduct.id),
+                    ]);
+                }
             } else {
                 // Fallback only when BE does not return created product payload.
-                await loadProducts();
+                await loadProducts(0);
             }
 
             triggerToast('success', 'Product added successfully');
@@ -335,6 +334,26 @@ function PMProductManagement() {
             setDeletingProductId(null);
         }
     };
+
+    const applyFilters = () => {
+        setAppliedKeyword(keywordInput.trim());
+        setPageNumber(0);
+    };
+
+     const resetFilters = () => {
+         setKeywordInput('');
+         setAppliedKeyword('');
+         setCategoryFilterId('');
+         setSortBy('id,desc');
+         setPageNumber(0);
+     };
+
+     useEffect(() => {
+         if (!hasFetchedInitialDataRef.current) {
+             return;
+         }
+         loadProducts(pageNumber);
+     }, [appliedKeyword, categoryFilterId, sortBy, pageNumber]);
 
     const handleToggleActiveProduct = async (productId, nextActiveState) => {
         const actionLabel = nextActiveState ? 'activate' : 'deactivate';
@@ -378,6 +397,61 @@ function PMProductManagement() {
                     <button className="pm-btn-add" onClick={openAddModal}>
                         + Add Product
                     </button>
+                </div>
+
+                <div className="pm-filter-container">
+                    <div className="pm-filter-row pm-filter-row--first">
+                        <input
+                            type="text"
+                            className="pm-filter-input pm-filter-input--full"
+                            placeholder="Search by keyword..."
+                            value={keywordInput}
+                            onChange={(event) => setKeywordInput(event.target.value)}
+                            onKeyDown={(event) => {
+                                if (event.key === 'Enter') {
+                                    applyFilters();
+                                }
+                            }}
+                        />
+
+                        <select
+                            className="pm-filter-select"
+                            value={categoryFilterId}
+                            onChange={(event) => {
+                                setCategoryFilterId(event.target.value);
+                                setPageNumber(0);
+                            }}
+                        >
+                            <option value="">All Categories</option>
+                            {categories.map((category) => (
+                                <option key={category.id} value={category.id}>
+                                    {category.name}
+                                </option>
+                            ))}
+                        </select>
+
+                        <select
+                            className="pm-filter-select"
+                            value={sortBy}
+                            onChange={(event) => {
+                                setSortBy(event.target.value);
+                                setPageNumber(0);
+                            }}
+                        >
+                            <option value="id,desc">Newest</option>
+                            <option value="price,asc">Price: Low to High</option>
+                            <option value="price,desc">Price: High to Low</option>
+                            <option value="title,asc">Title: A to Z</option>
+                            <option value="title,desc">Title: Z to A</option>
+                        </select>
+
+                        <button type="button" className="pm-filter-btn" onClick={applyFilters}>
+                            Search
+                        </button>
+                        <button type="button" className="pm-filter-btn pm-filter-btn--ghost" onClick={resetFilters}>
+                            Reset
+                        </button>
+                    </div>
                 </div>
 
                 {loadingProducts && (
@@ -458,6 +532,16 @@ function PMProductManagement() {
                             </tbody>
                         </table>
                     </div>
+                )}
+
+                {!loadingProducts && !productsError && (
+                    <PaginationControls
+                        page={pageNumber}
+                        totalPages={totalPages}
+                        totalElements={totalElements}
+                        onPageChange={setPageNumber}
+                        disabled={loadingProducts}
+                    />
                 )}
             </div>
 

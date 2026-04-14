@@ -7,9 +7,9 @@ export const addProduct = async (productRequest, attributeSchemas = []) => {
     return response.data;
 };
 
-export const getPMProducts = async () => {
-    const response = await apiClient.get('/pm/products');
-    return Array.isArray(response.data) ? response.data : [];
+export const getPMProducts = async (params = {}) => {
+    const response = await apiClient.get('/pm/products', { params });
+    return response.data;
 };
 
 export const getPMProductDetail = async (productId) => {

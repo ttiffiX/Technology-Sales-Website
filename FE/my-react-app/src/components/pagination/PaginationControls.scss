@@ -1,0 +1,55 @@
+@use '../../styles/variables';
+
+.pm-pagination {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pm-pagination__meta {
+  font-size: 13px;
+  color: #666;
+}
+
+.pm-pagination__controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pm-pagination__btn {
+  min-width: 36px;
+  height: 34px;
+  border: 1px solid variables.$border-color;
+  border-radius: 8px;
+  background: #fff;
+  color: #333;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0 10px;
+
+  &:hover:not(:disabled) {
+    border-color: variables.$primary-color;
+    color: variables.$primary-color;
+  }
+
+  &.is-active {
+    background: rgba(variables.$primary-color, 0.12);
+    color: variables.$primary-color;
+    border-color: variables.$primary-color;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.pm-pagination__ellipsis {
+  color: #888;
+  font-weight: 600;
+}
+

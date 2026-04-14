@@ -90,8 +90,16 @@ export {
     buildPMDetailAttributeValues,
     buildUpdateProductPayload,
     flattenPMDetailAttributes,
-    groupAttributesByGroupName
+    groupAttributesByGroupName,
+    validatePMProductForm,
+    normalizePMProductPageResponse,
+    normalizePMProductFilterParams,
 } from './pmProductUtils';
+
+// Pagination utilities
+export {
+    buildPaginationItems,
+} from './paginationUtils';
 
 // Product attribute display utilities
 export {

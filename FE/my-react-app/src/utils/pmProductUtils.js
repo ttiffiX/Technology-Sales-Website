@@ -225,3 +225,115 @@ export const buildUpdateProductPayload = (productForm, attributeSchemas = [], de
     };
 };
 
+export const validatePMProductForm = (productForm) => {
+    const nextErrors = {};
+
+    if (!productForm.categoryId) {
+        nextErrors.categoryId = 'Please choose a category';
+    }
+
+    if (!productForm.title?.trim()) {
+        nextErrors.title = 'Title is required';
+    }
+
+    if (productForm.price === '') {
+        nextErrors.price = 'Price is required';
+    } else if (Number.isNaN(Number(productForm.price)) || Number(productForm.price) < 0) {
+        nextErrors.price = 'Price must be a valid number >= 0';
+    }
+
+    if (productForm.quantity === '') {
+        nextErrors.quantity = 'Quantity is required';
+    } else if (Number.isNaN(Number(productForm.quantity)) || Number(productForm.quantity) < 0) {
+        nextErrors.quantity = 'Quantity must be a valid number >= 0';
+    }
+
+    if (
+        productForm.quantitySold !== '' &&
+        (Number.isNaN(Number(productForm.quantitySold)) || Number(productForm.quantitySold) < 0)
+    ) {
+        nextErrors.quantitySold = 'Quantity sold must be a valid number >= 0';
+    }
+
+    return nextErrors;
+};
+
+export const normalizePMProductPageResponse = (rawData) => {
+    const pageData = rawData?.data && typeof rawData.data === 'object' ? rawData.data : rawData;
+
+    const toSafeNumber = (value, fallback = 0) => {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : fallback;
+    };
+
+    if (Array.isArray(pageData)) {
+        return {
+            content: pageData,
+            pageNumber: 0,
+            totalPages: 1,
+            totalElements: pageData.length,
+            pageSize: pageData.length,
+        };
+    }
+
+    const content = Array.isArray(pageData?.content) ? pageData.content : [];
+    const pageMeta = pageData?.page && typeof pageData.page === 'object' ? pageData.page : pageData;
+
+    return {
+        content,
+        pageNumber: toSafeNumber(pageMeta?.number ?? pageData?.pageNumber, 0),
+        totalPages: toSafeNumber(pageMeta?.totalPages ?? pageData?.totalPages, 0),
+        totalElements: toSafeNumber(pageMeta?.totalElements ?? pageData?.totalElements, content.length),
+        pageSize: toSafeNumber(pageMeta?.size ?? pageData?.pageSize, content.length),
+    };
+};
+
+export const normalizePMProductFilterParams = ({
+    keyword = '',
+    categoryId = '',
+    minPrice = '',
+    maxPrice = '',
+    sort = 'id,desc',
+    page = 0,
+    size = 10,
+} = {}) => {
+    const params = {
+        page,
+        size,
+    };
+
+    // Normalize keyword
+    const trimmedKeyword = String(keyword).trim();
+    if (trimmedKeyword) {
+        params.keyword = trimmedKeyword;
+    }
+
+    // Normalize categoryId
+    const parsedCategoryId = Number(categoryId);
+    if (!Number.isNaN(parsedCategoryId) && parsedCategoryId > 0) {
+        params.categoryId = parsedCategoryId;
+    }
+
+    // Normalize minPrice
+    if (minPrice !== '' && minPrice !== null && minPrice !== undefined) {
+        const parsedMinPrice = Number(minPrice);
+        if (!Number.isNaN(parsedMinPrice) && parsedMinPrice >= 0) {
+            params.minPrice = parsedMinPrice;
+        }
+    }
+
+    // Normalize maxPrice
+    if (maxPrice !== '' && maxPrice !== null && maxPrice !== undefined) {
+        const parsedMaxPrice = Number(maxPrice);
+        if (!Number.isNaN(parsedMaxPrice) && parsedMaxPrice >= 0) {
+            params.maxPrice = parsedMaxPrice;
+        }
+    }
+
+    // Add sort if provided
+    if (sort) {
+        params.sort = sort;
+    }
+
+    return params;
+};
