@@ -133,3 +133,63 @@ export const normalizePMOrderFilterParams = ({
     return params;
 };
 
+export const normalizeCustomerOrderFilterParams = ({
+    orderStatus = null,
+    paymentStatus = '',
+    startDate = '',
+    endDate = '',
+    page = 0,
+    size = 10,
+} = {}) => {
+    const params = {
+        page,
+        size,
+    };
+
+    if (orderStatus) {
+        params.orderStatus = String(orderStatus).trim();
+    }
+
+    const trimmedPaymentStatus = String(paymentStatus).trim();
+    if (trimmedPaymentStatus) {
+        params.paymentStatus = trimmedPaymentStatus;
+    }
+
+    const normalizedStartDate = String(startDate).trim();
+    if (normalizedStartDate) {
+        params.startDate = normalizedStartDate;
+    }
+
+    const normalizedEndDate = String(endDate).trim();
+    if (normalizedEndDate) {
+        params.endDate = normalizedEndDate;
+    }
+
+    return params;
+};
+
+export const normalizeCustomerOrderPageResponse = (rawData) => {
+    const pageData = rawData?.data && typeof rawData.data === 'object' ? rawData.data : rawData;
+
+    if (Array.isArray(pageData)) {
+        return {
+            content: pageData,
+            pageNumber: 0,
+            totalPages: pageData.length ? 1 : 0,
+            totalElements: pageData.length,
+            pageSize: pageData.length,
+        };
+    }
+
+    const content = Array.isArray(pageData?.content) ? pageData.content : [];
+    const pageMeta = pageData?.page && typeof pageData.page === 'object' ? pageData.page : pageData;
+
+    return {
+        content,
+        pageNumber: toSafeNumber(pageMeta?.number ?? pageData?.pageNumber, 0),
+        totalPages: toSafeNumber(pageMeta?.totalPages ?? pageData?.totalPages, 0),
+        totalElements: toSafeNumber(pageMeta?.totalElements ?? pageData?.totalElements, content.length),
+        pageSize: toSafeNumber(pageMeta?.size ?? pageData?.pageSize, content.length),
+    };
+};
+

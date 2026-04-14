@@ -4,37 +4,11 @@ import apiClient from "../apiClient";
 const BASE_URL = '/orders';
 
 /**
- * Hook to get all orders for current user
- * @param {string} status - Optional filter by status (PENDING, APPROVED, REJECTED, CANCELLED, SUCCESS)
+ * Get orders for current user (API call only)
  */
-export const useGetOrders = (status = null) => {
-    const [orders, setOrders] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [refetchTrigger, setRefetchTrigger] = useState(0);
-
-    useEffect(() => {
-        const fetchOrders = async () => {
-            try {
-                setLoading(true);
-                const url = status ? `${BASE_URL}?status=${status}` : BASE_URL;
-                const response = await apiClient.get(url);
-                setOrders(response.data);
-                setError(null);
-            } catch (err) {
-                setError(err.response?.data.message || 'Failed to fetch orders');
-                // console.error('Error fetching orders:', err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchOrders();
-    }, [status, refetchTrigger]);
-
-    const refetch = () => setRefetchTrigger(prev => prev + 1);
-
-    return { orders, loading, error, refetch };
+export const getOrders = async (params = {}) => {
+    const response = await apiClient.get(BASE_URL, { params });
+    return response.data;
 };
 
 /**

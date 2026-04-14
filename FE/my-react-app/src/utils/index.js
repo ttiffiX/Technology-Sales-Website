@@ -83,6 +83,8 @@ export {
     getPaymentStatusColor,
     normalizePMOrderFilterParams,
     normalizePMOrderPageResponse,
+    normalizeCustomerOrderFilterParams,
+    normalizeCustomerOrderPageResponse,
 } from './orderUtils';
 
 // PM product utilities

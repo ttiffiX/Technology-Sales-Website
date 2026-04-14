@@ -2,18 +2,44 @@ import React, {useEffect, useState} from 'react';
 import './OrderHistory.scss';
 import Nav from "../../../components/navigation/Nav";
 import Header from "../../../components/header/Header";
-import {useGetOrders, useCancelOrder, getOrderCountByStatus} from "../../../api/customer/OrderAPI";
+import {getOrders, useCancelOrder} from "../../../api/customer/OrderAPI";
 import {useToast} from "../../../components/Toast/Toast";
 import OrderDetailModal from "./OrderDetailModal";
-import {formatDate, formatPrice, getStatusColor, getPaymentStatusColor, ORDER_STATUS_FILTERS} from "../../../utils";
+import PaginationControls from "../../../components/pagination/PaginationControls";
+import {
+    formatDate,
+    formatPrice,
+    getStatusColor,
+    getPaymentStatusColor,
+    ORDER_STATUS_FILTERS,
+    PAYMENT_STATUS_FILTERS,
+    normalizeCustomerOrderFilterParams,
+    normalizeCustomerOrderPageResponse,
+} from "../../../utils";
 import {useCart} from "../../../contexts/CartContext";
 
 const OrderHistory = () => {
     const [statusFilter, setStatusFilter] = useState(null);
-    const [statusCounts, setStatusCounts] = useState({});
-    const [totalStatusCount, setTotalStatusCount] = useState(0);
-    const [isStatusCountLoaded, setIsStatusCountLoaded] = useState(false);
-    const {orders, loading, error, refetch} = useGetOrders(statusFilter);
+    // TEMP COMMENT: hide status-count badges to avoid filter misunderstanding.
+    // const [statusCounts, setStatusCounts] = useState({});
+    // const [totalStatusCount, setTotalStatusCount] = useState(0);
+    // const [isStatusCountLoaded, setIsStatusCountLoaded] = useState(false);
+
+    const [paymentStatusInput, setPaymentStatusInput] = useState('');
+    const [appliedPaymentStatus, setAppliedPaymentStatus] = useState('');
+    const [startDateInput, setStartDateInput] = useState('');
+    const [endDateInput, setEndDateInput] = useState('');
+    const [appliedStartDate, setAppliedStartDate] = useState('');
+    const [appliedEndDate, setAppliedEndDate] = useState('');
+
+    const [pageNumber, setPageNumber] = useState(0);
+    const pageSize = 10;
+
+    const [orders, setOrders] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [totalPages, setTotalPages] = useState(0);
+    const [totalElements, setTotalElements] = useState(0);
     const {cancelOrder, loading: cancelling} = useCancelOrder();
     const {triggerToast} = useToast();
 
@@ -22,6 +48,46 @@ const OrderHistory = () => {
     const [showCancelConfirm, setShowCancelConfirm] = useState(false);
     const [orderToCancel, setOrderToCancel] = useState(null);
     const {cartCount} = useCart();
+
+    const loadOrders = async (nextPage = pageNumber) => {
+        try {
+            setLoading(true);
+            setError('');
+
+            const params = normalizeCustomerOrderFilterParams({
+                orderStatus: statusFilter,
+                paymentStatus: appliedPaymentStatus,
+                startDate: appliedStartDate,
+                endDate: appliedEndDate,
+                page: nextPage,
+                size: pageSize,
+            });
+
+            const rawData = await getOrders(params);
+            const pageData = normalizeCustomerOrderPageResponse(rawData);
+            const rows = Array.isArray(pageData.content) ? pageData.content : [];
+
+            setOrders(rows);
+            setPageNumber(Number.isFinite(pageData.pageNumber) ? pageData.pageNumber : nextPage);
+            setTotalPages(Number.isFinite(pageData.totalPages) ? pageData.totalPages : 0);
+            setTotalElements(Number.isFinite(pageData.totalElements) ? pageData.totalElements : rows.length);
+        } catch (err) {
+            setOrders([]);
+            setTotalPages(0);
+            setTotalElements(0);
+            setError(err?.response?.data?.message || 'Failed to fetch orders');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const refetch = async () => {
+        await loadOrders(pageNumber);
+    };
+
+    useEffect(() => {
+        loadOrders(pageNumber);
+    }, [statusFilter, appliedPaymentStatus, appliedStartDate, appliedEndDate, pageNumber]);
 
 
     const handleViewDetails = (orderId) => {
@@ -54,7 +120,8 @@ const OrderHistory = () => {
 
             // Refetch orders to update the list smoothly
             await refetch();
-            await fetchStatusCounts();
+            // TEMP COMMENT: status count refresh is disabled.
+            // await fetchStatusCounts();
 
             // Restore scroll position after a short delay to ensure DOM is updated
             setTimeout(() => {
@@ -65,24 +132,45 @@ const OrderHistory = () => {
         }
     };
 
-    const fetchStatusCounts = async () => {
-        try {
-            const data = await getOrderCountByStatus();
-            setStatusCounts(data.orderStatusCountMap || {});
-            setTotalStatusCount(data.totalStatusCount ?? 0);
-            setIsStatusCountLoaded(true);
-        } catch (_err) {
-            setIsStatusCountLoaded(false);
+    // TEMP COMMENT: status-count endpoint is temporarily hidden from UI.
+    // const fetchStatusCounts = async () => {
+    //     try {
+    //         const data = await getOrderCountByStatus();
+    //         setStatusCounts(data.orderStatusCountMap || {});
+    //         setTotalStatusCount(data.totalStatusCount ?? 0);
+    //         setIsStatusCountLoaded(true);
+    //     } catch (_err) {
+    //         setIsStatusCountLoaded(false);
+    //     }
+    // };
+    // useEffect(() => {
+    //     fetchStatusCounts();
+    // }, []);
+    // const getFilterCount = (statusValue) => {
+    //     if (statusValue === null) return totalStatusCount;
+    //     return statusCounts?.[statusValue] ?? 0;
+    // };
+
+    const applyExtraFilters = () => {
+        if (startDateInput && endDateInput && startDateInput > endDateInput) {
+            triggerToast('error', 'Start date must be before or equal to end date');
+            return;
         }
+
+        setAppliedPaymentStatus(paymentStatusInput);
+        setAppliedStartDate(startDateInput);
+        setAppliedEndDate(endDateInput);
+        setPageNumber(0);
     };
 
-    useEffect(() => {
-        fetchStatusCounts();
-    }, []);
-
-    const getFilterCount = (statusValue) => {
-        if (statusValue === null) return totalStatusCount;
-        return statusCounts?.[statusValue] ?? 0;
+    const resetExtraFilters = () => {
+        setPaymentStatusInput('');
+        setAppliedPaymentStatus('');
+        setStartDateInput('');
+        setEndDateInput('');
+        setAppliedStartDate('');
+        setAppliedEndDate('');
+        setPageNumber(0);
     };
 
     return (
@@ -97,12 +185,64 @@ const OrderHistory = () => {
                         <button
                             key={filter.label}
                             className={`tab ${statusFilter === filter.value ? 'active' : ''}`}
-                            onClick={() => setStatusFilter(filter.value)}
+                            onClick={() => {
+                                setStatusFilter(filter.value);
+                                setPageNumber(0);
+                            }}
                         >
                             {filter.label}
-                            {isStatusCountLoaded ? ` (${getFilterCount(filter.value)})` : ''}
+                            {/* TEMP COMMENT: hide numbers on tabs to avoid filter misunderstanding */}
+                            {/* {isStatusCountLoaded ? ` (${getFilterCount(filter.value)})` : ''} */}
                         </button>
                     ))}
+                </div>
+
+                <div className="order-filters-panel">
+                    <div className="order-filters-grid">
+                        <select
+                            className="order-filter-input"
+                            value={paymentStatusInput}
+                            onChange={(event) => setPaymentStatusInput(event.target.value)}
+                        >
+                            {PAYMENT_STATUS_FILTERS.map((option) => (
+                                <option key={option.value || 'all'} value={option.value}>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </select>
+
+                        <input
+                            type="date"
+                            className="order-filter-input"
+                            value={startDateInput}
+                            onChange={(event) => setStartDateInput(event.target.value)}
+                            aria-label="Start date"
+                        />
+
+                        <input
+                            type="date"
+                            className="order-filter-input"
+                            value={endDateInput}
+                            onChange={(event) => setEndDateInput(event.target.value)}
+                            aria-label="End date"
+                        />
+
+                        <button
+                            type="button"
+                            className="order-filter-btn"
+                            onClick={applyExtraFilters}
+                        >
+                            Apply
+                        </button>
+
+                        <button
+                            type="button"
+                            className="order-filter-btn order-filter-btn--ghost"
+                            onClick={resetExtraFilters}
+                        >
+                            Reset
+                        </button>
+                    </div>
                 </div>
 
                 {/* Orders List */}
@@ -222,6 +362,16 @@ const OrderHistory = () => {
                         })
                     )}
                 </div>
+
+                {!loading && !error && (
+                    <PaginationControls
+                        page={pageNumber}
+                        totalPages={totalPages}
+                        totalElements={totalElements}
+                        onPageChange={setPageNumber}
+                        disabled={loading}
+                    />
+                )}
             </div>
 
             {/* Order Detail Modal */}
