@@ -8,9 +8,17 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @RestController
@@ -21,20 +29,30 @@ public class OrderController {
     private final OrderServiceInterface orderServiceInterface;
 
     /**
-     * GET /orders - Get all orders for current user
-     * GET /orders?status=PENDING - Filter orders by status (optional)
-     * Valid status values: PENDING, APPROVED, REJECTED, CANCELLED, SUCCESS
+     * GET /orders - Get paged orders for current user with optional filters.
+     * Supported filters: orderStatus, paymentStatus, startDate, endDate.
      */
     @GetMapping
-    public ResponseEntity<List<OrderDTO>> getMyOrders(
-            @RequestParam(required = false) String status
+    public ResponseEntity<Page<OrderDTO>> getMyOrders(
+            @RequestParam(required = false) String orderStatus,
+            @RequestParam(required = false) String paymentStatus,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
+            @PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        if (status != null && !status.trim().isEmpty()) {
-            log.info("Get orders for current user with status: {}", status);
-        } else {
-            log.info("Get all orders for current user");
-        }
-        List<OrderDTO> orders = orderServiceInterface.getOrderByUserId(status);
+        log.info("Get orders for current user with filters - orderStatus: {}, paymentStatus: {}, startDate: {}, endDate: {}",
+                orderStatus, paymentStatus, startDate, endDate);
+
+        LocalDateTime startDateTime = (startDate != null) ? startDate.atStartOfDay() : null;
+        LocalDateTime endDateTime = (endDate != null) ? endDate.atTime(LocalTime.MAX) : null;
+
+        Page<OrderDTO> orders = orderServiceInterface.getOrderByUserId(
+                orderStatus,
+                paymentStatus,
+                startDateTime,
+                endDateTime,
+                pageable
+        );
         return ResponseEntity.ok(orders);
     }
 

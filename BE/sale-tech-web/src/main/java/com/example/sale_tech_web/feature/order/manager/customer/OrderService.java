@@ -27,6 +27,8 @@ import com.example.sale_tech_web.feature.users.entity.Users;
 import com.example.sale_tech_web.feature.users.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -47,31 +49,32 @@ public class OrderService implements OrderServiceInterface {
     private final ProductRepository productRepository;
 
     @Override
-    public List<OrderDTO> getOrderByUserId(String status) {
+    public Page<OrderDTO> getOrderByUserId(String orderStatus,
+                                           String paymentStatus,
+                                           LocalDateTime startDate,
+                                           LocalDateTime endDate,
+                                           Pageable pageable) {
         Long userId = getUserIdFromToken();
 
-        List<Order> orders;
-
-        // If status is provided, filter by status; otherwise get all orders
-        OrderStatus orderStatus = null;
-        if (status != null && !status.trim().isEmpty()) {
-            try {
-                orderStatus = OrderStatus.valueOf(status.trim().toUpperCase());
-            } catch (IllegalArgumentException e) {
-                throw new ResponseStatusException(BAD_REQUEST,
-                        "Invalid status '" + status + "'. Valid values: " +
-                                Arrays.toString(OrderStatus.values()));
-            }
+        OrderStatus oStatus = null;
+        if (orderStatus != null && !orderStatus.trim().isEmpty()) {
+            oStatus = OrderStatus.valueOf(orderStatus.trim().toUpperCase());
         }
 
-        orders = orderRepository.findByUserIdAndOptionalStatus(userId, orderStatus);
+        PaymentStatus pStatus = null;
+        if (paymentStatus != null && !paymentStatus.trim().isEmpty()) {
+            pStatus = PaymentStatus.valueOf(paymentStatus.trim().toUpperCase());
+        }
 
-        return orders.stream().map(order -> {
-            String paymentStatus = order.getPayment() != null
+        Page<Order> orderPage = orderRepository.findAllUserOrderCustom(
+                userId, oStatus, pStatus, startDate, endDate, pageable);
+
+        return orderPage.map(order -> {
+            String currentPaymentStatus = order.getPayment() != null
                     ? order.getPayment().getStatus().name()
                     : "UNKNOWN";
-            return convertToDTO(order, paymentStatus);
-        }).toList();
+            return convertToDTO(order, currentPaymentStatus);
+        });
     }
 
     @Override

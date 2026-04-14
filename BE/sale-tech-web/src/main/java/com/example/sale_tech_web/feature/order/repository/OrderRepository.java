@@ -40,11 +40,20 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @EntityGraph(attributePaths = {"payment"})
     @Query("SELECT o FROM Order o " +
-            "LEFT JOIN FETCH o.payment " +
+            "LEFT JOIN o.payment p " +
             "WHERE o.user.id = :userId " +
-            "AND (:status IS NULL OR o.status = :status) " +
-            "ORDER BY o.createdAt DESC")
-    List<Order> findByUserIdAndOptionalStatus(@Param("userId") Long userId, @Param("status") OrderStatus status);
+            "AND (:orderStatus IS NULL OR o.status = :orderStatus) " +
+            "AND (:paymentStatus IS NULL OR p.status = :paymentStatus) " +
+            "AND (CAST(:startDate AS timestamp) IS NULL OR o.createdAt >= :startDate) " +
+            "AND (CAST(:endDate AS timestamp) IS NULL OR o.createdAt <= :endDate)")
+    Page<Order> findAllUserOrderCustom(
+            @Param("userId") Long userId,
+            @Param("orderStatus") OrderStatus orderStatus,
+            @Param("paymentStatus") PaymentStatus paymentStatus,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            Pageable pageable
+    );
 
     @Query("SELECT o FROM Order o LEFT JOIN FETCH o.orderDetails LEFT JOIN FETCH o.user WHERE o.id = :orderId AND o.user.id = :userId")
     Optional<Order> findByIdAndUserId(@Param("orderId") Long orderId, @Param("userId") Long userId);
