@@ -7,11 +7,17 @@ import {
     updateAdminUserBanStatus,
     updateAdminUserRole,
 } from '../../../api/admin/AdminAPI';
-import { searchAdminUsers, filterAdminUsersByRole } from '../../../api/admin/AdminAPI';
 import AddUserModal from '../../../components/modal/adduser/AddUserModal';
 import DeleteUserModal from '../../../components/modal/deleteuser/DeleteUserModal';
+import PaginationControls from '../../../components/pagination/PaginationControls';
 import { useToast } from '../../../components/Toast/Toast';
-import { formatDateTimeOrFallback, getApiErrorMessage, passwordsMatch } from '../../../utils';
+import {
+    formatDateTimeOrFallback,
+    getApiErrorMessage,
+    passwordsMatch,
+    normalizeAdminUserFilterParams,
+    normalizeAdminUserPageResponse,
+} from '../../../utils';
 import './AdminUserManagement.scss';
 
 const EMPTY_ADD_USER_FORM = {
@@ -28,6 +34,10 @@ function AdminUserManagement() {
     const [users, setUsers] = useState([]);
     const [roles, setRoles] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [pageNumber, setPageNumber] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const [totalElements, setTotalElements] = useState(0);
+    const pageSize = 10;
     const [updatingId, setUpdatingId] = useState(null);
     const [creatingUser, setCreatingUser] = useState(false);
     const [addUserModalOpen, setAddUserModalOpen] = useState(false);
@@ -40,99 +50,82 @@ function AdminUserManagement() {
 
     const getDefaultRole = (roleOptions = roles) => roleOptions[0] || 'PM';
 
-    const [searchKeyword, setSearchKeyword] = useState('');
-    const [filterRole, setFilterRole] = useState('');
-    const [filteredUsers, setFilteredUsers] = useState([]);
-    const [isSearching, setIsSearching] = useState(false);
-    const [hasSearched, setHasSearched] = useState(false);
+    const [searchKeywordInput, setSearchKeywordInput] = useState('');
+    const [appliedKeyword, setAppliedKeyword] = useState('');
+    const [filterRoleInput, setFilterRoleInput] = useState('');
+    const [appliedRole, setAppliedRole] = useState('');
 
-    // Show filtered results ONLY if search/filter was actually performed
-    const displayUsers = hasSearched ? filteredUsers : users;
+    const displayUsers = users;
 
-    const loadUsers = async () => {
+    const loadUsers = async (nextPage = pageNumber, nextKeyword = appliedKeyword, nextRole = appliedRole) => {
         setLoading(true);
         try {
-            const [userData, roleData] = await Promise.all([getAdminUsers(), getAdminRoles()]);
-            setUsers(userData);
+            const params = normalizeAdminUserFilterParams({
+                keyword: nextKeyword,
+                role: nextRole,
+                page: nextPage,
+                size: pageSize,
+            });
+
+            const rawData = await getAdminUsers(params);
+            const pageData = normalizeAdminUserPageResponse(rawData);
+            const rows = Array.isArray(pageData.content) ? pageData.content : [];
+
+            setUsers(rows);
+            setPageNumber(Number.isFinite(pageData.pageNumber) ? pageData.pageNumber : nextPage);
+            setTotalPages(Number.isFinite(pageData.totalPages) ? pageData.totalPages : 0);
+            setTotalElements(Number.isFinite(pageData.totalElements) ? pageData.totalElements : rows.length);
+        } catch (error) {
+            triggerToast('error', getApiErrorMessage(error, 'Failed to load user list'));
+            setUsers([]);
+            setTotalPages(0);
+            setTotalElements(0);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const loadRoles = async () => {
+        try {
+            const roleData = await getAdminRoles();
             setRoles(roleData);
             setAddUserForm((prev) => ({
                 ...prev,
                 role: roleData.includes(prev.role) ? prev.role : getDefaultRole(roleData),
             }));
         } catch (error) {
-            triggerToast('error', getApiErrorMessage(error, 'Failed to load user list'));
-        } finally {
-            setLoading(false);
+            triggerToast('error', getApiErrorMessage(error, 'Failed to load roles'));
         }
     };
 
     useEffect(() => {
-        loadUsers();
+        loadRoles();
     }, []);
 
-    const handleSearchChange = (event) => {
-        const keyword = event.target.value;
-        setSearchKeyword(keyword);
-        setFilterRole('');
-    };
-
-    const handleFilterRoleChange = (event) => {
-        const role = event.target.value;
-        setFilterRole(role);
-        setSearchKeyword('');
-
-        if (role) {
-            performFilterByRole(role);
-        } else {
-            setFilteredUsers([]);
-        }
-    };
-
-    const performSearch = async (keyword) => {
-        if (!keyword.trim()) {
-            setFilteredUsers([]);
-            setHasSearched(false);
-            return;
-        }
-
-        setIsSearching(true);
-        setHasSearched(true);
-        try {
-            const results = await searchAdminUsers(keyword);
-            setFilteredUsers(results);
-        } catch (error) {
-            triggerToast('error', getApiErrorMessage(error, 'Failed to search users'));
-            setFilteredUsers([]);
-        } finally {
-            setIsSearching(false);
-        }
-    };
-
-    const performFilterByRole = async (role) => {
-        setIsSearching(true);
-        setHasSearched(true);
-        try {
-            const results = await filterAdminUsersByRole(role);
-            setFilteredUsers(results);
-        } catch (error) {
-            triggerToast('error', getApiErrorMessage(error, 'Failed to filter users'));
-            setFilteredUsers([]);
-        } finally {
-            setIsSearching(false);
-        }
-    };
+    useEffect(() => {
+        loadUsers(pageNumber, appliedKeyword, appliedRole);
+    }, [pageNumber, appliedKeyword, appliedRole]);
 
     const handleSearchSubmit = (event) => {
         if (event.key === 'Enter') {
-            performSearch(searchKeyword);
+            setAppliedKeyword(searchKeywordInput.trim());
+            setAppliedRole(filterRoleInput);
+            setPageNumber(0);
         }
     };
 
+    const handleApplyFilters = () => {
+        setAppliedKeyword(searchKeywordInput.trim());
+        setAppliedRole(filterRoleInput);
+        setPageNumber(0);
+    };
+
     const handleClearFilters = () => {
-        setSearchKeyword('');
-        setFilterRole('');
-        setFilteredUsers([]);
-        setHasSearched(false);
+        setSearchKeywordInput('');
+        setFilterRoleInput('');
+        setAppliedKeyword('');
+        setAppliedRole('');
+        setPageNumber(0);
     };
 
     const stats = useMemo(() => {
@@ -147,8 +140,8 @@ function AdminUserManagement() {
         setUpdatingId(user.id);
 
         try {
-            const updated = await updateAdminUserBanStatus(user.id, nextStatus);
-            setUsers((prev) => prev.map((item) => (item.id === user.id ? { ...item, ...updated } : item)));
+            await updateAdminUserBanStatus(user.id, nextStatus);
+            await loadUsers(pageNumber, appliedKeyword, appliedRole);
             triggerToast('success', nextStatus ? 'User has been banned' : 'User has been unbanned');
         } catch (error) {
             triggerToast('error', getApiErrorMessage(error, 'Failed to update ban status'));
@@ -161,8 +154,8 @@ function AdminUserManagement() {
         setUpdatingId(userId);
 
         try {
-            const updated = await updateAdminUserRole(userId, role);
-            setUsers((prev) => prev.map((item) => (item.id === userId ? { ...item, ...updated } : item)));
+            await updateAdminUserRole(userId, role);
+            await loadUsers(pageNumber, appliedKeyword, appliedRole);
             triggerToast('success', 'Role updated successfully');
         } catch (error) {
             triggerToast('error', getApiErrorMessage(error, 'Failed to update role'));
@@ -222,8 +215,9 @@ function AdminUserManagement() {
         setCreatingUser(true);
 
         try {
-            const created = await addAdminUser(addUserForm);
-            setUsers((prev) => [created, ...prev]);
+            await addAdminUser(addUserForm);
+            setPageNumber(0);
+            await loadUsers(0, appliedKeyword, appliedRole);
             setAddUserForm((prev) => ({
                 ...EMPTY_ADD_USER_FORM,
                 role: roles.includes(prev.role) ? prev.role : getDefaultRole(),
@@ -253,7 +247,7 @@ function AdminUserManagement() {
         setDeletingUserId(true);
         try {
             await deleteAdminUser(deletingUser.id, adminPassword);
-            setUsers((prev) => prev.filter((item) => item.id !== deletingUser.id));
+            await loadUsers(pageNumber, appliedKeyword, appliedRole);
             triggerToast('success', 'User deleted successfully');
             setDeleteModalOpen(false);
         } catch (error) {
@@ -285,9 +279,6 @@ function AdminUserManagement() {
                     >
                         Add User
                     </button>
-                    <button className="admin-users__reload" onClick={loadUsers}>
-                        Reload
-                    </button>
                 </div>
             </header>
 
@@ -296,17 +287,15 @@ function AdminUserManagement() {
                     type="text"
                     className="admin-users__search-input"
                     placeholder="Search by username or email..."
-                    value={searchKeyword}
-                    onChange={handleSearchChange}
+                    value={searchKeywordInput}
+                    onChange={(event) => setSearchKeywordInput(event.target.value)}
                     onKeyDown={handleSearchSubmit}
-                    disabled={isSearching}
                 />
 
                 <select
                     className="admin-users__filter-select"
-                    value={filterRole}
-                    onChange={handleFilterRoleChange}
-                    disabled={isSearching}
+                    value={filterRoleInput}
+                    onChange={(event) => setFilterRoleInput(event.target.value)}
                 >
                     <option value="">All Roles</option>
                     {roles.map((role) => (
@@ -316,15 +305,18 @@ function AdminUserManagement() {
                     ))}
                 </select>
 
-                {(searchKeyword || filterRole) && (
+                {(searchKeywordInput || filterRoleInput) && (
                     <button
                         className="admin-users__clear-filters"
                         onClick={handleClearFilters}
-                        disabled={isSearching}
                     >
                         Clear
                     </button>
                 )}
+
+                <button className="admin-users__apply-filters" onClick={handleApplyFilters}>
+                    Apply
+                </button>
             </div>
 
             <AddUserModal
@@ -356,25 +348,25 @@ function AdminUserManagement() {
             <div className="admin-users__stats">
                 <div className="admin-users__stat-card">
                     <span>Total users</span>
-                    <strong>{hasSearched ? displayUsers.length : stats.total}</strong>
+                    <strong>{totalElements}</strong>
                 </div>
                 <div className="admin-users__stat-card">
-                    <span>Active users</span>
+                    <span>Current page active</span>
                     <strong>{stats.active}</strong>
                 </div>
                 <div className="admin-users__stat-card">
-                    <span>Banned users</span>
+                    <span>Current page banned</span>
                     <strong>{stats.banned}</strong>
                 </div>
             </div>
 
             <div className="admin-users__table-wrapper">
-                {hasSearched && displayUsers.length === 0 ? (
+                {!loading && displayUsers.length === 0 ? (
                     <div className="admin-users__empty-state">
                         <p>No results found</p>
                         <small>
-                            {searchKeyword && `No users match "${searchKeyword}"`}
-                            {filterRole && `No users with role "${filterRole}"`}
+                            {searchKeywordInput && `No users match "${searchKeywordInput}"`}
+                            {filterRoleInput && `No users with role "${filterRoleInput}"`}
                         </small>
                     </div>
                 ) : (
@@ -445,6 +437,16 @@ function AdminUserManagement() {
                 </table>
                 )}
             </div>
+
+            {!loading && (
+                <PaginationControls
+                    page={pageNumber}
+                    totalPages={totalPages}
+                    totalElements={totalElements}
+                    onPageChange={setPageNumber}
+                    disabled={loading}
+                />
+            )}
         </section>
     );}
 

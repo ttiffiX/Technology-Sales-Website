@@ -103,6 +103,21 @@
   }
 }
 
+.admin-users__apply-filters {
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #fff;
+  background: variables.$primary-color;
+
+  &:hover {
+    opacity: 0.92;
+  }
+}
+
 .admin-users__title {
   margin: 0;
   color: variables.$primary-color;
@@ -289,5 +304,9 @@
 @media (max-width: 900px) {
   .admin-users__stats {
     grid-template-columns: 1fr;
+  }
+
+  .admin-users__filters {
+    flex-wrap: wrap;
   }
 }
