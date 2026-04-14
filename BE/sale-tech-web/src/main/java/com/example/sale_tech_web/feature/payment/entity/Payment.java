@@ -34,6 +34,12 @@ public class Payment {
     @Column(name = "transaction_id")
     private String transactionId;
 
+    @Column(name = "vnp_transaction_no")
+    private String vnpTransactionNo;
+
+    @Column(name = "vnp_pay_date")
+    private String vnpPayDate;
+
     @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
     private PaymentStatus status;

@@ -151,7 +151,7 @@ public class VNPayService {
      * Process VNPay refund request
      *
      * @param refundRequest Refund request data
-     * @param request HttpServletRequest to get IP address
+     * @param request       HttpServletRequest to get IP address
      * @return VNPayRefundResponse with refund result
      */
     public VNPayRefundResponse processRefund(VNPayRefundRequest refundRequest, HttpServletRequest request) {
@@ -169,12 +169,10 @@ public class VNPayService {
             String vnp_Amount = String.valueOf(amount);
 
             String vnp_OrderInfo = refundRequest.getOrderInfo() != null
-                ? refundRequest.getOrderInfo()
-                : "Hoan tien GD OrderId:" + vnp_TxnRef;
+                    ? refundRequest.getOrderInfo()
+                    : "Hoan tien GD OrderId:" + vnp_TxnRef;
 
-            String vnp_TransactionNo = refundRequest.getTransactionNo() != null
-                ? refundRequest.getTransactionNo()
-                : "";
+            String vnp_TransactionNo = refundRequest.getTransactionNo();
 
             String vnp_TransactionDate = refundRequest.getTransactionDate();
             String vnp_CreateBy = refundRequest.getCreateBy();
@@ -197,10 +195,8 @@ public class VNPayService {
             vnp_Params.addProperty("vnp_TxnRef", vnp_TxnRef);
             vnp_Params.addProperty("vnp_Amount", vnp_Amount);
             vnp_Params.addProperty("vnp_OrderInfo", vnp_OrderInfo);
+            vnp_Params.addProperty("vnp_TransactionNo", vnp_TransactionNo);
 
-            if (vnp_TransactionNo != null && !vnp_TransactionNo.isEmpty()) {
-                vnp_Params.addProperty("vnp_TransactionNo", vnp_TransactionNo);
-            }
 
             vnp_Params.addProperty("vnp_TransactionDate", vnp_TransactionDate);
             vnp_Params.addProperty("vnp_CreateBy", vnp_CreateBy);
@@ -209,11 +205,10 @@ public class VNPayService {
 
             // Create secure hash
             String hash_Data = String.join("|",
-                vnp_RequestId, vnp_Version, vnp_Command, vnp_TmnCode,
-                vnp_TransactionType, vnp_TxnRef, vnp_Amount,
-                vnp_TransactionNo != null && !vnp_TransactionNo.isEmpty() ? vnp_TransactionNo : "",
-                vnp_TransactionDate, vnp_CreateBy, vnp_CreateDate,
-                vnp_IpAddr, vnp_OrderInfo);
+                    vnp_RequestId, vnp_Version, vnp_Command, vnp_TmnCode,
+                    vnp_TransactionType, vnp_TxnRef, vnp_Amount,
+                    vnp_TransactionNo, vnp_TransactionDate, vnp_CreateBy, vnp_CreateDate,
+                    vnp_IpAddr, vnp_OrderInfo);
 
             String vnp_SecureHash = VNPayUtil.hmacSHA512(vnPayConfig.getHashSecret(), hash_Data);
             vnp_Params.addProperty("vnp_SecureHash", vnp_SecureHash);

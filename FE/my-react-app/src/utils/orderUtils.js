@@ -17,37 +17,27 @@ export const PAYMENT_STATUS = {
     REFUND_FAILED: 'REFUND_FAILED'
 };
 
-/**
- * Get status color
- * @param {string} status - Order status
- * @returns {string} Color hex code
- */
 export const getStatusColor = (status) => {
     const colors = {
-        PENDING: '#FFA500',
-        APPROVED: '#1E90FF',
-        SHIPPING: '#17a2b8',
-        REJECTED: '#6c757d',
-        CANCELLED: '#dc3545',
-        COMPLETED: '#28a745'
+        PENDING: '#FFA500',   // Vàng: Chờ xử lý
+        APPROVED: '#0D6EFD',  // Xanh dương: Đã duyệt
+        SHIPPING: '#17A2B8',  // Xanh teal: Đang giao (nên đậm hơn xíu so với Cyan)
+        REJECTED: '#6C757D',  // Xám: Bị từ chối
+        CANCELLED: '#DC3545', // Đỏ: Khách hủy
+        COMPLETED: '#28A745'  // Xanh lá: Xong
     };
-    return colors[status] || '#6c757d';
+    return colors[status] || '#6C757D';
 };
 
-/**
- * Get payment status color
- * @param {string} status - Payment status
- * @returns {string} Color hex code
- */
 export const getPaymentStatusColor = (status) => {
     const colors = {
-        REFUND: '#6c757d',
-        FAILED: '#dc3545',
-        PAID: '#28a745',
-        PENDING: '#FFA500',
-        REFUND_FAILED: '#b02a37'
+        PENDING: '#FFA500',       // Vàng: Chờ thanh toán
+        PAID: '#28A745',          // Xanh lá: Đã thu tiền
+        FAILED: '#DC3545',        // Đỏ: Thanh toán lỗi
+        REFUND: '#6610F2',        // Tím: Đã hoàn tiền (Dễ phân biệt với các màu khác)
+        REFUND_FAILED: '#A52A2A'  // Nâu đỏ: Lỗi hoàn tiền (Cực kỳ nguy hiểm)
     };
-    return colors[status] || '#6c757d';
+    return colors[status] || '#6C757D';
 };
 
 /**

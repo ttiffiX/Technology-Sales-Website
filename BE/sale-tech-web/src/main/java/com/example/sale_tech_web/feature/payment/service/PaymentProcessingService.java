@@ -16,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.springframework.http.HttpStatus.*;
 
@@ -30,7 +32,7 @@ public class PaymentProcessingService {
     private final ProductRepository productRepository;
 
     @Transactional
-    public void processSuccessfulPayment(Long orderId, Long receivedAmount, String transactionId) {
+    public void processSuccessfulPayment(Long orderId, Long receivedAmount, String transactionId, String transactionNo, String payDate) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Order not found: " + orderId));
 
@@ -45,6 +47,10 @@ public class PaymentProcessingService {
         Payment payment = paymentRepository.findByOrderId(orderId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Payment not found for order: " + orderId));
 
+        if (payment.getTransactionId() != null && !payment.getTransactionId().equals(transactionId)) {
+            throw new ResponseStatusException(CONFLICT, "Payment transaction ID mismatch for order " + orderId);
+        }
+
         // Check if already processed
         if (payment.getStatus() == PaymentStatus.PAID) {
             throw new ResponseStatusException(CONFLICT, "Payment for order " + orderId + " already processed as PAID");
@@ -52,7 +58,9 @@ public class PaymentProcessingService {
 
         // Update Payment to SUCCESS
         payment.setStatus(PaymentStatus.PAID);
-        payment.setTransactionId(transactionId);
+//        payment.setTransactionId(transactionId);
+        payment.setVnpTransactionNo(transactionNo);
+        payment.setVnpPayDate(payDate);
         payment.setUpdatedAt(LocalDateTime.now());
         paymentRepository.save(payment);
 
@@ -69,7 +77,7 @@ public class PaymentProcessingService {
     }
 
     @Transactional
-    public void processFailedPayment(Long orderId, String transactionId) {
+    public void processFailedPayment(Long orderId, String transactionId, String transactionNo, String payDate) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Order not found: " + orderId));
 
@@ -82,6 +90,9 @@ public class PaymentProcessingService {
             productRepository.incrementStockOnRevert(orderDetail.getProduct().getId(), orderDetail.getQuantity());
         }
 
+        if (payment.getTransactionId() != null && !payment.getTransactionId().equals(transactionId)) {
+            throw new ResponseStatusException(CONFLICT, "Payment transaction ID mismatch for order " + orderId);
+        }
 
         // Check if already processed
         if (payment.getStatus() == PaymentStatus.FAILED || payment.getStatus() == PaymentStatus.PAID) {
@@ -90,7 +101,9 @@ public class PaymentProcessingService {
 
         // Update Payment to FAILED
         payment.setStatus(PaymentStatus.FAILED);
-        payment.setTransactionId(transactionId);
+//        payment.setTransactionId(transactionId);
+        payment.setVnpTransactionNo(transactionNo);
+        payment.setVnpPayDate(payDate);
         payment.setUpdatedAt(LocalDateTime.now());
         paymentRepository.save(payment);
 
@@ -105,18 +118,23 @@ public class PaymentProcessingService {
 
     /**
      * Extract order ID from VNPay orderInfo string
-     * Format: "Thanh toan don hang #123"
+     * Format: "Thanh toan don hang 123"
      */
     public Long extractOrderId(String orderInfo) {
         try {
-            if (orderInfo == null || !orderInfo.contains("#")) {
+            if (orderInfo == null || orderInfo.isEmpty()) {
                 return null;
             }
-            String[] parts = orderInfo.split("#");
-            if (parts.length < 2) {
-                return null;
+
+            // Regex tìm dãy số nằm ở cuối chuỗi
+            Pattern pattern = Pattern.compile("(\\d+)$");
+            Matcher matcher = pattern.matcher(orderInfo.trim());
+
+            if (matcher.find()) {
+                return Long.parseLong(matcher.group(1));
             }
-            return Long.parseLong(parts[1].trim());
+
+            return null;
         } catch (Exception e) {
             log.error("Error extracting orderId from orderInfo: {}", orderInfo, e);
             return null;

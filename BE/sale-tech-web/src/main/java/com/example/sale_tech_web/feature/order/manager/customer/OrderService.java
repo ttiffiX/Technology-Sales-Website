@@ -32,7 +32,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 
@@ -170,7 +169,7 @@ public class OrderService implements OrderServiceInterface {
         // Check payment method
         if (request.getPaymentMethod() == PaymentMethod.VNPAY) {
             // Create VNPay payment URL
-            String orderInfo = "Thanh toan don hang #" + savedOrder.getId();
+            String orderInfo = "Thanh toan don hang " + savedOrder.getId();
 
             // Create VNPay payment record with PENDING status
             var vnpayResponse = vnPayService.createPayment(
@@ -225,10 +224,10 @@ public class OrderService implements OrderServiceInterface {
                         .txnRef(payment.getTransactionId())
                         .amount(Long.valueOf(payment.getAmount()))
                         .transactionType("02") // "02" = Full refund, "03" = Partial refund
-                        .transactionDate(payment.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")))
-                        .transactionNo("") // VNPay transaction number if available
+                        .transactionDate(payment.getVnpPayDate())
+                        .transactionNo(payment.getVnpTransactionNo()) // VNPay transaction number if available
                         .createBy(order.getUser().getUsername())
-                        .orderInfo("Hoan tien don hang #" + orderId)
+                        .orderInfo("Hoan tien don hang " + orderId)
                         .build();
 
                 // Call VNPay refund API

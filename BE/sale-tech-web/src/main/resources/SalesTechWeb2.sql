@@ -123,15 +123,15 @@ CREATE INDEX idx_cag_category_group_order ON category_attribute_group (category_
 drop table category_attribute_schema;
 CREATE TABLE category_attribute_schema
 (
-    id            SERIAL PRIMARY KEY,
-    category_id   INT         NOT NULL,
-    name          VARCHAR(50) NOT NULL, -- "Công nghệ CPU", "Dung lượng RAM"...
-    unit          VARCHAR(20),          -- "GB", "inch"...
-    data_type     VARCHAR(20),          -- "Text" | "Number"
-    is_filterable BOOLEAN DEFAULT false,
-    code          VARCHAR(50) NOT NULL,
-    category_attribute_group_id      INT,
-    display_order INT     DEFAULT 0,    -- thứ tự của ATTRIBUTE trong nhóm
+    id                          SERIAL PRIMARY KEY,
+    category_id                 INT         NOT NULL,
+    name                        VARCHAR(50) NOT NULL, -- "Công nghệ CPU", "Dung lượng RAM"...
+    unit                        VARCHAR(20),          -- "GB", "inch"...
+    data_type                   VARCHAR(20),          -- "Text" | "Number"
+    is_filterable               BOOLEAN DEFAULT false,
+    code                        VARCHAR(50) NOT NULL,
+    category_attribute_group_id INT,
+    display_order               INT     DEFAULT 0,    -- thứ tự của ATTRIBUTE trong nhóm
     CONSTRAINT fk_cas_category FOREIGN KEY (category_id) REFERENCES categories (id),
     CONSTRAINT fk_cas_group FOREIGN KEY (category_attribute_group_id) REFERENCES category_attribute_group (id),
     UNIQUE (category_id, code)
@@ -212,17 +212,19 @@ CREATE INDEX idx_order_detail_order_id ON order_detail (order_id);
 DROP table invoice;
 CREATE TABLE invoice
 (
-    id             SERIAL PRIMARY KEY,
-    order_id       INT UNIQUE NOT NULL, -- UNIQUE vì mỗi Order chỉ có 1 Invoice
-    transaction_id VARCHAR(255),
-    status         payment_status_enum,
-    created_at     DATE,
-    updated_at     DATE,
-    exipires_at    DATE,
-    content        TEXT,
-    amount         INT        NOT NULL,
-    provider       VARCHAR(20),         -- 'VNPAY', 'PAYOS'
-    raw_response   JSONB,
+    id                 SERIAL PRIMARY KEY,
+    order_id           INT UNIQUE NOT NULL, -- UNIQUE vì mỗi Order chỉ có 1 Invoice
+    transaction_id     VARCHAR(255),        --vnp_TxnRef
+    vnp_transaction_no VARCHAR(255),        -- Mã GD của VNPAY
+    vnp_pay_date       VARCHAR(20),         -- Lưu yyyyMMddHHmmss từ VNPAY
+    status             payment_status_enum,
+    created_at         DATE,
+    updated_at         DATE,
+    exipires_at        DATE,
+    content            TEXT,
+    amount             INT        NOT NULL,
+    provider           VARCHAR(20),         -- 'VNPAY', 'PAYOS'
+    raw_response       JSONB,
     -- Khóa ngoại đến Order
     CONSTRAINT fk_invoice_order FOREIGN KEY (order_id) REFERENCES orders (id)
 );

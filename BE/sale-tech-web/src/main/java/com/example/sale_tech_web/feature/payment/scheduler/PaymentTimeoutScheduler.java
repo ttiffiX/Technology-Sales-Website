@@ -58,7 +58,7 @@ public class PaymentTimeoutScheduler {
             for (Payment payment : expiredPayments) {
                 try {
                     Long orderId = payment.getOrder().getId();
-                    paymentProcessingService.processFailedPayment(orderId, null);
+                    paymentProcessingService.processFailedPayment(orderId, null, null, null);
                     successCount++;
                     System.out.println("Auto-cancelled expired payment for order " + orderId + ", inventory restored, expiresAt: " + payment.getExpiresAt());
                 } catch (Exception e) {
