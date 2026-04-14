@@ -7,15 +7,17 @@ import com.example.sale_tech_web.feature.order.entity.orderdetails.OrderDetail;
 import com.example.sale_tech_web.feature.order.entity.orders.Order;
 import com.example.sale_tech_web.feature.order.enums.OrderStatus;
 import com.example.sale_tech_web.feature.order.repository.OrderRepository;
+import com.example.sale_tech_web.feature.payment.enums.PaymentStatus;
 import com.example.sale_tech_web.feature.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -29,26 +31,31 @@ public class OMService implements OMServiceInterface {
     private final ProductRepository productRepository;
 
     @Override
-    public List<OrderDTO> getAllOrderByStatus(String orderStatus) {
-        OrderStatus status = null;
-        if (orderStatus != null && !orderStatus.trim().isEmpty()) {
-            try {
-                status = OrderStatus.valueOf(orderStatus.trim().toUpperCase());
-            } catch (IllegalArgumentException e) {
-                throw new ResponseStatusException(BAD_REQUEST,
-                        "Invalid status '" + orderStatus + "'. Valid values: " +
-                                Arrays.toString(OrderStatus.values()));
-            }
+    public Page<OrderDTO> getAllOrderByStatus(String orderStatus,
+                                              String paymentStatus,
+                                              String keyword,
+                                              LocalDateTime startDate,
+                                              LocalDateTime endDate,
+                                              Pageable pageable) {
+        OrderStatus oStatus = null;
+        if (orderStatus != null && !orderStatus.isBlank()) {
+            oStatus = OrderStatus.valueOf(orderStatus.trim().toUpperCase());
         }
 
-        return orderRepository.findByOptionalStatus(status).stream()
-                .map(order -> {
-                    String paymentStatus = order.getPayment() != null
-                            ? order.getPayment().getStatus().name()
-                            : "UNKNOWN";
-                    return convertToDTO(order, paymentStatus);
-                })
-                .toList();
+        PaymentStatus pStatus = null;
+        if (paymentStatus != null && !paymentStatus.isBlank()) {
+            pStatus = PaymentStatus.valueOf(paymentStatus.trim().toUpperCase());
+        }
+
+        Page<Order> orderPage = orderRepository.findAllOrderCustom(
+                oStatus, pStatus, keyword, startDate, endDate, pageable);
+
+        // 3. Map sang DTO
+        return orderPage.map(order -> {
+            String status = (order.getPayment() != null)
+                    ? order.getPayment().getStatus().name() : "UNKNOWN";
+            return convertToDTO(order, status);
+        });
     }
 
     @Override
