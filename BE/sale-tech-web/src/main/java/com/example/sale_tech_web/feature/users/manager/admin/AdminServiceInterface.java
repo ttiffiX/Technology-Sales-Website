@@ -4,11 +4,13 @@ import com.example.sale_tech_web.feature.users.dto.admin.AdminPasswordRequest;
 import com.example.sale_tech_web.feature.users.dto.admin.AdminRegisterRequest;
 import com.example.sale_tech_web.feature.users.dto.admin.UserDTO;
 import com.example.sale_tech_web.feature.users.enums.Role;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
 public interface AdminServiceInterface {
-    List<UserDTO> getAllUsers();
+    Page<UserDTO> getAllUsers(String keyword, Role role, Pageable pageable);
 
     List<Role> getAllRole();
 
@@ -19,8 +21,4 @@ public interface AdminServiceInterface {
     String deleteUser(Long id, AdminPasswordRequest adminPassword);
 
     UserDTO updateBanStatus(Long id, Boolean status);
-
-    List<UserDTO> searchUsersByUsernameOrEmail(String keyword);
-
-    List<UserDTO> filterUsersByRole(Role role);
 }

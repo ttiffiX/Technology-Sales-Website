@@ -9,6 +9,8 @@ import com.example.sale_tech_web.feature.users.enums.Role;
 import com.example.sale_tech_web.feature.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,11 +29,9 @@ public class AdminService implements AdminServiceInterface {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public List<UserDTO> getAllUsers() {
-        return userRepository.findAllByOrderByIdDesc()
-                .stream()
-                .map(this::convertToUserDTO)
-                .toList();
+    public Page<UserDTO> getAllUsers(String keyword, Role role, Pageable pageable) {
+        return userRepository.findAllUsersCustom(keyword, role, pageable)
+                .map(this::convertToUserDTO);
     }
 
     @Override
@@ -141,31 +141,6 @@ public class AdminService implements AdminServiceInterface {
         user.setBanned(status);
         userRepository.save(user);
         return convertToUserDTO(user);
-    }
-
-    @Override
-    public List<UserDTO> searchUsersByUsernameOrEmail(String keyword) {
-        if (keyword == null || keyword.trim().isEmpty()) {
-            getAllUsers(); // Trả về tất cả users nếu keyword rỗng
-        }
-
-        assert keyword != null;
-        return userRepository.searchByUsernameOrEmail(keyword.trim())
-                .stream()
-                .map(this::convertToUserDTO)
-                .toList();
-    }
-
-    @Override
-    public List<UserDTO> filterUsersByRole(Role role) {
-        if (role == null) {
-            throw new ResponseStatusException(BAD_REQUEST, "Role cannot be null.");
-        }
-
-        return userRepository.findByRoleOrderByIdDesc(role)
-                .stream()
-                .map(this::convertToUserDTO)
-                .toList();
     }
 
     /**

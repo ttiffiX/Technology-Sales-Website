@@ -2,6 +2,8 @@ package com.example.sale_tech_web.feature.users.repository;
 
 import com.example.sale_tech_web.feature.users.entity.Users;
 import com.example.sale_tech_web.feature.users.enums.Role;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -32,17 +34,15 @@ public interface UserRepository extends JpaRepository<Users, Long> {
     List<Users> findInactiveUsersOlderThan(@Param("cutoffTime") LocalDateTime cutoffTime);
 
     @EntityGraph(attributePaths = {"cart"})
-    List<Users> findAllByOrderByIdDesc();
-
-    @EntityGraph(attributePaths = {"cart"})
     @Query("SELECT u FROM Users u WHERE " +
-            "u.username ILIKE %:keyword% OR " +
-            "u.email ILIKE %:keyword% " +
-            "ORDER BY u.id DESC")
-    List<Users> searchByUsernameOrEmail(@Param("keyword") String keyword);
-
-    @EntityGraph(attributePaths = {"cart"})
-    List<Users> findByRoleOrderByIdDesc(Role role);
+            "(:role IS NULL OR u.role = :role) AND " +
+            "(:keyword IS NULL OR " +
+            "LOWER(u.username) LIKE LOWER(CONCAT('%', CAST(:keyword as string), '%')) OR " +
+            "LOWER(u.email) LIKE LOWER(CONCAT('%', CAST(:keyword as string), '%')) OR" +
+            "     u.phone LIKE CONCAT('%', CAST(:keyword as string), '%')) ")
+    Page<Users> findAllUsersCustom(@Param("keyword") String keyword,
+                                   @Param("role") Role role,
+                                   Pageable pageable);
 }
 
 
