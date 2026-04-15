@@ -184,6 +184,7 @@ CREATE TABLE orders
 CREATE INDEX idx_orders_user_id ON orders (user_id);
 -- Giúp Admin/PM lọc đơn hàng theo trạng thái (VD: Lấy đơn PENDING để duyệt)
 CREATE INDEX idx_orders_status ON orders (status);
+CREATE INDEX idx_orders_created_date ON orders (CAST(created_at AS DATE));
 
 
 -- 6. ORDER DETAIL TABLE
@@ -232,6 +233,7 @@ CREATE TABLE invoice
 -- INDEXES FOR INVOICE TABLE
 -- Tìm kiếm hóa đơn theo mã giao dịch (của VNPAY/PayOS trả về)
 CREATE INDEX idx_invoice_transaction_id ON invoice (transaction_id);
+CREATE INDEX idx_invoice_status ON invoice (status);
 
 
 -- 8. CART TABLE
@@ -323,6 +325,59 @@ CREATE TABLE refresh_tokens
     -- Khóa ngoại đến User
     CONSTRAINT fk_rt_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
+
+-- ========================================================
+-- VIEW (BẢNG ẢO)
+-- ========================================================
+
+drop view if exists view_daily_revenue_summary;
+CREATE OR REPLACE VIEW view_daily_revenue_summary AS
+SELECT
+    CAST(o.created_at AS DATE) AS report_date,
+    CAST(EXTRACT(HOUR FROM o.created_at) AS INT) AS report_hour,
+    o.status AS order_status,
+    i.status AS payment_status,
+    o.payment_method,
+    COUNT(o.id) AS total_orders,
+    COALESCE(SUM(o.total_price), 0) AS total_revenue
+FROM orders o
+         LEFT JOIN invoice i ON o.id = i.order_id
+GROUP BY
+    CAST(o.created_at AS DATE),
+    CAST(EXTRACT(HOUR FROM o.created_at) AS INT),
+    o.status,
+    i.status,
+    o.payment_method;
+
+
+
+
+drop view if exists view_product_performance;
+CREATE OR REPLACE VIEW view_product_performance AS
+SELECT
+    CAST(o.created_at AS DATE) AS report_date,
+    o.id AS order_id,
+    o.payment_method,
+    od.product_id,
+    od.product_title,
+    p.category_id,
+    od.category_name,
+    SUM(od.quantity) AS total_quantity_sold,
+    COALESCE(SUM(od.price * od.quantity), 0) AS total_revenue
+FROM order_detail od
+         JOIN orders o ON od.order_id = o.id
+         JOIN invoice i ON o.id = i.order_id
+         JOIN product p ON od.product_id = p.id
+WHERE o.status = 'COMPLETED' AND i.status = 'PAID'
+GROUP BY
+    CAST(o.created_at AS DATE),
+    o.id,
+    o.payment_method,
+    od.product_id,
+    od.product_title,
+    p.category_id,
+    od.category_name;
+
 
 
 -- ========================================================

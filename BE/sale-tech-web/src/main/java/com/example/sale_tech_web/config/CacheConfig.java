@@ -17,12 +17,18 @@ public class CacheConfig {
     public CacheManager cacheManager() {
         // Keep all cache policies in one place for easier tuning.
         List<CaffeineCache> caches = List.of(
+                //Product
                 buildCache(CacheNames.CATEGORIES, Duration.ofHours(24), 20, 100),
                 buildCache(CacheNames.FILTER_OPTIONS, Duration.ofHours(6), 50, 500),
                 buildCache(CacheNames.PRODUCT_LIST_ALL, Duration.ofMinutes(30), 5, 50),
                 buildCache(CacheNames.PRODUCT_BY_ID, Duration.ofMinutes(30), 200, 2000),
                 buildCache(CacheNames.PRODUCT_BY_CATEGORY, Duration.ofMinutes(30), 50, 500),
-                buildCache(CacheNames.PRODUCT_SEARCH, Duration.ofMinutes(5), 200, 1000)
+                buildCache(CacheNames.PRODUCT_SEARCH, Duration.ofMinutes(5), 200, 1000),
+
+
+
+                //Revenue
+                buildCache(CacheNames.REVENUE_ANALYTICS, Duration.ofMinutes(10), 50, 500)
         );
 
         SimpleCacheManager manager = new SimpleCacheManager();
