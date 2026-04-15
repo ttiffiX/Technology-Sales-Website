@@ -138,3 +138,20 @@ export {
     reorderIdsByDnD,
     mapDraftIdsToItems,
 } from './pmAttributeSchemaUtils';
+
+// Revenue utilities
+export {
+    REVENUE_DATE_OPTIONS,
+    REVENUE_SORT_OPTIONS,
+    REVENUE_PIE_COLORS,
+    getTodayInputValue,
+    toApiDate,
+    buildApiParams,
+    safeNumber,
+    formatPercent,
+    formatCompactNumber,
+    normalizeCategories,
+    loadRevenueDashboardData,
+    normalizeDailySeries,
+} from './revenueUtils';
+

@@ -1,0 +1,560 @@
+@use '../../../styles/variables' as vars;
+
+$primary: vars.$primary-color;
+$primary-soft: rgba(66, 107, 31, 0.14);
+$text-main: #0f172a;
+$text-muted: #64748b;
+$border: #e2e8f0;
+$bg-page: #f8fafc;
+
+.admin-revenue {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 24px;
+    background: $bg-page;
+    min-height: 100%;
+}
+
+.admin-revenue__hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px 22px;
+    background: $primary;
+    color: #fff;
+    border-radius: 18px;
+}
+
+.admin-revenue__hero h1 {
+    margin: 0 0 8px;
+    font-size: 28px;
+}
+
+.admin-revenue__hero p {
+    margin: 0;
+    max-width: 760px;
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.admin-revenue__hero-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: right;
+}
+
+.admin-revenue__hero-badge {
+    align-self: flex-end;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+    font-weight: 700;
+    font-size: 13px;
+}
+
+.admin-revenue__hero-update {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.admin-revenue__panel {
+    background: #fff;
+    border: 1px solid $border;
+    border-radius: 18px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.admin-revenue__filters {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 14px;
+    padding: 18px;
+    align-items: end;
+}
+
+.admin-revenue__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.admin-revenue__label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.admin-revenue__control,
+.admin-revenue__button {
+    height: 44px;
+    border-radius: 12px;
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    font-size: 14px;
+    padding: 0 14px;
+    color: $text-main;
+}
+
+.admin-revenue__control:focus {
+    outline: none;
+    border-color: $primary;
+    box-shadow: 0 0 0 3px $primary-soft;
+}
+
+.admin-revenue__button {
+    cursor: pointer;
+    font-weight: 700;
+    border-color: $primary;
+    background: $primary;
+    color: #fff;
+}
+
+.admin-revenue__button:hover {
+    filter: brightness(0.94);
+}
+
+.admin-revenue__button--secondary {
+    color: $text-main;
+    border-color: #cbd5e1;
+    background: #fff;
+}
+
+.admin-revenue__summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    align-items: stretch;
+}
+
+.admin-revenue__stat {
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-revenue__stat-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: $text-muted;
+    text-transform: uppercase;
+}
+
+.admin-revenue__stat-value {
+    margin-top: 10px;
+    font-size: 24px;
+    font-weight: 800;
+    color: $text-main;
+}
+
+.admin-revenue__stat-subtitle {
+    margin-top: 8px;
+    font-size: 13px;
+    color: $text-muted;
+    flex: 1;
+}
+
+.admin-revenue__total-details {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.admin-revenue__total-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.admin-revenue__total-group {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px;
+    background: #f8fafc;
+}
+
+.admin-revenue__total-heading {
+    font-size: 12px;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.admin-revenue__total-line {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 4px;
+}
+
+.admin-revenue__total-line strong {
+    color: #0f172a;
+}
+
+.admin-revenue__total-growth {
+    width: fit-content;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.admin-revenue__total-growth.is-up {
+    color: #047857;
+    background: #d1fae5;
+}
+
+.admin-revenue__total-growth.is-down {
+    color: #b91c1c;
+    background: #fee2e2;
+}
+
+.admin-revenue__mini-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px;
+    background: #f8fafc;
+}
+
+.admin-revenue__mini-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 12px;
+    color: #64748b;
+}
+
+.admin-revenue__mini-row strong {
+    color: #0f172a;
+    text-align: right;
+}
+
+.admin-revenue__stat-chip {
+    display: inline-flex;
+    margin-top: 10px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.admin-revenue__stat-chip--success {
+    color: #047857;
+    background: #d1fae5;
+}
+
+.admin-revenue__stat-chip--warning {
+    color: #b45309;
+    background: #fef3c7;
+}
+
+.admin-revenue__stat-chip--danger {
+    color: #b91c1c;
+    background: #fee2e2;
+}
+
+.admin-revenue__card {
+    padding: 18px;
+}
+
+.admin-revenue__card-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.admin-revenue__card-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 800;
+    color: $text-main;
+}
+
+.admin-revenue__card-subtitle,
+.admin-revenue__card-meta,
+.admin-revenue__meta-note {
+    font-size: 13px;
+    color: $text-muted;
+}
+
+.admin-revenue__grid {
+    display: grid;
+    gap: 16px;
+}
+
+.admin-revenue__grid--two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-revenue__line-wrap {
+    overflow-x: auto;
+    padding-bottom: 8px;
+}
+
+.admin-revenue__svg {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.admin-revenue__dual-line {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.admin-revenue__dual-line-legend {
+    display: inline-grid;
+    grid-template-columns: 12px auto 12px auto;
+    gap: 8px;
+    align-items: center;
+    width: fit-content;
+    font-size: 13px;
+    color: $text-main;
+    font-weight: 600;
+}
+
+.admin-revenue__legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.admin-revenue__legend-dot--current {
+    background: $primary;
+}
+
+.admin-revenue__legend-dot--previous {
+    background: #94a3b8;
+}
+
+.admin-revenue__growth {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.admin-revenue__growth-bars {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    align-items: end;
+}
+
+.admin-revenue__growth-col {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+}
+
+.admin-revenue__growth-track {
+    width: 100%;
+    max-width: 160px;
+    height: 200px;
+    border-radius: 12px;
+    background: #e2e8f0;
+    display: flex;
+    align-items: end;
+    overflow: hidden;
+}
+
+.admin-revenue__growth-fill {
+    width: 100%;
+    background: #94a3b8;
+    min-height: 6px;
+}
+
+.admin-revenue__growth-fill--primary {
+    background: $primary;
+}
+
+.admin-revenue__growth-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: $text-main;
+}
+
+.admin-revenue__growth-value {
+    font-size: 13px;
+    font-weight: 700;
+    color: #334155;
+}
+
+.admin-revenue__growth-chip {
+    width: fit-content;
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.admin-revenue__growth-chip.is-up {
+    color: #047857;
+    background: #d1fae5;
+}
+
+.admin-revenue__growth-chip.is-down {
+    color: #b91c1c;
+    background: #fee2e2;
+}
+
+.admin-revenue__pie-layout {
+    display: grid;
+    grid-template-columns: 300px minmax(0, 1fr);
+    gap: 24px;
+    align-items: center;
+}
+
+
+.admin-revenue__pie-chart {
+    position: relative;
+    width: 260px;
+    height: 260px;
+    margin: 0 auto;
+}
+
+.admin-revenue__pie-chart svg {
+    width: 260px;
+    height: 260px;
+    display: block;
+}
+
+.admin-revenue__legend {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.admin-revenue__legend-item {
+    display: grid;
+    grid-template-columns: 14px minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+    font-size: 13px;
+    color: $text-main;
+}
+
+.admin-revenue__legend-swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+}
+
+.admin-revenue__legend-name {
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+.admin-revenue__legend-hover {
+    margin-top: 6px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    font-size: 13px;
+    color: #334155;
+    line-height: 1.45;
+}
+
+.admin-revenue__table-wrap {
+    overflow-x: auto;
+}
+
+.admin-revenue__table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 720px;
+}
+
+.admin-revenue__table th,
+.admin-revenue__table td {
+    text-align: left;
+    padding: 12px 14px;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 13px;
+    color: #334155;
+}
+
+.admin-revenue__table th {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #64748b;
+    background: #f8fafc;
+}
+
+.admin-revenue__table td:first-child,
+.admin-revenue__table th:first-child {
+    width: 56px;
+    text-align: center;
+}
+
+.admin-revenue__empty,
+.admin-revenue__error {
+    padding: 24px;
+    text-align: center;
+    border-radius: 16px;
+    background: #fff;
+    border: 1px dashed #cbd5e1;
+    color: $text-muted;
+}
+
+.admin-revenue__error {
+    border-style: solid;
+    border-color: #fecaca;
+    background: #fff1f2;
+    color: #b91c1c;
+}
+
+.admin-revenue__error-actions {
+    margin-top: 12px;
+}
+
+@media (max-width: 1280px) {
+    .admin-revenue__filters {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .admin-revenue__grid--two,
+    .admin-revenue__pie-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-revenue {
+        padding: 16px;
+    }
+
+    .admin-revenue__hero {
+        flex-direction: column;
+    }
+
+    .admin-revenue__hero-meta {
+        text-align: left;
+    }
+
+    .admin-revenue__filters,
+    .admin-revenue__summary,
+    .admin-revenue__growth-bars,
+    .admin-revenue__total-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+
