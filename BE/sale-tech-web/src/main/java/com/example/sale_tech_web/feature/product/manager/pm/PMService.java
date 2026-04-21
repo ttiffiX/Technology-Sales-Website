@@ -182,6 +182,7 @@ public class PMService implements PMServiceInterface {
                 .isActive(p.getIsActive())
                 .categoryId(p.getCategory().getId())
                 .categoryName(p.getCategory().getName())
+                .quantity(p.getQuantity())
                 .build();
     }
 

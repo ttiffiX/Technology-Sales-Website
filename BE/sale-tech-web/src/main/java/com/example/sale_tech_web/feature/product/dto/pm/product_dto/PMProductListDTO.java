@@ -16,4 +16,5 @@ public class PMProductListDTO {
     private Boolean isActive;
     private Long categoryId;
     private String categoryName;
+    private Integer quantity;
 }

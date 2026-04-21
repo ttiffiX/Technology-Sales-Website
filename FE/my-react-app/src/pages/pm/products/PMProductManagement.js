@@ -484,6 +484,7 @@ function PMProductManagement() {
                                     <th>Title</th>
                                     <th>Category</th>
                                     <th>Price</th>
+                                    <th>Quantity</th>
                                     <th>Active</th>
                                     <th className="pm-product-table__actions">Actions</th>
                                 </tr>
@@ -495,6 +496,7 @@ function PMProductManagement() {
                                         <td>{product.title}</td>
                                         <td>{product.categoryName || '-'}</td>
                                         <td>{formatPrice(product.price)}</td>
+                                        <td>{product.quantity}</td>
                                         <td>
                                             <span className={`pm-active-badge ${product.isActive ? 'pm-active-badge--on' : 'pm-active-badge--off'}`}>
                                                 {product.isActive ? 'Active' : 'Inactive'}
