@@ -5,15 +5,25 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class PaymentMethodRevenueDTO {
-    private String paymentMethod;
-    private Long totalRevenue;
-    private Long totalQuantitySold;
-    private Long orderCount;
-    private Double revenuePercentage;
-}
+    private List<PaymentMethodRevenue> paymentMethodRevenues;
+    private DateRangeDTO range;
 
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class PaymentMethodRevenue {
+        private String paymentMethod;
+        private Long totalRevenue;
+        private Long totalQuantitySold;
+        private Long orderCount;
+        private Double revenuePercentage;
+    }
+}

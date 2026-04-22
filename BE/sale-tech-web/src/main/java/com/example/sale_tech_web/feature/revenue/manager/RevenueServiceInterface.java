@@ -1,14 +1,7 @@
 package com.example.sale_tech_web.feature.revenue.manager;
 
 import com.example.sale_tech_web.feature.revenue.enums.DateOption;
-import com.example.sale_tech_web.feature.revenue.dto.CancelRateDTO;
-import com.example.sale_tech_web.feature.revenue.dto.CategoryRevenueDTO;
-import com.example.sale_tech_web.feature.revenue.dto.DailyRevenuePointDTO;
-import com.example.sale_tech_web.feature.revenue.dto.PaymentMethodRevenueDTO;
-import com.example.sale_tech_web.feature.revenue.dto.PendingRevenueDTO;
-import com.example.sale_tech_web.feature.revenue.dto.RevenueCompareDTO;
-import com.example.sale_tech_web.feature.revenue.dto.RevenueTotalDTO;
-import com.example.sale_tech_web.feature.revenue.dto.TopProductDTO;
+import com.example.sale_tech_web.feature.revenue.dto.*;
 import com.example.sale_tech_web.feature.revenue.enums.TopProductSortBy;
 
 import java.time.LocalDate;
@@ -16,44 +9,44 @@ import java.util.List;
 
 public interface RevenueServiceInterface {
     /**
-     * Lấy tất cả các đơn hàng có trạng thái COMPLETED
-     * và đã thanh toán (PAID) theo ngày, tuần, tháng, năm.
+     * Lấy tổng doanh thu + số lượng đơn hàng COMPLETED/PAID
+     * So sánh với period trước để tính growth %
      */
-    RevenueTotalDTO getTotalRevenue(DateOption dateOption);
+    RevenueTotalDTO getTotalRevenue(DateOption dateOption, Long categoryId);
 
     /**
-     * Lấy tất cả các đơn hàng có trạng thái PENDING, APPROVED, SHIPPING.
+     * Lấy doanh thu phân bổ theo danh mục (cho Pie Chart)
+     * Kèm theo % tỷ trọng mỗi danh mục trong tổng doanh thu
      */
-    PendingRevenueDTO getPendingRevenue();
+    CategoryRevenueDTO getCategoryRevenue(DateOption dateOption);
 
     /**
-     * Lấy tất cả các đơn hàng có trạng thái CANCELLED theo ngày, tuần, tháng, năm.
+     * Lấy top 10 sản phẩm doanh thu cao nhất (cho Bar Chart)
+     * Có thể sort theo REVENUE hoặc QUANTITY
      */
-    CancelRateDTO getCancelRate(DateOption dateOption);
+    TopProductDTO getTopProducts(DateOption dateOption, Long categoryId, TopProductSortBy sortBy);
 
     /**
-     * Tính % tăng trưởng doanh thu so với chu kỳ trước (Ngày, Tuần, Tháng, Năm).
+     * Lấy doanh thu phân bổ theo phương thức thanh toán (VNPAY, CASH)
+     * Kèm theo % tỷ trọng mỗi phương thức thanh toán
      */
-    RevenueCompareDTO getRevenueCompare(DateOption dateOption);
+    PaymentMethodRevenueDTO getRevenueByPaymentMethod(DateOption dateOption, Long categoryId);
 
     /**
-     * Data cho Line Chart (Doanh thu theo thời gian của 1 ngày).
-     * Chọn 1 ngày cụ thể, hệ thống hiển thị biểu đồ doanh thu theo giờ trong ngày đó.
+     * Lấy tổng giá trị + số lượng đơn hàng PENDING/APPROVED/SHIPPING
+     * Đây là doanh thu chờ xử lý, chưa hoàn tất
      */
-    List<DailyRevenuePointDTO> getDailyRevenue(LocalDate date);
+    PendingRevenueDTO getPendingRevenue(DateOption dateOption, Long categoryId);
 
     /**
-     * Data cho Pie Chart (Tỷ trọng doanh thu theo danh mục theo ngày, tuần, tháng, năm).
+     * Lấy tỷ lệ hủy đơn hàng (CANCELLED orders vs Total orders)
+     * Kèm theo thống kê doanh thu bị mất do hủy đơn
      */
-    List<CategoryRevenueDTO> getCategoryRevenue(DateOption dateOption);
+    CancelRateDTO getCancelRate(DateOption dateOption, Long categoryId);
 
     /**
-     * Data cho Bar Chart (Top 10 sản phẩm doanh thu cao nhất theo ngày, tuần, tháng, năm và có thể lọc theo categoryId).
+     * Lấy doanh thu theo giờ trong 1 ngày (cho Line Chart)
+     * Hiển thị biểu đồ doanh thu theo giờ của ngày được chọn
      */
-    List<TopProductDTO> getTopProducts(DateOption dateOption, Long categoryId, TopProductSortBy sortBy);
-
-    /**
-     * Phân tích tỷ trọng phương thức thanh toán (VNPAY vs CASH) theo ngày, tuần, tháng, năm và có thể lọc theo category.
-     */
-    List<PaymentMethodRevenueDTO> getRevenueByPaymentMethod(DateOption dateOption, Long categoryId);
+    List<DailyRevenuePointDTO> getDailyRevenue(LocalDate date, Long categoryId);
 }

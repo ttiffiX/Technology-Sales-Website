@@ -12,5 +12,6 @@ import lombok.NoArgsConstructor;
 public class PendingRevenueDTO {
     private Long pendingRevenue;
     private Long pendingOrders;
+    private DateRangeDTO range;
 }
 

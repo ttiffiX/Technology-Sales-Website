@@ -27,48 +27,46 @@ public class RevenueController {
 
     @GetMapping("/total")
     public ResponseEntity<RevenueTotalDTO> getTotalRevenue(
-            @RequestParam(required = false) DateOption dateOption) {
-        log.info("Revenue - Get total revenue: dateOption={}", dateOption);
-        return ResponseEntity.ok(revenueServiceInterface.getTotalRevenue(dateOption));
+            @RequestParam(required = false) DateOption dateOption,
+            @RequestParam(required = false) Long categoryId) {
+        log.info("Revenue - Get total revenue: dateOption={}, categoryId={}", dateOption, categoryId);
+        return ResponseEntity.ok(revenueServiceInterface.getTotalRevenue(dateOption, categoryId));
     }
 
     @GetMapping("/pending")
-    public ResponseEntity<PendingRevenueDTO> getPendingRevenue() {
-        log.info("Revenue - Get pending revenue");
-        return ResponseEntity.ok(revenueServiceInterface.getPendingRevenue());
+    public ResponseEntity<PendingRevenueDTO> getPendingRevenue(
+            @RequestParam(required = false) DateOption dateOption,
+            @RequestParam(required = false) Long categoryId) {
+        log.info("Revenue - Get pending revenue: dateOption={}, categoryId={}", dateOption, categoryId);
+        return ResponseEntity.ok(revenueServiceInterface.getPendingRevenue(dateOption, categoryId));
     }
 
     @GetMapping("/cancel-rate")
     public ResponseEntity<CancelRateDTO> getCancelRate(
-            @RequestParam(required = false) DateOption dateOption) {
-        log.info("Revenue - Get cancel rate: dateOption={}", dateOption);
-        return ResponseEntity.ok(revenueServiceInterface.getCancelRate(dateOption));
-    }
-
-    @GetMapping("/compare")
-    public ResponseEntity<RevenueCompareDTO> getRevenueCompare(
-            @RequestParam(required = false) DateOption dateOption) {
-        log.info("Revenue - Compare revenue: dateOption={}", dateOption);
-        return ResponseEntity.ok(revenueServiceInterface.getRevenueCompare(dateOption));
+            @RequestParam(required = false) DateOption dateOption,
+            @RequestParam(required = false) Long categoryId) {
+        log.info("Revenue - Get cancel rate: dateOption={}, categoryId={}", dateOption, categoryId);
+        return ResponseEntity.ok(revenueServiceInterface.getCancelRate(dateOption, categoryId));
     }
 
     @GetMapping("/daily")
     public ResponseEntity<List<DailyRevenuePointDTO>> getDailyRevenue(
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date) {
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date,
+            @RequestParam(required = false) Long categoryId) {
         LocalDate targetDate = date == null ? LocalDate.now() : date;
-        log.info("Revenue - Get daily revenue chart: date={}", targetDate);
-        return ResponseEntity.ok(revenueServiceInterface.getDailyRevenue(targetDate));
+        log.info("Revenue - Get daily revenue chart: date={}, categoryId={}", targetDate, categoryId);
+        return ResponseEntity.ok(revenueServiceInterface.getDailyRevenue(targetDate, categoryId));
     }
 
     @GetMapping("/category")
-    public ResponseEntity<List<CategoryRevenueDTO>> getCategoryRevenue(
+    public ResponseEntity<CategoryRevenueDTO> getCategoryRevenue(
             @RequestParam(required = false) DateOption dateOption) {
         log.info("Revenue - Get category revenue: dateOption={}", dateOption);
         return ResponseEntity.ok(revenueServiceInterface.getCategoryRevenue(dateOption));
     }
 
     @GetMapping("/top-products")
-    public ResponseEntity<List<TopProductDTO>> getTopProducts(
+    public ResponseEntity<TopProductDTO> getTopProducts(
             @RequestParam(required = false) DateOption dateOption,
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) TopProductSortBy sortBy) {
@@ -77,7 +75,7 @@ public class RevenueController {
     }
 
     @GetMapping("/payment-method")
-    public ResponseEntity<List<PaymentMethodRevenueDTO>> getRevenueByPaymentMethod(
+    public ResponseEntity<PaymentMethodRevenueDTO> getRevenueByPaymentMethod(
             @RequestParam(required = false) DateOption dateOption,
             @RequestParam(required = false) Long categoryId) {
         log.info("Revenue - Get payment method revenue: dateOption={}, categoryId={}", dateOption, categoryId);

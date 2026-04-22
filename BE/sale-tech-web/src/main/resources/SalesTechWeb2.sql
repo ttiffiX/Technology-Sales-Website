@@ -330,54 +330,29 @@ CREATE TABLE refresh_tokens
 -- VIEW (BẢNG ẢO)
 -- ========================================================
 
-drop view if exists view_daily_revenue_summary;
-CREATE OR REPLACE VIEW view_daily_revenue_summary AS
+drop view if exists view_revenue_analytics;
+CREATE OR REPLACE VIEW view_revenue_analytics AS
 SELECT
-    CAST(o.created_at AS DATE) AS report_date,
+    -- Thời gian
+    CAST(o.created_at AS DATE)                   AS report_date,
     CAST(EXTRACT(HOUR FROM o.created_at) AS INT) AS report_hour,
-    o.status AS order_status,
-    i.status AS payment_status,
+    -- Order info
+    o.id                                         AS order_id,
     o.payment_method,
-    COUNT(o.id) AS total_orders,
-    COALESCE(SUM(o.total_price), 0) AS total_revenue
-FROM orders o
-         LEFT JOIN invoice i ON o.id = i.order_id
-GROUP BY
-    CAST(o.created_at AS DATE),
-    CAST(EXTRACT(HOUR FROM o.created_at) AS INT),
-    o.status,
-    i.status,
-    o.payment_method;
-
-
-
-
-drop view if exists view_product_performance;
-CREATE OR REPLACE VIEW view_product_performance AS
-SELECT
-    CAST(o.created_at AS DATE) AS report_date,
-    o.id AS order_id,
-    o.payment_method,
+    -- Product/Category info
     od.product_id,
     od.product_title,
     p.category_id,
     od.category_name,
-    SUM(od.quantity) AS total_quantity_sold,
-    COALESCE(SUM(od.price * od.quantity), 0) AS total_revenue
+    -- Revenue details (từng item)
+    od.quantity                                  AS total_quantity_sold,
+    (od.price * od.quantity)                     AS total_revenue
 FROM order_detail od
          JOIN orders o ON od.order_id = o.id
          JOIN invoice i ON o.id = i.order_id
          JOIN product p ON od.product_id = p.id
-WHERE o.status = 'COMPLETED' AND i.status = 'PAID'
-GROUP BY
-    CAST(o.created_at AS DATE),
-    o.id,
-    o.payment_method,
-    od.product_id,
-    od.product_title,
-    p.category_id,
-    od.category_name;
-
+WHERE o.status = 'COMPLETED'
+  AND i.status = 'PAID';
 
 
 -- ========================================================
