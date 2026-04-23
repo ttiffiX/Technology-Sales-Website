@@ -1,6 +1,5 @@
 package com.example.sale_tech_web.feature.revenue.manager;
 
-import com.example.sale_tech_web.config.CacheNames;
 import com.example.sale_tech_web.feature.revenue.entity.*;
 import com.example.sale_tech_web.feature.revenue.enums.DateOption;
 import com.example.sale_tech_web.feature.revenue.dto.*;
@@ -8,7 +7,6 @@ import com.example.sale_tech_web.feature.revenue.entity.HourlyRevenueProjection;
 import com.example.sale_tech_web.feature.revenue.enums.TopProductSortBy;
 import com.example.sale_tech_web.feature.revenue.repository.RevenueRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -29,7 +27,7 @@ public class RevenueService implements RevenueServiceInterface {
     private final RevenueRepository revenueRepository;
 
     @Override
-    @Cacheable(value = CacheNames.REVENUE_ANALYTICS, key = "'total:' + (#dateOption == null ? 'THIS_MONTH' : #dateOption.name()) + ':' + (#categoryId == null ? 'ALL' : #categoryId)")
+//    @Cacheable(value = CacheNames.REVENUE_ANALYTICS, key = "'total:' + (#dateOption == null ? 'THIS_MONTH' : #dateOption.name()) + ':' + (#categoryId == null ? 'ALL' : #categoryId)")
     public RevenueTotalDTO getTotalRevenue(DateOption dateOption, Long categoryId) {
         DateRangeDTO currentRange = resolveDateRange(dateOption);
         DateRangeDTO previousRange = resolvePreviousRange(dateOption);
@@ -62,7 +60,7 @@ public class RevenueService implements RevenueServiceInterface {
     }
 
     @Override
-    @Cacheable(value = CacheNames.REVENUE_ANALYTICS, key = "'pending:' + (#dateOption == null ? 'THIS_MONTH' : #dateOption.name()) + ':' + (#categoryId == null ? 'ALL' : #categoryId)")
+//    @Cacheable(value = CacheNames.REVENUE_ANALYTICS, key = "'pending:' + (#dateOption == null ? 'THIS_MONTH' : #dateOption.name()) + ':' + (#categoryId == null ? 'ALL' : #categoryId)")
     public PendingRevenueDTO getPendingRevenue(DateOption dateOption, Long categoryId) {
         DateRangeDTO range = resolveDateRange(dateOption);
 
@@ -82,11 +80,10 @@ public class RevenueService implements RevenueServiceInterface {
     }
 
     @Override
-    @Cacheable(value = CacheNames.REVENUE_ANALYTICS, key = "'cancel:' + (#dateOption == null ? 'THIS_MONTH' : #dateOption.name()) + ':' + (#categoryId == null ? 'ALL' : #categoryId)")
+//    @Cacheable(value = CacheNames.REVENUE_ANALYTICS, key = "'cancel:' + (#dateOption == null ? 'THIS_MONTH' : #dateOption.name()) + ':' + (#categoryId == null ? 'ALL' : #categoryId)")
     public CancelRateDTO getCancelRate(DateOption dateOption, Long categoryId) {
         DateRangeDTO range = resolveDateRange(dateOption);
 
-        // GROUP 2: Unified query lấy cancelled revenue + cancelled orders + total orders
         CancelRateStatsProjection result = revenueRepository.getCancelledAndTotalOrderStats(
                 range.getStartDate(),
                 range.getEndDate(),
@@ -106,18 +103,18 @@ public class RevenueService implements RevenueServiceInterface {
     }
 
     @Override
-    @Cacheable(value = CacheNames.REVENUE_ANALYTICS, key = "'daily:' + (#date == null ? T(java.time.LocalDate).now().toString() : #date.toString()) + ':' + (#categoryId == null ? 'ALL' : #categoryId)")
+//    @Cacheable(value = CacheNames.REVENUE_ANALYTICS, key = "'daily:' + (#date == null ? T(java.time.LocalDate).now().toString() : #date.toString()) + ':' + (#categoryId == null ? 'ALL' : #categoryId)")
     public List<DailyRevenuePointDTO> getDailyRevenue(LocalDate date, Long categoryId) {
         List<HourlyRevenueProjection> rawRows = revenueRepository.findHourlyRevenue(date, categoryId);
         Map<Integer, HourlyRevenueProjection> byHour = rawRows.stream()
-                .collect(Collectors.toMap(HourlyRevenueProjection::getHour, Function.identity()));
+                .collect(Collectors.toMap(HourlyRevenueProjection::getReportHour, Function.identity()));
 
         List<DailyRevenuePointDTO> result = new ArrayList<>(24);
         for (int hour = 0; hour < 24; hour++) {
             HourlyRevenueProjection data = byHour.get(hour);
             result.add(DailyRevenuePointDTO.builder()
                     .hour(hour)
-                    .revenue(data == null ? 0L : safeLong(data.getRevenue()))
+                    .revenue(data == null ? 0L : safeLong(data.getTotalRevenue()))
                     .orderCount(data == null ? 0L : safeLong(data.getOrderCount()))
                     .build());
         }
@@ -151,7 +148,7 @@ public class RevenueService implements RevenueServiceInterface {
     }
 
     @Override
-    @Cacheable(value = CacheNames.REVENUE_ANALYTICS, key = "'top:' + (#dateOption == null ? 'THIS_MONTH' : #dateOption.name()) + ':' + (#categoryId == null ? 'ALL' : #categoryId) + ':' + (#sortBy == null ? 'REVENUE' : #sortBy.name())")
+//    @Cacheable(value = CacheNames.REVENUE_ANALYTICS, key = "'top:' + (#dateOption == null ? 'THIS_MONTH' : #dateOption.name()) + ':' + (#categoryId == null ? 'ALL' : #categoryId) + ':' + (#sortBy == null ? 'REVENUE' : #sortBy.name())")
     public TopProductDTO getTopProducts(DateOption dateOption, Long categoryId, TopProductSortBy sortBy) {
         DateRangeDTO range = resolveDateRange(dateOption);
         TopProductSortBy safeSortBy = sortBy == null ? TopProductSortBy.REVENUE : sortBy;
@@ -181,7 +178,7 @@ public class RevenueService implements RevenueServiceInterface {
     }
 
     @Override
-    @Cacheable(value = CacheNames.REVENUE_ANALYTICS, key = "'pay-method:' + (#dateOption == null ? 'THIS_MONTH' : #dateOption.name()) + ':' + (#categoryId == null ? 'ALL' : #categoryId)")
+//    @Cacheable(value = CacheNames.REVENUE_ANALYTICS, key = "'pay-method:' + (#dateOption == null ? 'THIS_MONTH' : #dateOption.name()) + ':' + (#categoryId == null ? 'ALL' : #categoryId)")
     public PaymentMethodRevenueDTO getRevenueByPaymentMethod(DateOption dateOption, Long categoryId) {
         DateRangeDTO range = resolveDateRange(dateOption);
         List<PaymentMethodRevenueProjection> rawRows =

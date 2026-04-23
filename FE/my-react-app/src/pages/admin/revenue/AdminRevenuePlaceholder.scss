@@ -66,18 +66,71 @@ $bg-page: #f8fafc;
     box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
 }
 
+.admin-revenue__tabs {
+    display: inline-flex;
+    gap: 8px;
+    background: #ffffff;
+    border: 1px solid $border;
+    border-radius: 12px;
+    padding: 6px;
+    width: fit-content;
+}
+
+.admin-revenue__tab {
+    border: 1px solid transparent;
+    background: transparent;
+    color: #475569;
+    height: 38px;
+    padding: 0 14px;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.admin-revenue__tab.is-active {
+    background: $primary;
+    color: #fff;
+}
+
 .admin-revenue__filters {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 14px;
     padding: 18px;
     align-items: end;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.admin-revenue__filters--overview {
+    justify-content: stretch;
 }
 
 .admin-revenue__field {
     display: flex;
     flex-direction: column;
     gap: 6px;
+    flex: 1 1 260px;
+    min-width: 220px;
+    min-inline-size: 0;
+}
+
+.admin-revenue__filters .admin-revenue__button {
+    flex: 1 1 220px;
+}
+
+.admin-revenue__filters .admin-revenue__control,
+.admin-revenue__filters > .admin-revenue__button {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.admin-revenue__filters--overview > .admin-revenue__field,
+.admin-revenue__filters--overview > .admin-revenue__button,
+.admin-revenue__filters--daily > .admin-revenue__field,
+.admin-revenue__filters--daily > .admin-revenue__button {
+    flex: 1 1 0;
+    min-width: 0;
 }
 
 .admin-revenue__label {
@@ -125,9 +178,13 @@ $bg-page: #f8fafc;
 
 .admin-revenue__summary {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 16px;
     align-items: stretch;
+}
+
+.admin-revenue__stat--total {
+    grid-column: span 2;
 }
 
 .admin-revenue__stat {
@@ -285,6 +342,25 @@ $bg-page: #f8fafc;
 .admin-revenue__meta-note {
     font-size: 13px;
     color: $text-muted;
+}
+
+.admin-revenue__panel--daily {
+    border-style: dashed;
+}
+
+.admin-revenue__filters--daily {
+    justify-content: stretch;
+}
+
+.admin-revenue__top-filter {
+    display: flex;
+    gap: 12px;
+    align-items: end;
+    margin-bottom: 14px;
+}
+
+.admin-revenue__top-filter .admin-revenue__field {
+    min-width: 260px;
 }
 
 .admin-revenue__grid {
@@ -525,13 +601,30 @@ $bg-page: #f8fafc;
 }
 
 @media (max-width: 1280px) {
-    .admin-revenue__filters {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+    .admin-revenue__filters .admin-revenue__button {
+        flex: 1 1 0;
     }
 
     .admin-revenue__grid--two,
     .admin-revenue__pie-layout {
         grid-template-columns: 1fr;
+    }
+
+    .admin-revenue__summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-revenue__stat--total {
+        grid-column: span 2;
+    }
+
+    .admin-revenue__top-filter {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-revenue__top-filter .admin-revenue__field {
+        min-width: 0;
     }
 }
 
@@ -548,11 +641,25 @@ $bg-page: #f8fafc;
         text-align: left;
     }
 
-    .admin-revenue__filters,
     .admin-revenue__summary,
     .admin-revenue__growth-bars,
     .admin-revenue__total-grid {
         grid-template-columns: 1fr;
+    }
+
+    .admin-revenue__filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-revenue__field,
+    .admin-revenue__filters .admin-revenue__button {
+        flex: 1 1 auto;
+        width: 100%;
+    }
+
+    .admin-revenue__stat--total {
+        grid-column: span 1;
     }
 }
 

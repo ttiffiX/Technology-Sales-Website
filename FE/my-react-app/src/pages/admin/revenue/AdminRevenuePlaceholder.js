@@ -30,9 +30,9 @@ import {
     safeNumber,
 } from '../../../utils';
 
-function SummaryCard({ title, value, subtitle, tone = 'neutral', badge }) {
+function SummaryCard({ title, value, subtitle, tone = 'neutral', badge, className = '' }) {
     return (
-        <article className="admin-revenue__panel admin-revenue__stat">
+        <article className={`admin-revenue__panel admin-revenue__stat ${className}`.trim()}>
             <div className="admin-revenue__stat-title">{title}</div>
             <div className="admin-revenue__stat-value">{value}</div>
             {badge ? <div className={`admin-revenue__stat-chip admin-revenue__stat-chip--${tone}`}>{badge}</div> : null}
@@ -87,6 +87,10 @@ function PendingRevenueDetails({ pending }) {
                 <strong>{formatCompactNumber(pending?.pendingOrders)}</strong>
             </div>
             <div className="admin-revenue__mini-row">
+                <span>Range</span>
+                <strong>{pending?.range?.label || '-'}</strong>
+            </div>
+            <div className="admin-revenue__mini-row">
                 <span>Pipeline status</span>
                 <strong>Pending/Approved/Shipping</strong>
             </div>
@@ -100,6 +104,10 @@ function CancelRateDetails({ cancelRate }) {
             <div className="admin-revenue__mini-row">
                 <span>Cancelled orders</span>
                 <strong>{formatCompactNumber(cancelRate?.cancelledOrders)}</strong>
+            </div>
+            <div className="admin-revenue__mini-row">
+                <span>Total orders</span>
+                <strong>{formatCompactNumber(cancelRate?.totalOrders)}</strong>
             </div>
             <div className="admin-revenue__mini-row">
                 <span>Cancelled revenue</span>
@@ -276,18 +284,49 @@ function TopProductsTable({ data = [] }) {
     );
 }
 
+function RevenueTabs({ activeTab, onChange }) {
+    return (
+        <section className="admin-revenue__tabs">
+            <button
+                type="button"
+                className={`admin-revenue__tab ${activeTab === 'overview' ? 'is-active' : ''}`}
+                onClick={() => onChange('overview')}
+            >
+                Overview
+            </button>
+            <button
+                type="button"
+                className={`admin-revenue__tab ${activeTab === 'daily' ? 'is-active' : ''}`}
+                onClick={() => onChange('daily')}
+            >
+                Daily revenue
+            </button>
+        </section>
+    );
+}
+
 function AdminRevenuePlaceholder() {
-    const initialFilters = useMemo(
+    const initialSummaryFilters = useMemo(
         () => ({
             dateOption: 'THIS_MONTH',
-            dailyDate: getTodayInputValue(),
             categoryId: '',
-            sortBy: 'REVENUE',
         }),
         []
     );
-    const [draftFilters, setDraftFilters] = useState(initialFilters);
-    const [appliedFilters, setAppliedFilters] = useState(initialFilters);
+    const initialDailyFilters = useMemo(
+        () => ({
+            dailyDate: getTodayInputValue(),
+            categoryId: '',
+        }),
+        []
+    );
+    const [draftSummaryFilters, setDraftSummaryFilters] = useState(initialSummaryFilters);
+    const [appliedSummaryFilters, setAppliedSummaryFilters] = useState(initialSummaryFilters);
+    const [draftDailyFilters, setDraftDailyFilters] = useState(initialDailyFilters);
+    const [appliedDailyFilters, setAppliedDailyFilters] = useState(initialDailyFilters);
+    const [draftTopSort, setDraftTopSort] = useState('REVENUE');
+    const [appliedTopSort, setAppliedTopSort] = useState('REVENUE');
+    const [activeTab, setActiveTab] = useState('overview');
     const [categories, setCategories] = useState([]);
     const [dashboard, setDashboard] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -320,10 +359,11 @@ function AdminRevenuePlaceholder() {
 
         try {
             const data = await loadRevenueDashboardData({
-                dateOption: appliedFilters.dateOption,
-                categoryId: appliedFilters.categoryId ? Number(appliedFilters.categoryId) : null,
-                sortBy: appliedFilters.sortBy,
-                dailyDate: appliedFilters.dailyDate,
+                dateOption: appliedSummaryFilters.dateOption,
+                categoryId: appliedSummaryFilters.categoryId ? Number(appliedSummaryFilters.categoryId) : null,
+                sortBy: appliedTopSort,
+                dailyDate: appliedDailyFilters.dailyDate,
+                dailyCategoryId: appliedDailyFilters.categoryId ? Number(appliedDailyFilters.categoryId) : null,
             });
             setDashboard(data);
         } catch (err) {
@@ -331,32 +371,60 @@ function AdminRevenuePlaceholder() {
         } finally {
             setLoading(false);
         }
-    }, [appliedFilters]);
+    }, [appliedDailyFilters, appliedSummaryFilters, appliedTopSort]);
 
     useEffect(() => {
         loadDashboard();
     }, [loadDashboard]);
 
     const selectedDateLabel = useMemo(() => {
-        const selected = REVENUE_DATE_OPTIONS.find((item) => item.value === appliedFilters.dateOption);
-        return selected?.label || appliedFilters.dateOption;
-    }, [appliedFilters.dateOption]);
+        const selected = REVENUE_DATE_OPTIONS.find((item) => item.value === appliedSummaryFilters.dateOption);
+        return selected?.label || appliedSummaryFilters.dateOption;
+    }, [appliedSummaryFilters.dateOption]);
 
     const selectedCategoryLabel = useMemo(() => {
-        if (!appliedFilters.categoryId) return 'All categories';
-        return categories.find((item) => String(item.id) === String(appliedFilters.categoryId))?.name || 'Selected category';
-    }, [appliedFilters.categoryId, categories]);
+        if (!appliedSummaryFilters.categoryId) return 'All categories';
+        return categories.find((item) => String(item.id) === String(appliedSummaryFilters.categoryId))?.name || 'Selected category';
+    }, [appliedSummaryFilters.categoryId, categories]);
 
-    const applyFilters = useCallback(() => {
-        setAppliedFilters({ ...draftFilters });
-    }, [draftFilters]);
+    const selectedDailyCategoryLabel = useMemo(() => {
+        if (!appliedDailyFilters.categoryId) return 'All categories';
+        return categories.find((item) => String(item.id) === String(appliedDailyFilters.categoryId))?.name || 'Selected category';
+    }, [appliedDailyFilters.categoryId, categories]);
 
-    const handleFilterSubmit = useCallback(
+    const dailyDateLabel = useMemo(() => {
+        const rawDate = appliedDailyFilters.dailyDate;
+        if (!rawDate) return '-';
+        const parsed = new Date(`${rawDate}T00:00:00`);
+        return Number.isNaN(parsed.getTime()) ? rawDate : formatDateOnly(parsed);
+    }, [appliedDailyFilters.dailyDate]);
+
+    const applySummaryFilters = useCallback(() => {
+        setAppliedSummaryFilters({ ...draftSummaryFilters });
+    }, [draftSummaryFilters]);
+
+    const applyDailyFilters = useCallback(() => {
+        setAppliedDailyFilters({ ...draftDailyFilters });
+    }, [draftDailyFilters]);
+
+    const applyTopSort = useCallback(() => {
+        setAppliedTopSort(draftTopSort);
+    }, [draftTopSort]);
+
+    const handleSummaryFilterSubmit = useCallback(
         (event) => {
             event.preventDefault();
-            applyFilters();
+            applySummaryFilters();
         },
-        [applyFilters]
+        [applySummaryFilters]
+    );
+
+    const handleDailyFilterSubmit = useCallback(
+        (event) => {
+            event.preventDefault();
+            applyDailyFilters();
+        },
+        [applyDailyFilters]
     );
 
     const currentSummary = dashboard?.totalRevenue;
@@ -366,7 +434,7 @@ function AdminRevenuePlaceholder() {
     const categorySeries = dashboard?.categoryRevenue || [];
     const paymentSeries = dashboard?.paymentMethodRevenue || [];
     const topProducts = dashboard?.topProducts || [];
-    const topMetricLabel = appliedFilters.sortBy === 'QUANTITY' ? 'Quantity sold' : 'Revenue';
+    const topMetricLabel = appliedTopSort === 'QUANTITY' ? 'Quantity sold' : 'Revenue';
     const topChartSubtitle = `Top products sorted by ${topMetricLabel.toLowerCase()}`;
 
     return (
@@ -384,73 +452,86 @@ function AdminRevenuePlaceholder() {
 
                 <div className="admin-revenue__hero-meta">
                     <div className="admin-revenue__hero-badge">{selectedDateLabel}</div>
-                    <div className="admin-revenue__hero-update">Category: {selectedCategoryLabel}</div>
-                    <div className="admin-revenue__hero-update">Hourly chart: {formatDateOnly(new Date(`${appliedFilters.dailyDate}T00:00:00`))}</div>
+                    <div className="admin-revenue__hero-update">Summary category: {selectedCategoryLabel}</div>
+                    <div className="admin-revenue__hero-update">Daily chart date: {dailyDateLabel}</div>
                 </div>
             </header>
 
-            <section className="admin-revenue__panel">
-                <form className="admin-revenue__filters" onSubmit={handleFilterSubmit}>
-                    <label className="admin-revenue__field">
-                        <span className="admin-revenue__label">Date range</span>
-                        <select
-                            className="admin-revenue__control"
-                            value={draftFilters.dateOption}
-                            onChange={(e) => setDraftFilters((prev) => ({ ...prev, dateOption: e.target.value }))}
-                        >
-                            {REVENUE_DATE_OPTIONS.map((item) => (
-                                <option key={item.value} value={item.value}>
-                                    {item.label}
-                                </option>
-                            ))}
-                        </select>
-                    </label>
+            <RevenueTabs activeTab={activeTab} onChange={setActiveTab} />
 
-                    <label className="admin-revenue__field">
-                        <span className="admin-revenue__label">Category</span>
-                        <select
-                            className="admin-revenue__control"
-                            value={draftFilters.categoryId}
-                            onChange={(e) => setDraftFilters((prev) => ({ ...prev, categoryId: e.target.value }))}
-                        >
-                            {categories.map((item) => (
-                                <option key={item.id || 'all'} value={item.id}>
-                                    {item.name}
-                                </option>
-                            ))}
-                        </select>
-                    </label>
+            {activeTab === 'overview' ? (
+                <section className="admin-revenue__panel">
+                    <form className="admin-revenue__filters admin-revenue__filters--overview" onSubmit={handleSummaryFilterSubmit}>
+                        <label className="admin-revenue__field">
+                            <span className="admin-revenue__label">Summary date range</span>
+                            <select
+                                className="admin-revenue__control"
+                                value={draftSummaryFilters.dateOption}
+                                onChange={(e) => setDraftSummaryFilters((prev) => ({ ...prev, dateOption: e.target.value }))}
+                            >
+                                {REVENUE_DATE_OPTIONS.map((item) => (
+                                    <option key={item.value} value={item.value}>
+                                        {item.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
 
-                    <label className="admin-revenue__field">
-                        <span className="admin-revenue__label">Top products sort</span>
-                        <select
-                            className="admin-revenue__control"
-                            value={draftFilters.sortBy}
-                            onChange={(e) => setDraftFilters((prev) => ({ ...prev, sortBy: e.target.value }))}
-                        >
-                            {REVENUE_SORT_OPTIONS.map((item) => (
-                                <option key={item.value} value={item.value}>
-                                    {item.label}
-                                </option>
-                            ))}
-                        </select>
-                    </label>
+                        <label className="admin-revenue__field">
+                            <span className="admin-revenue__label">Summary category</span>
+                            <select
+                                className="admin-revenue__control"
+                                value={draftSummaryFilters.categoryId}
+                                onChange={(e) => setDraftSummaryFilters((prev) => ({ ...prev, categoryId: e.target.value }))}
+                            >
+                                {categories.map((item) => (
+                                    <option key={item.id || 'all'} value={item.id}>
+                                        {item.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
 
-                    <label className="admin-revenue__field">
-                        <span className="admin-revenue__label">Hourly chart date</span>
-                        <input
-                            className="admin-revenue__control"
-                            type="date"
-                            value={draftFilters.dailyDate}
-                            onChange={(e) => setDraftFilters((prev) => ({ ...prev, dailyDate: e.target.value }))}
-                        />
-                    </label>
 
-                    <button type="submit" className="admin-revenue__button">
-                        Filter
-                    </button>
-                </form>
-            </section>
+                        <button type="submit" className="admin-revenue__button">
+                            Apply filter
+                        </button>
+                    </form>
+                </section>
+            ) : (
+                <section className="admin-revenue__panel admin-revenue__panel--daily">
+                    <form className="admin-revenue__filters admin-revenue__filters--daily" onSubmit={handleDailyFilterSubmit}>
+                        <label className="admin-revenue__field">
+                            <span className="admin-revenue__label">Daily chart date</span>
+                            <input
+                                className="admin-revenue__control"
+                                type="date"
+                                value={draftDailyFilters.dailyDate}
+                                onChange={(e) => setDraftDailyFilters((prev) => ({ ...prev, dailyDate: e.target.value }))}
+                            />
+                        </label>
+
+                        <label className="admin-revenue__field">
+                            <span className="admin-revenue__label">Daily category</span>
+                            <select
+                                className="admin-revenue__control"
+                                value={draftDailyFilters.categoryId}
+                                onChange={(e) => setDraftDailyFilters((prev) => ({ ...prev, categoryId: e.target.value }))}
+                            >
+                                {categories.map((item) => (
+                                    <option key={`daily-${item.id || 'all'}`} value={item.id}>
+                                        {item.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+
+                        <button type="submit" className="admin-revenue__button">
+                            Apply filter
+                        </button>
+                    </form>
+                </section>
+            )}
 
             {error ? (
                 <section className="admin-revenue__error">
@@ -464,65 +545,89 @@ function AdminRevenuePlaceholder() {
                 </section>
             ) : null}
 
-            <section className="admin-revenue__summary">
-                <SummaryCard
-                    title="Total revenue"
-                    value={formatPrice(currentSummary?.currentRevenue)}
-                    subtitle={<TotalRevenueDetails total={currentSummary} />}
-                    tone="success"
-                    badge={currentSummary?.currentRange?.label || selectedDateLabel}
-                />
+            {activeTab === 'overview' ? (
+                <>
+                    <section className="admin-revenue__summary">
+                        <SummaryCard
+                            title="Total revenue"
+                            value={formatPrice(currentSummary?.currentRevenue)}
+                            subtitle={<TotalRevenueDetails total={currentSummary} />}
+                            tone="success"
+                            badge={currentSummary?.currentRange?.label || selectedDateLabel}
+                            className="admin-revenue__stat--total"
+                        />
 
-                <SummaryCard
-                    title="Pending revenue"
-                    value={formatPrice(pendingSummary?.pendingRevenue)}
-                    subtitle={<PendingRevenueDetails pending={pendingSummary} />}
-                    tone="warning"
-                    badge="Pending"
-                />
+                        <SummaryCard
+                            title="Pending revenue"
+                            value={formatPrice(pendingSummary?.pendingRevenue)}
+                            subtitle={<PendingRevenueDetails pending={pendingSummary} />}
+                            tone="warning"
+                            badge={pendingSummary?.range?.label || selectedDateLabel}
+                        />
 
-                <SummaryCard
-                    title="Cancel rate"
-                    value={formatPercent(cancelSummary?.cancellationRate)}
-                    subtitle={<CancelRateDetails cancelRate={cancelSummary} />}
-                    tone="danger"
-                    badge="Cancelled"
-                />
-            </section>
+                        <SummaryCard
+                            title="Cancel rate"
+                            value={formatPercent(cancelSummary?.cancellationRate)}
+                            subtitle={<CancelRateDetails cancelRate={cancelSummary} />}
+                            tone="danger"
+                            badge={cancelSummary?.range?.label || selectedDateLabel}
+                        />
+                    </section>
 
-            <SectionCard
-                title="Revenue by hour"
-                subtitle="Line chart of hourly revenue for the selected date"
-                meta={formatDateOnly(new Date(`${appliedFilters.dailyDate}T00:00:00`))}
-            >
-                <RevenueLineChart data={dailySeries} />
-            </SectionCard>
+                    <div className="admin-revenue__grid admin-revenue__grid--two">
+                        <SectionCard
+                            title="Revenue by category"
+                            subtitle="Share of total revenue by category"
+                            meta={dashboard?.categoryRange?.label || selectedDateLabel}
+                        >
+                            <RevenuePieChart data={categorySeries} totalFormatter={formatPrice} />
+                        </SectionCard>
 
-            <div className="admin-revenue__grid admin-revenue__grid--two">
+                        <SectionCard
+                            title="Revenue by payment method"
+                            subtitle="Revenue share of VNPAY vs CASH"
+                            meta={dashboard?.paymentMethodRange?.label || selectedDateLabel}
+                        >
+                            <RevenuePieChart data={paymentSeries} totalFormatter={formatPrice} />
+                        </SectionCard>
+                    </div>
+
+                    <SectionCard
+                        title="Top products"
+                        subtitle={topChartSubtitle}
+                        meta={dashboard?.topProductsRange?.label || selectedDateLabel}
+                    >
+                        <div className="admin-revenue__top-filter">
+                            <label className="admin-revenue__field">
+                                <span className="admin-revenue__label">Top products sort</span>
+                                <select
+                                    className="admin-revenue__control"
+                                    value={draftTopSort}
+                                    onChange={(e) => setDraftTopSort(e.target.value)}
+                                >
+                                    {REVENUE_SORT_OPTIONS.map((item) => (
+                                        <option key={item.value} value={item.value}>
+                                            {item.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                            <button type="button" className="admin-revenue__button" onClick={applyTopSort}>
+                                Apply filter
+                            </button>
+                        </div>
+                        <TopProductsTable data={topProducts} />
+                    </SectionCard>
+                </>
+            ) : (
                 <SectionCard
-                    title="Revenue by category"
-                    subtitle="Share of total revenue by category"
-                    meta={selectedDateLabel}
+                    title="Daily revenue"
+                    subtitle="Hourly revenue by selected day. This chart is separate from summary DateOption filter."
+                    meta={`${dailyDateLabel} | ${selectedDailyCategoryLabel}`}
                 >
-                    <RevenuePieChart data={categorySeries} totalFormatter={formatPrice} />
+                    <RevenueLineChart data={dailySeries} />
                 </SectionCard>
-
-                <SectionCard
-                    title="Revenue by payment method"
-                    subtitle="Revenue share of VNPAY vs CASH"
-                    meta={selectedCategoryLabel}
-                >
-                    <RevenuePieChart data={paymentSeries} totalFormatter={formatPrice} />
-                </SectionCard>
-            </div>
-
-            <SectionCard
-                title="Top products"
-                subtitle={topChartSubtitle}
-                meta={selectedCategoryLabel}
-            >
-                <TopProductsTable data={topProducts} />
-            </SectionCard>
+            )}
         </section>
     );
 }

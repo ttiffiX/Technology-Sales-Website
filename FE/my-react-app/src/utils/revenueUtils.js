@@ -77,10 +77,17 @@ export const normalizeCategories = (data) => {
     ];
 };
 
-export const loadRevenueDashboardData = async ({ dateOption, categoryId, sortBy, dailyDate }) => {
-    const commonParams = buildApiParams({ dateOption });
+export const loadRevenueDashboardData = async ({
+    dateOption,
+    categoryId,
+    sortBy,
+    dailyDate,
+    dailyCategoryId,
+}) => {
+    const summaryParams = buildApiParams({ dateOption, categoryId });
+    const categoryParams = buildApiParams({ dateOption });
     const topParams = buildApiParams({ dateOption, categoryId, sortBy });
-    const dailyParams = buildApiParams({ date: toApiDate(dailyDate) });
+    const dailyParams = buildApiParams({ date: toApiDate(dailyDate), categoryId: dailyCategoryId });
     const paymentParams = buildApiParams({ dateOption, categoryId });
 
     const [
@@ -88,15 +95,15 @@ export const loadRevenueDashboardData = async ({ dateOption, categoryId, sortBy,
         pendingRevenue,
         cancelRate,
         dailyRevenue,
-        categoryRevenue,
-        topProducts,
-        paymentMethodRevenue,
+        categoryRevenueResponse,
+        topProductsResponse,
+        paymentMethodRevenueResponse,
     ] = await Promise.all([
-        getRevenueTotal(commonParams),
-        getPendingRevenue(),
-        getRevenueCancelRate(commonParams),
+        getRevenueTotal(summaryParams),
+        getPendingRevenue(summaryParams),
+        getRevenueCancelRate(summaryParams),
         getDailyRevenue(dailyParams),
-        getCategoryRevenue(commonParams),
+        getCategoryRevenue(categoryParams),
         getTopProducts(topParams),
         getRevenueByPaymentMethod(paymentParams),
     ]);
@@ -106,9 +113,12 @@ export const loadRevenueDashboardData = async ({ dateOption, categoryId, sortBy,
         pendingRevenue,
         cancelRate,
         dailyRevenue,
-        categoryRevenue,
-        topProducts,
-        paymentMethodRevenue,
+        categoryRevenue: categoryRevenueResponse?.categoryRevenues || [],
+        categoryRange: categoryRevenueResponse?.range || null,
+        topProducts: topProductsResponse?.topProducts || [],
+        topProductsRange: topProductsResponse?.range || null,
+        paymentMethodRevenue: paymentMethodRevenueResponse?.paymentMethodRevenues || [],
+        paymentMethodRange: paymentMethodRevenueResponse?.range || null,
     };
 };
 
@@ -123,6 +133,4 @@ export const normalizeDailySeries = (data = []) => {
         };
     });
 };
-
-
 
