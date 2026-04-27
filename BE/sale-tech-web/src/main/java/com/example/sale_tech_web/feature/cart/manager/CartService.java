@@ -21,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 import static org.springframework.http.HttpStatus.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -43,7 +44,17 @@ public class CartService implements CartServiceInterface {
                 .orElse(null);
 
         if (cart == null) {
+            Users users = userRepository.findById(userId)
+                    .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
+            Cart newCart = Cart.builder()
+                    .user(users)
+                    .updatedAt(LocalDateTime.now())
+                    .build();
+
+            newCart = cartRepository.save(newCart);
+
             return CartDTO.builder()
+                    .cartId(newCart.getId())
                     .totalQuantity(0)
                     .totalPrice(0)
                     .cartDetailDTO(List.of())
@@ -125,6 +136,7 @@ public class CartService implements CartServiceInterface {
                     Cart newCart = Cart.builder()
                             .user(user)
                             .updatedAt(LocalDateTime.now())
+                            .cartDetailList(new ArrayList<>())
                             .build();
                     return cartRepository.save(newCart);
                 });
