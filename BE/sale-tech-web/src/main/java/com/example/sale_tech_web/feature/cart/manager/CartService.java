@@ -40,21 +40,18 @@ public class CartService implements CartServiceInterface {
         // 2. Lấy Cart với tất cả relationships trong 1 query (JOIN FETCH)
         // Không cần query User riêng, không cần query CartDetails riêng, không cần query Products riêng
         Cart cart = cartRepository.findByUserId(userId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Cart not found"));
+                .orElse(null);
 
-        // 3. Lấy CartDetails từ relationship (đã được load bởi JOIN FETCH)
-        List<CartDetail> cartItems = cart.getCartDetailList();
-
-        // 4. Nếu giỏ hàng trống
-        if (cartItems.isEmpty()) {
+        if (cart == null) {
             return CartDTO.builder()
-                    .cartId(cart.getId())
                     .totalQuantity(0)
                     .totalPrice(0)
                     .cartDetailDTO(List.of())
                     .build();
         }
 
+        // 3. Lấy CartDetails từ relationship (đã được load bởi JOIN FETCH)
+        List<CartDetail> cartItems = cart.getCartDetailList();
 
         // 6. Tính tổng số lượng cho tất cả và giá cho các sản phẩm ĐƯỢC CHỌN
         int totalQuantity = cartItems.size();
