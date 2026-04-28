@@ -19,9 +19,35 @@ function AddProductModal({
     onListAttributeItemChange,
     onAddListAttributeItem,
     onRemoveListAttributeItem,
+    onFileChange,
 }) {
-    const { useMemo } = React;
+    const { useMemo, useState, useEffect } = React;
+    const [previewUrl, setPreviewUrl] = useState(null);
+    const [fileError, setFileError] = useState('');
     const groupedAttributes = useMemo(() => groupAttributesByGroupName(attributes), [attributes]);
+
+    useEffect(() => {
+        // create object URL for File instances, or use provided string URL
+        const file = productForm?.imageFile;
+        if (!file) {
+            setPreviewUrl(null);
+            return;
+        }
+
+        if (typeof file === 'string') {
+            setPreviewUrl(file);
+            return;
+        }
+
+        // file is a File object
+        const url = URL.createObjectURL(file);
+        setPreviewUrl(url);
+
+        return () => {
+            URL.revokeObjectURL(url);
+            setPreviewUrl(null);
+        };
+    }, [productForm?.imageFile]);
 
     if (!isOpen) {
         return null;
@@ -259,17 +285,60 @@ function AddProductModal({
                                         </label>
                                     </div>
 
+
                                     <div className="pm-form-group pm-form-group--full">
-                                        <label htmlFor="pm-product-image">Image URL</label>
-                                        <input
-                                            id="pm-product-image"
-                                            name="imageUrl"
-                                            type="text"
-                                            value={productForm.imageUrl}
-                                            onChange={onBaseFieldChange}
-                                            placeholder="Enter image URL"
-                                            disabled={savingProduct}
-                                        />
+                                        <label htmlFor="pm-product-image-file">Upload image</label>
+                                                <input
+                                                    id="pm-product-image-file"
+                                                    name="imageFile"
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={(e) => {
+                                                        const file = e.target.files && e.target.files[0];
+                                                        if (!file) {
+                                                            setFileError('');
+                                                            onFileChange && onFileChange(null);
+                                                            return;
+                                                        }
+
+                                                        const maxBytes = 5 * 1024 * 1024; // 5MB
+                                                        if (file.size > maxBytes) {
+                                                            setFileError('Image must be smaller than 5MB');
+                                                            onFileChange && onFileChange(null);
+                                                            return;
+                                                        }
+
+                                                        setFileError('');
+                                                        onFileChange && onFileChange(file);
+                                                    }}
+                                                    disabled={savingProduct}
+                                                />
+
+                                                <div className="pm-form-hint">Maximum file size: 5MB. Accepted: image/*</div>
+
+                                                {fileError ? <div className="pm-form-error">{fileError}</div> : null}
+
+                                                {productForm.imageFile && (
+                                                    <div className="pm-image-preview">
+                                                        {previewUrl ? (
+                                                            <img
+                                                                src={previewUrl}
+                                                                alt="preview"
+                                                                style={{ maxWidth: '160px', maxHeight: '120px', objectFit: 'cover', display: 'block' }}
+                                                            />
+                                                        ) : null}
+                                                        <div className="pm-image-meta">
+                                                            <div className="pm-image-name">
+                                                                {typeof productForm.imageFile === 'string'
+                                                                    ? productForm.imageFile
+                                                                    : productForm.imageFile.name}
+                                                            </div>
+                                                            {typeof productForm.imageFile !== 'string' && (
+                                                                <div className="pm-image-size">{(productForm.imageFile.size / 1024 / 1024).toFixed(2)} MB</div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
                                     </div>
 
                                     <div className="pm-form-group pm-form-group--full">
@@ -316,7 +385,7 @@ function AddProductModal({
                         <button
                             type="submit"
                             className="pm-btn-submit"
-                            disabled={savingProduct || loadingAttr || !!errorAttr || !productForm.categoryId}
+                            disabled={savingProduct || loadingAttr || !!errorAttr || !!fileError || !productForm.categoryId}
                         >
                             {savingProduct ? 'Adding...' : 'Add Product'}
                         </button>

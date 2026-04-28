@@ -3,6 +3,25 @@ import { buildAddProductPayload, buildUpdateProductPayload } from '../../../util
 
 export const addProduct = async (productRequest, attributeSchemas = []) => {
     const payload = buildAddProductPayload(productRequest, attributeSchemas);
+
+    // If caller provided an imageFile (File object), send multipart/form-data
+    if (productRequest && productRequest.imageFile) {
+        const formData = new FormData();
+
+        const blob = new Blob([JSON.stringify(payload)], {
+            type: 'application/json'
+        });
+
+        formData.append('request', blob);
+        formData.append('file', productRequest.imageFile);
+
+        const response = await apiClient.post('/pm/products', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return response.data;
+    }
+
+    // Fallback: send JSON body (no file)
     const response = await apiClient.post('/pm/products', payload);
     return response.data;
 };

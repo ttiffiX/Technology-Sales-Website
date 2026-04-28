@@ -1,14 +1,14 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { getAllCategories } from '../../../api/customer/ProductAPI';
+import React, {useEffect, useRef, useState} from 'react';
+import {useNavigate} from 'react-router-dom';
+import {getAllCategories} from '../../../api/customer/ProductAPI';
 import {
     addProduct,
     deletePMProduct,
     getPMProducts,
     updatePMProductState,
 } from '../../../api/pm/product/ProductAPI';
-import { getAttributesByCategory } from '../../../api/pm/product/AttributeAPI';
-import { useToast } from '../../../components/Toast/Toast';
+import {getAttributesByCategory} from '../../../api/pm/product/AttributeAPI';
+import {useToast} from '../../../components/Toast/Toast';
 import AddProductModal from '../../../components/modal/addproduct/AddProductModal';
 import PaginationControls from '../../../components/pagination/PaginationControls';
 import {
@@ -26,7 +26,7 @@ const INITIAL_FORM = {
     price: '',
     quantity: '',
     quantitySold: '',
-    imageUrl: '',
+    imageFile: null,
     isActive: true,
 };
 
@@ -45,7 +45,7 @@ const extractCreatedProduct = (payload) => {
 
 function PMProductManagement() {
     const navigate = useNavigate();
-    const { triggerToast } = useToast();
+    const {triggerToast} = useToast();
     const [categories, setCategories] = useState([]);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [productForm, setProductForm] = useState(INITIAL_FORM);
@@ -58,10 +58,10 @@ function PMProductManagement() {
     const [products, setProducts] = useState([]);
     const [loadingProducts, setLoadingProducts] = useState(true);
     const [productsError, setProductsError] = useState(null);
-     const [keywordInput, setKeywordInput] = useState('');
-     const [appliedKeyword, setAppliedKeyword] = useState('');
-     const [categoryFilterId, setCategoryFilterId] = useState('');
-     const [sortBy, setSortBy] = useState('id,desc');
+    const [keywordInput, setKeywordInput] = useState('');
+    const [appliedKeyword, setAppliedKeyword] = useState('');
+    const [categoryFilterId, setCategoryFilterId] = useState('');
+    const [sortBy, setSortBy] = useState('id,desc');
     const [pageNumber, setPageNumber] = useState(0);
     const [pageSize] = useState(10);
     const [totalPages, setTotalPages] = useState(0);
@@ -170,7 +170,7 @@ function PMProductManagement() {
     };
 
     const handleBaseFieldChange = (event) => {
-        const { name, value, type, checked } = event.target;
+        const {name, value, type, checked} = event.target;
         const nextValue = type === 'checkbox' ? checked : value;
 
         setProductForm((prev) => ({
@@ -184,6 +184,13 @@ function PMProductManagement() {
                 [name]: '',
             }));
         }
+    };
+
+    const handleImageFileChange = (file) => {
+        setProductForm((prev) => ({
+            ...prev,
+            imageFile: file || null,
+        }));
     };
 
     const handleCategoryChange = (event) => {
@@ -302,9 +309,23 @@ function PMProductManagement() {
             triggerToast('success', 'Product added successfully');
             closeAddModal();
         } catch (error) {
+            console.error("DEBUG ERROR OBJECT:", error); // <-- THÊM DÒNG NÀY
+
+            if (error.response) {
+                // Server đã trả về phản hồi (status code không phải 2xx)
+                console.log("Data từ server:", error.response.data);
+                console.log("Status code:", error.response.status);
+            } else if (error.request) {
+                // Request đã gửi nhưng không nhận được phản hồi (thường là lỗi mạng)
+                console.log("Request bị lỗi (không nhận được phản hồi):", error.request);
+            } else {
+                // Lỗi do cấu hình axios hoặc code của bạn
+                console.log("Lỗi khác:", error.message);
+            }
             const message =
                 error?.response?.data?.message ||
                 error?.response?.data ||
+                error?.response?.message ||
                 'Failed to add product';
 
             triggerToast('error', message);
@@ -340,20 +361,20 @@ function PMProductManagement() {
         setPageNumber(0);
     };
 
-     const resetFilters = () => {
-         setKeywordInput('');
-         setAppliedKeyword('');
-         setCategoryFilterId('');
-         setSortBy('id,desc');
-         setPageNumber(0);
-     };
+    const resetFilters = () => {
+        setKeywordInput('');
+        setAppliedKeyword('');
+        setCategoryFilterId('');
+        setSortBy('id,desc');
+        setPageNumber(0);
+    };
 
-     useEffect(() => {
-         if (!hasFetchedInitialDataRef.current) {
-             return;
-         }
-         loadProducts(pageNumber);
-     }, [appliedKeyword, categoryFilterId, sortBy, pageNumber]);
+    useEffect(() => {
+        if (!hasFetchedInitialDataRef.current) {
+            return;
+        }
+        loadProducts(pageNumber);
+    }, [appliedKeyword, categoryFilterId, sortBy, pageNumber]);
 
     const handleToggleActiveProduct = async (productId, nextActiveState) => {
         const actionLabel = nextActiveState ? 'activate' : 'deactivate';
@@ -367,7 +388,7 @@ function PMProductManagement() {
             await updatePMProductState(productId, nextActiveState);
 
             setProducts((prev) => prev.map((item) => (
-                item.id === productId ? { ...item, isActive: nextActiveState } : item
+                item.id === productId ? {...item, isActive: nextActiveState} : item
             )));
             triggerToast('success', `Product ${nextActiveState ? 'activated' : 'deactivated'} successfully`);
         } catch (error) {
@@ -479,58 +500,59 @@ function PMProductManagement() {
                     <div className="pm-product-table-wrapper">
                         <table className="pm-product-table">
                             <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Title</th>
-                                    <th>Category</th>
-                                    <th>Price</th>
-                                    <th>Quantity</th>
-                                    <th>Active</th>
-                                    <th className="pm-product-table__actions">Actions</th>
-                                </tr>
+                            <tr>
+                                <th>ID</th>
+                                <th>Title</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Quantity</th>
+                                <th>Active</th>
+                                <th className="pm-product-table__actions">Actions</th>
+                            </tr>
                             </thead>
                             <tbody>
-                                {products.map((product) => (
-                                    <tr key={product.id}>
-                                        <td>{product.id}</td>
-                                        <td>{product.title}</td>
-                                        <td>{product.categoryName || '-'}</td>
-                                        <td>{formatPrice(product.price)}</td>
-                                        <td>{product.quantity}</td>
-                                        <td>
-                                            <span className={`pm-active-badge ${product.isActive ? 'pm-active-badge--on' : 'pm-active-badge--off'}`}>
+                            {products.map((product) => (
+                                <tr key={product.id}>
+                                    <td>{product.id}</td>
+                                    <td>{product.title}</td>
+                                    <td>{product.categoryName || '-'}</td>
+                                    <td>{formatPrice(product.price)}</td>
+                                    <td>{product.quantity}</td>
+                                    <td>
+                                            <span
+                                                className={`pm-active-badge ${product.isActive ? 'pm-active-badge--on' : 'pm-active-badge--off'}`}>
                                                 {product.isActive ? 'Active' : 'Inactive'}
                                             </span>
-                                        </td>
-                                        <td className="pm-product-table__actions">
-                                            <button
-                                                type="button"
-                                                className="pm-action-btn pm-action-btn--view"
-                                                onClick={() => navigate(`/pm/products/list/${product.id}`)}
-                                            >
-                                                View
-                                            </button>
-                                            <button
-                                                type="button"
-                                                className={`pm-action-btn ${product.isActive ? 'pm-action-btn--deactivate' : 'pm-action-btn--active'}`}
-                                                onClick={() => handleToggleActiveProduct(product.id, !product.isActive)}
-                                                disabled={activatingProductId === product.id}
-                                            >
-                                                {activatingProductId === product.id
-                                                    ? (product.isActive ? 'Deactivating...' : 'Activating...')
-                                                    : (product.isActive ? 'Deactivate' : 'Active')}
-                                            </button>
-                                            <button
-                                                type="button"
-                                                className="pm-action-btn pm-action-btn--delete"
-                                                onClick={() => handleDeleteProduct(product.id)}
-                                                disabled={deletingProductId === product.id}
-                                            >
-                                                {deletingProductId === product.id ? 'Deleting...' : 'Delete'}
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
+                                    </td>
+                                    <td className="pm-product-table__actions">
+                                        <button
+                                            type="button"
+                                            className="pm-action-btn pm-action-btn--view"
+                                            onClick={() => navigate(`/pm/products/list/${product.id}`)}
+                                        >
+                                            View
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className={`pm-action-btn ${product.isActive ? 'pm-action-btn--deactivate' : 'pm-action-btn--active'}`}
+                                            onClick={() => handleToggleActiveProduct(product.id, !product.isActive)}
+                                            disabled={activatingProductId === product.id}
+                                        >
+                                            {activatingProductId === product.id
+                                                ? (product.isActive ? 'Deactivating...' : 'Activating...')
+                                                : (product.isActive ? 'Deactivate' : 'Active')}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="pm-action-btn pm-action-btn--delete"
+                                            onClick={() => handleDeleteProduct(product.id)}
+                                            disabled={deletingProductId === product.id}
+                                        >
+                                            {deletingProductId === product.id ? 'Deleting...' : 'Delete'}
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
                             </tbody>
                         </table>
                     </div>
@@ -561,6 +583,7 @@ function PMProductManagement() {
                 attributeValues={attributeValues}
                 onCategoryChange={handleCategoryChange}
                 onBaseFieldChange={handleBaseFieldChange}
+                onFileChange={handleImageFileChange}
                 onAttributeChange={handleAttributeChange}
                 onListAttributeItemChange={handleListAttributeItemChange}
                 onAddListAttributeItem={addListAttributeItem}

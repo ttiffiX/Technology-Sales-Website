@@ -6,6 +6,11 @@
 export const getImage = (imageName) => {
     if (!imageName) return '';
 
+    // If the value is already a full URL or data URI, use it directly
+    if (typeof imageName === 'string' && (imageName.startsWith('http://') || imageName.startsWith('https://') || imageName.startsWith('data:') || imageName.startsWith('/')) ) {
+        return imageName;
+    }
+
     try {
         return require(`../assets/images/${imageName}`);
     } catch (error) {
