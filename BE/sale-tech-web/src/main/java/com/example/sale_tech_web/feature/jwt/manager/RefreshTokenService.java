@@ -46,6 +46,15 @@ public class RefreshTokenService {
         RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenValue)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token not found"));
 
+        Users user = refreshToken.getUser();
+
+        if (user.isBanned()) {
+            refreshToken.setRevoked(true);
+            refreshTokenRepository.save(refreshToken);
+
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User account is banned");
+        }
+
         if (refreshToken.isRevoked()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token has been revoked");
         }
@@ -60,7 +69,6 @@ public class RefreshTokenService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token");
         }
 
-        Users user = refreshToken.getUser();
         return jwtUtils.generateToken(user.getId(), user.getRole().name());
     }
 

@@ -49,6 +49,10 @@ public class UserService implements UserServiceInterface {
         Users users = userRepository.findByUsernameOrEmail(logInRequest.getUsernameOrEmail())
                 .orElseThrow(() -> new ResponseStatusException(UNAUTHORIZED, "Invalid account or password"));
 
+        if (users.isBanned()) {
+            throw new ResponseStatusException(FORBIDDEN, "Your account has been banned.");
+        }
+
         if (!passwordEncoder.matches(logInRequest.getPassword(), users.getPassword())) {
             throw new ResponseStatusException(UNAUTHORIZED, "Invalid account or password");
         }

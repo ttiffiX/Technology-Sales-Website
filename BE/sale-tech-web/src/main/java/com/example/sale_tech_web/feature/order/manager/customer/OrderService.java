@@ -111,6 +111,10 @@ public class OrderService implements OrderServiceInterface {
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
 
+        if (user.isBanned()) {
+            throw new ResponseStatusException(FORBIDDEN, "Your account has been banned.");
+        }
+
         List<CartDetail> cartDetails = cartDetailRepository.findSelectedByUserId(userId);
 
         if (cartDetails.isEmpty()) {
@@ -202,6 +206,13 @@ public class OrderService implements OrderServiceInterface {
     @Transactional
     public String cancelOrder(Long orderId, HttpServletRequest request) {
         Long userId = getUserIdFromToken();
+
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
+
+        if (user.isBanned()) {
+            throw new ResponseStatusException(FORBIDDEN, "Your account has been banned.");
+        }
 
         Order order = orderRepository.findByIdAndUserId(orderId, userId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND,
