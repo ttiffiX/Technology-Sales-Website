@@ -3,6 +3,7 @@ package com.example.sale_tech_web.feature.order.manager.pm;
 import com.example.sale_tech_web.feature.order.dto.StatusCountDTO;
 import com.example.sale_tech_web.feature.order.dto.customer.OrderDTO;
 import com.example.sale_tech_web.feature.order.dto.customer.OrderDetailDTO;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -22,7 +23,7 @@ public interface OMServiceInterface {
 
     String approveOrder(Long orderId);
 
-    String rejectOrder(Long orderId, String reason);
+    String rejectOrder(Long orderId, String reason, HttpServletRequest request);
 
     String moveToShipping(Long orderId);
 

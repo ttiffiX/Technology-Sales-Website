@@ -3,6 +3,7 @@ package com.example.sale_tech_web.controller.pm;
 import com.example.sale_tech_web.feature.order.dto.customer.OrderDTO;
 import com.example.sale_tech_web.feature.order.dto.customer.OrderDetailDTO;
 import com.example.sale_tech_web.feature.order.manager.pm.OMServiceInterface;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -62,9 +63,12 @@ public class OMController {
     }
 
     @PatchMapping("/{orderId}/reject")
-    public ResponseEntity<String> rejectOrder(@PathVariable Long orderId, @RequestParam String reason) {
+    public ResponseEntity<String> rejectOrder(
+            @PathVariable Long orderId,
+            @RequestParam String reason,
+            HttpServletRequest request) {
         log.info("PM - Reject order: id={}", orderId);
-        return ResponseEntity.ok(omServiceInterface.rejectOrder(orderId, reason));
+        return ResponseEntity.ok(omServiceInterface.rejectOrder(orderId, reason, request));
     }
 
     @PatchMapping("/{orderId}/shipping")
