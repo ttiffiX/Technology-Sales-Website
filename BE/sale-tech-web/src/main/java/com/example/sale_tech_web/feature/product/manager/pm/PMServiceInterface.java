@@ -5,6 +5,7 @@ import com.example.sale_tech_web.feature.product.dto.pm.product_dto.PMProductLis
 import com.example.sale_tech_web.feature.product.dto.pm.product_dto.ProductRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface PMServiceInterface {
     Page<PMProductListDTO> getAllProductsForPM(String keyword, Integer categoryId, Boolean isActive,
@@ -12,7 +13,7 @@ public interface PMServiceInterface {
 
     PMProductDetailDTO getProductDetailForPM(Long productId);
 
-    PMProductListDTO addProduct(ProductRequest request);
+    PMProductListDTO addProduct(ProductRequest request, MultipartFile image);
 
     PMProductDetailDTO updateProduct(Long productId, ProductRequest request);
 

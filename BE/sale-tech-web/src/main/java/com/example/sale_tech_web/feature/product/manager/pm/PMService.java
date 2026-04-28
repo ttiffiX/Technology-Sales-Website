@@ -1,6 +1,7 @@
 package com.example.sale_tech_web.feature.product.manager.pm;
 
 import com.example.sale_tech_web.config.CacheNames;
+import com.example.sale_tech_web.feature.cloudinary.manager.CloudinaryService;
 import com.example.sale_tech_web.feature.product.dto.customer.ProductFilterGroupDTO;
 import com.example.sale_tech_web.feature.product.dto.pm.product_dto.PMProductDetailDTO;
 import com.example.sale_tech_web.feature.product.dto.pm.product_dto.PMProductListDTO;
@@ -21,8 +22,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -41,6 +44,7 @@ public class PMService implements PMServiceInterface {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final CategoryAttributeSchemaRepository categoryAttributeSchemaRepository;
+    private final CloudinaryService cloudinaryService;
 
     @Autowired
     private CacheManager cacheManager;
@@ -71,7 +75,7 @@ public class PMService implements PMServiceInterface {
             @CacheEvict(value = CacheNames.FILTER_OPTIONS, key = "#request.categoryId"),
             @CacheEvict(value = CacheNames.PRODUCT_SEARCH, allEntries = true)
     })
-    public PMProductListDTO addProduct(ProductRequest request) {
+    public PMProductListDTO addProduct(ProductRequest request, MultipartFile file) {
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Category not found"));
 
@@ -91,12 +95,22 @@ public class PMService implements PMServiceInterface {
 
         Product savedProduct = productRepository.save(product);
 
-        if (request.getImageUrl() == null || request.getImageUrl().isEmpty()) {
-            String fileName = savedProduct.getId() + ".png";
-            savedProduct.setImageUrl(fileName);
+        if (file != null && !file.isEmpty()) {
+            try {
+                String imageUrl = cloudinaryService.uploadImage(file, category.getName(), savedProduct.getId());
+                savedProduct.setImageUrl(imageUrl);
+
+                productRepository.save(savedProduct);
+            } catch (IOException e) {
+                // Rollback thủ công hoặc ném exception để @Transactional tự rollback
+                throw new RuntimeException("Upload image failed: " + e.getMessage());
+            }
         } else {
-            savedProduct.setImageUrl(request.getImageUrl());
+            // Xử lý mặc định nếu không có ảnh
+            savedProduct.setImageUrl("default_image_url.png");
+            productRepository.save(savedProduct);
         }
+
         return toListDTO(savedProduct);
     }
 
