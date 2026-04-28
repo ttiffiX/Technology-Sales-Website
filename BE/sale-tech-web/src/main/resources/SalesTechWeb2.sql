@@ -74,6 +74,7 @@ CREATE TABLE product
     quantity      INT,
     category_id   INT,
     image_url     VARCHAR(255),
+    public_id     VARCHAR(255), -- Lưu public_id của Cloudinary để dễ quản lý ảnh
     is_active     BOOLEAN,
     created_at    TIMESTAMP,
     attributes    JSONB,

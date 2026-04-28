@@ -1,6 +1,7 @@
 package com.example.sale_tech_web.feature.product.manager.pm;
 
 import com.example.sale_tech_web.config.CacheNames;
+import com.example.sale_tech_web.feature.cloudinary.dto.CloudinaryResponse;
 import com.example.sale_tech_web.feature.cloudinary.manager.CloudinaryService;
 import com.example.sale_tech_web.feature.product.dto.customer.ProductFilterGroupDTO;
 import com.example.sale_tech_web.feature.product.dto.pm.product_dto.PMProductDetailDTO;
@@ -97,13 +98,14 @@ public class PMService implements PMServiceInterface {
 
         if (file != null && !file.isEmpty()) {
             try {
-                String imageUrl = cloudinaryService.uploadImage(file, category.getName(), savedProduct.getId());
-                savedProduct.setImageUrl(imageUrl);
+                CloudinaryResponse uploadResult = cloudinaryService.uploadImage(file, category.getName(), savedProduct.getId());
+                savedProduct.setImageUrl(uploadResult.getImageUrl());
+                savedProduct.setPublicId(uploadResult.getPublicId());
 
                 productRepository.save(savedProduct);
             } catch (IOException e) {
                 // Rollback thủ công hoặc ném exception để @Transactional tự rollback
-                throw new RuntimeException("Upload image failed: " + e.getMessage());
+                throw new ResponseStatusException(BAD_REQUEST, "Upload image failed: " + e.getMessage());
             }
         } else {
             // Xử lý mặc định nếu không có ảnh
@@ -133,7 +135,6 @@ public class PMService implements PMServiceInterface {
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .price(request.getPrice())
-                .imageUrl(request.getImageUrl() == null || request.getImageUrl().isBlank() ? existing.getImageUrl() : request.getImageUrl())
                 .quantity(request.getQuantity())
                 .quantitySold(request.getQuantitySold() == null ? existing.getQuantitySold() : request.getQuantitySold())
                 .isActive(request.getIsActive())

@@ -27,7 +27,6 @@ public class ProductRequest {
     @Min(value = 0, message = "Price must be >= 0")
     private Integer price;
 
-    private String imageUrl;
     private Integer quantitySold;
 
     @NotNull(message = "Quantity is required")
