@@ -15,6 +15,7 @@ import com.example.sale_tech_web.feature.product.repository.CategoryAttributeSch
 import com.example.sale_tech_web.feature.product.repository.CategoryRepository;
 import com.example.sale_tech_web.feature.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
@@ -40,6 +41,7 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PMService implements PMServiceInterface {
 
     private final ProductRepository productRepository;
@@ -181,12 +183,23 @@ public class PMService implements PMServiceInterface {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Product not found"));
 
+        String result = "Product with ID " + productId + " has been deleted.";
+
+        try {
+            if (product.getPublicId() != null) {
+                cloudinaryService.deleteImage(product.getPublicId());
+            }
+        } catch (IOException e) {
+            log.error("Failed to delete image from Cloudinary for product ID {}: {}", productId, e.getMessage());
+            result += " However, the associated image could not be deleted.";
+        }
+
         productRepository.delete(product);
 
         Objects.requireNonNull(cacheManager.getCache(CacheNames.PRODUCT_BY_CATEGORY)).evict(product.getCategory().getId());
         Objects.requireNonNull(cacheManager.getCache(CacheNames.FILTER_OPTIONS)).evict(product.getCategory().getId());
 
-        return "Product with ID " + productId + " has been deleted.";
+        return result;
     }
 
     private PMProductListDTO toListDTO(Product p) {

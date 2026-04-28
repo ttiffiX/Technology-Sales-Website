@@ -5,6 +5,7 @@ import com.cloudinary.utils.ObjectUtils;
 import com.example.sale_tech_web.feature.cloudinary.dto.CloudinaryResponse;
 import com.example.sale_tech_web.utils.SlugUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -13,6 +14,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CloudinaryService {
     private final Cloudinary cloudinary;
 
@@ -31,5 +33,11 @@ public class CloudinaryService {
                 .imageUrl(uploadResult.get("secure_url").toString())
                 .publicId(publicId)
                 .build();
+    }
+
+    public void deleteImage(String publicId) throws IOException {
+        if (publicId != null && !publicId.isEmpty()) {
+            cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+        }
     }
 }
