@@ -38,6 +38,25 @@ export const getPMProductDetail = async (productId) => {
 
 export const updatePMProduct = async (productId, productForm, attributeSchemas = [], detailAttributes = {}, editedAttributeValues = null) => {
     const payload = buildUpdateProductPayload(productForm, attributeSchemas, detailAttributes, editedAttributeValues);
+
+    // If caller provided an imageFile (File object), send multipart/form-data
+    if (productForm && productForm.imageFile && productForm.imageFile instanceof File) {
+        const formData = new FormData();
+
+        const blob = new Blob([JSON.stringify(payload)], {
+            type: 'application/json'
+        });
+
+        formData.append('request', blob);
+        formData.append('file', productForm.imageFile);
+
+        const response = await apiClient.put(`/pm/products/${productId}`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return response.data;
+    }
+
+    // Fallback: send JSON body (no file or imageFile is string URL)
     const response = await apiClient.put(`/pm/products/${productId}`, payload);
     return response.data;
 };

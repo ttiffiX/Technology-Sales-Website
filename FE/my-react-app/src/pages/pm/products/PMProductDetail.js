@@ -21,6 +21,7 @@ const INITIAL_FORM = {
     quantity: '',
     quantitySold: '',
     imageUrl: '',
+    imageFile: null,
     isActive: true,
 };
 
@@ -33,6 +34,8 @@ function PMProductDetail() {
     const [error, setError] = useState(null);
     const [saving, setSaving] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
+    const [previewUrl, setPreviewUrl] = useState(null);
+    const [fileError, setFileError] = useState('');
 
     const [product, setProduct] = useState(null);
     const [attributeSchemas, setAttributeSchemas] = useState([]);
@@ -45,6 +48,29 @@ function PMProductDetail() {
         [attributeSchemas]
     );
 
+    // Manage preview URL for imageFile
+    useEffect(() => {
+        const file = form?.imageFile;
+        if (!file) {
+            setPreviewUrl(null);
+            return;
+        }
+
+        if (typeof file === 'string') {
+            setPreviewUrl(file);
+            return;
+        }
+
+        // file is a File object
+        const url = URL.createObjectURL(file);
+        setPreviewUrl(url);
+
+        return () => {
+            URL.revokeObjectURL(url);
+            setPreviewUrl(null);
+        };
+    }, [form?.imageFile]);
+
     const fillFormFromProduct = (detail) => {
         setForm({
             categoryId: detail?.categoryId ?? '',
@@ -54,6 +80,7 @@ function PMProductDetail() {
             quantity: detail?.quantity ?? '',
             quantitySold: detail?.quantitySold ?? '',
             imageUrl: detail?.imageUrl ?? '',
+            imageFile: null,
             isActive: detail?.isActive !== false,
         });
     };
@@ -129,6 +156,33 @@ function PMProductDetail() {
         }
     };
 
+    const handleImageFileChange = (file) => {
+        if (!file) {
+            setForm((prev) => ({
+                ...prev,
+                imageFile: null,
+            }));
+            setFileError('');
+            return;
+        }
+
+        const maxBytes = 5 * 1024 * 1024; // 5MB
+        if (file.size > maxBytes) {
+            setFileError('Image must be smaller than 5MB');
+            setForm((prev) => ({
+                ...prev,
+                imageFile: null,
+            }));
+            return;
+        }
+
+        setFileError('');
+        setForm((prev) => ({
+            ...prev,
+            imageFile: file,
+        }));
+    };
+
     const handleStartEdit = () => {
         if (!product) return;
         fillFormFromProduct(product);
@@ -142,6 +196,7 @@ function PMProductDetail() {
         fillFormFromProduct(product);
         setAttributeValues(buildPMDetailAttributeValues(product.attributes || {}, attributeSchemas));
         setFormErrors({});
+        setFileError('');
         setIsEditing(false);
     };
 
@@ -292,6 +347,10 @@ function PMProductDetail() {
     const handleSave = async () => {
         if (!product) return;
         if (!validateForm()) return;
+        if (fileError) {
+            triggerToast('error', 'Please fix file errors before saving');
+            return;
+        }
 
         setSaving(true);
         try {
@@ -332,6 +391,47 @@ function PMProductDetail() {
                         <div className="pm-product-detail-main">
                             <div className="pm-product-media">
                                 <div className="pm-product-image" style={{ backgroundImage: `url(${getImage(product.imageUrl)})` }} />
+                                {isEditing && (
+                                    <div className="pm-field pm-field--full">
+                                        <label htmlFor="pm-detail-image-file">Update image</label>
+                                        <input
+                                            id="pm-detail-image-file"
+                                            name="imageFile"
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={(e) => {
+                                                const file = e.target.files && e.target.files[0];
+                                                handleImageFileChange(file);
+                                            }}
+                                            disabled={saving}
+                                        />
+                                        <div className="pm-form-hint">Maximum file size: 5MB. Accepted: image/*</div>
+
+                                        {fileError ? <div className="pm-form-error">{fileError}</div> : null}
+
+                                        {form.imageFile && (
+                                            <div className="pm-image-preview">
+                                                {previewUrl ? (
+                                                    <img
+                                                        src={previewUrl}
+                                                        alt="preview"
+                                                        style={{ maxWidth: '160px', maxHeight: '120px', objectFit: 'cover', display: 'block' }}
+                                                    />
+                                                ) : null}
+                                                <div className="pm-image-meta">
+                                                    <div className="pm-image-name">
+                                                        {typeof form.imageFile === 'string'
+                                                            ? form.imageFile
+                                                            : form.imageFile.name}
+                                                    </div>
+                                                    {typeof form.imageFile !== 'string' && (
+                                                        <div className="pm-image-size">{(form.imageFile.size / 1024 / 1024).toFixed(2)} MB</div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
 
                             <div className="pm-product-detail-grid">
