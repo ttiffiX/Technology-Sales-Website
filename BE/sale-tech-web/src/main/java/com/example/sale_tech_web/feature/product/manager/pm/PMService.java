@@ -127,24 +127,48 @@ public class PMService implements PMServiceInterface {
             @CacheEvict(value = CacheNames.PRODUCT_BY_CATEGORY, key = "#request.categoryId"),
             @CacheEvict(value = CacheNames.FILTER_OPTIONS, key = "#request.categoryId")
     })
-    public PMProductDetailDTO updateProduct(Long productId, ProductRequest request) {
+    public PMProductDetailDTO updateProduct(Long productId, ProductRequest request, MultipartFile file) {
         Product existing = productRepository.findById(productId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Product not found"));
+        Category category = existing.getCategory();
 
-        validateProductAttributes(existing.getCategory(), request.getAttributes());
+        validateProductAttributes(category, request.getAttributes());
 
-        Product updated = existing.toBuilder()
-                .title(request.getTitle())
-                .description(request.getDescription())
-                .price(request.getPrice())
-                .quantity(request.getQuantity())
-                .quantitySold(request.getQuantitySold() == null ? existing.getQuantitySold() : request.getQuantitySold())
-                .isActive(request.getIsActive())
-                .category(existing.getCategory())
-                .attributes(request.getAttributes())
-                .build();
+        existing.setTitle(request.getTitle());
+        existing.setDescription(request.getDescription());
+        existing.setPrice(request.getPrice());
+        existing.setQuantity(request.getQuantity());
+        existing.setQuantitySold(request.getQuantitySold() == null ? 0 : request.getQuantitySold());
+        existing.setIsActive(request.getIsActive());
+        existing.setAttributes(request.getAttributes());
 
-        Product saved = productRepository.save(updated);
+//        String oldPublicId = null;
+
+        if (file != null && !file.isEmpty()) {
+            try {
+//                oldPublicId = existing.getPublicId();
+
+                CloudinaryResponse uploadResult = cloudinaryService.uploadImage(file, category.getName(), existing.getId());
+                existing.setImageUrl(uploadResult.getImageUrl());
+                existing.setPublicId(uploadResult.getPublicId());
+
+//            productRepository.save(updated);
+            } catch (IOException e) {
+                // Rollback thủ công hoặc ném exception để @Transactional tự rollback
+                throw new ResponseStatusException(BAD_REQUEST, "Upload image failed: " + e.getMessage());
+            }
+        }
+
+        Product saved = productRepository.save(existing);
+
+//        if (oldPublicId != null) {
+//            try {
+//                cloudinaryService.deleteImage(oldPublicId);
+//            } catch (IOException e) {
+//                log.error("Failed to delete image from Cloudinary for product ID {}: {}", productId, e.getMessage());
+//            }
+//        }
+
         return convertToDetailDTO(saved);
     }
 

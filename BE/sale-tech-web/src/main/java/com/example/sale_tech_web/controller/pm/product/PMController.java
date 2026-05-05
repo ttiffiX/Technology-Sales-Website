@@ -52,12 +52,13 @@ public class PMController {
         return ResponseEntity.ok(productPMService.addProduct(request, file));
     }
 
-    @PutMapping("/{productId}")
+    @PutMapping(path = "/{productId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<PMProductDetailDTO> updateProduct(
             @PathVariable Long productId,
-            @Valid @RequestBody ProductRequest request) {
+            @Valid @RequestPart("request") ProductRequest request,
+            @RequestPart("file") MultipartFile file) {
         log.info("PM - Update product: id={}", productId);
-        return ResponseEntity.ok(productPMService.updateProduct(productId, request));
+        return ResponseEntity.ok(productPMService.updateProduct(productId, request, file));
     }
 
     @PatchMapping("/{productId}/state")
