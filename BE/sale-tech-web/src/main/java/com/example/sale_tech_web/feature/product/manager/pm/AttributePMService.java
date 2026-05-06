@@ -1,6 +1,8 @@
 package com.example.sale_tech_web.feature.product.manager.pm;
 
 import com.example.sale_tech_web.config.CacheNames;
+import com.example.sale_tech_web.exception.BadRequestException;
+import com.example.sale_tech_web.exception.NotFoundException;
 import com.example.sale_tech_web.feature.product.dto.pm.attribute_dto.AttributeResponse;
 import com.example.sale_tech_web.feature.product.dto.pm.attribute_dto.CategoryAttribute;
 import com.example.sale_tech_web.feature.product.dto.pm.attribute_dto.CategoryAttributeResponse;
@@ -19,13 +21,9 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
@@ -93,16 +91,16 @@ public class AttributePMService implements AttributePMServiceInterface {
     })
     public String addAttributeSchema(Long categoryId, CategoryAttributeRequest request) {
         Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Category not found"));
+                .orElseThrow(() -> new NotFoundException("Category not found"));
 
         if (categoryAttributeSchemaRepository.existsByCategoryIdAndCode(categoryId, request.getCode())) {
-            throw new ResponseStatusException(BAD_REQUEST, "Attribute code already exists in this category");
+            throw new BadRequestException("Attribute code already exists in this category");
         }
 
         CategoryAttributeGroup group = categoryAttributeGroupRepository.findByIdAndCategoryId(request.getGroupId(), categoryId);
 
         if (group == null) {
-            throw new ResponseStatusException(NOT_FOUND, "Attribute group not found.");
+            throw new NotFoundException("Attribute group not found.");
         }
 
         int displayOrder = getNextDisplayOrder(group.getId());
@@ -130,19 +128,19 @@ public class AttributePMService implements AttributePMServiceInterface {
     })
     public String updateAttributeSchema(Long attributeId, CategoryAttributeRequest request) {
         CategoryAttributeSchema schema = categoryAttributeSchemaRepository.findById(attributeId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Attribute not found"));
+                .orElseThrow(() -> new NotFoundException("Attribute not found"));
 
         long categoryId = schema.getCategory().getId();
 
         if (!schema.getDataType().equals(request.getDataType()) || !schema.getCode().equals(request.getCode())) {
             boolean isUsed = productRepository.existsByAttributeCodeAndCategoryId(schema.getCode(), categoryId);
             if (isUsed) {
-                throw new ResponseStatusException(BAD_REQUEST, "Cannot change DATA TYPE or CODE of an attribute already in use by products.");
+                throw new BadRequestException("Cannot change DATA TYPE or CODE of an attribute already in use by products.");
             }
         }
 
         if (!schema.getCode().equals(request.getCode()) && categoryAttributeSchemaRepository.existsByCategoryIdAndCode(categoryId, request.getCode())) {
-            throw new ResponseStatusException(BAD_REQUEST, "Attribute code already exists in this category");
+            throw new BadRequestException("Attribute code already exists in this category");
         }
 
         CategoryAttributeGroup group = schema.getCategoryAttributeGroup();
@@ -150,7 +148,7 @@ public class AttributePMService implements AttributePMServiceInterface {
             CategoryAttributeGroup newGroup = categoryAttributeGroupRepository.findByIdAndCategoryId(request.getGroupId(), categoryId);
 
             if (newGroup == null) {
-                throw new ResponseStatusException(NOT_FOUND, "Attribute group not found or category not match.");
+                throw new NotFoundException("Attribute group not found or category not match.");
             }
 
             int displayOrder = getNextDisplayOrder(newGroup.getId());
@@ -185,7 +183,7 @@ public class AttributePMService implements AttributePMServiceInterface {
                 .collect(Collectors.toMap(CategoryAttributeSchema::getId, a -> a));
 
         if (currentAttributes.size() != attributeIds.size()) {
-            throw new ResponseStatusException(BAD_REQUEST,
+            throw new BadRequestException(
                     "Attribute Id list size does not match the number of attributes in system.");
         }
 
@@ -194,7 +192,7 @@ public class AttributePMService implements AttributePMServiceInterface {
             CategoryAttributeSchema attr = attributeMap.get(id);
 
             if (attr == null) {
-                throw new ResponseStatusException(BAD_REQUEST,
+                throw new BadRequestException(
                         "Attribute ID " + id + " does not exist in this category.");
             }
 
@@ -212,7 +210,7 @@ public class AttributePMService implements AttributePMServiceInterface {
     })
     public String deleteAttributeSchema(Long attributeId) {
         CategoryAttributeSchema schema = categoryAttributeSchemaRepository.findById(attributeId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Schema not found"));
+                .orElseThrow(() -> new NotFoundException("Schema not found"));
 
         boolean isUsed = productRepository.existsByAttributeCodeAndCategoryId(
                 schema.getCode(),
@@ -220,7 +218,7 @@ public class AttributePMService implements AttributePMServiceInterface {
         );
 
         if (isUsed) {
-            throw new ResponseStatusException(BAD_REQUEST, "Cannot delete attribute schema that is still in use by products.");
+            throw new BadRequestException("Cannot delete attribute schema that is still in use by products.");
         }
 
         categoryAttributeSchemaRepository.delete(schema);

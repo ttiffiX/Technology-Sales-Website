@@ -1,7 +1,10 @@
 package com.example.sale_tech_web.feature.order.manager.customer;
 
-import static org.springframework.http.HttpStatus.*;
-
+import com.example.sale_tech_web.exception.BadRequestException;
+import com.example.sale_tech_web.exception.ConflictException;
+import com.example.sale_tech_web.exception.ForbiddenException;
+import com.example.sale_tech_web.exception.NotFoundException;
+import com.example.sale_tech_web.exception.UnauthorizedException;
 import com.example.sale_tech_web.feature.cart.entity.CartDetail;
 import com.example.sale_tech_web.feature.cart.repository.CartDetailRepository;
 import com.example.sale_tech_web.feature.jwt.SecurityUtils;
@@ -31,7 +34,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -83,7 +85,7 @@ public class OrderService implements OrderServiceInterface {
 
         // Verify that the order belongs to the current user
         Order order = orderRepository.findByIdAndUserId(orderId, userId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND,
+                .orElseThrow(() -> new NotFoundException(
                         "Order not found or you don't have permission to view this order"));
 
         List<OrderDetail> orderDetails = order.getOrderDetails();
@@ -109,16 +111,16 @@ public class OrderService implements OrderServiceInterface {
         Long userId = getUserIdFromToken();
 
         Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         if (user.isBanned()) {
-            throw new ResponseStatusException(FORBIDDEN, "Your account has been banned.");
+            throw new ForbiddenException("Your account has been banned.");
         }
 
         List<CartDetail> cartDetails = cartDetailRepository.findSelectedByUserId(userId);
 
         if (cartDetails.isEmpty()) {
-            throw new ResponseStatusException(BAD_REQUEST, "Need at least one items selected. ");
+            throw new BadRequestException("Need at least one items selected. ");
         }
 
         // Apply stock updates in deterministic order to reduce deadlock probability.
@@ -147,12 +149,12 @@ public class OrderService implements OrderServiceInterface {
             Product product = cartDetail.getProduct();
 
             if (!Boolean.TRUE.equals(product.getIsActive())) {
-                throw new ResponseStatusException(CONFLICT, "Product is no longer available");
+                throw new ConflictException("Product is no longer available");
             }
 
             int updatedRows = productRepository.decrementStockIfAvailable(product.getId(), cartDetail.getQuantity());
             if (updatedRows == 0) {
-                throw new ResponseStatusException(CONFLICT,
+                throw new ConflictException(
                         "Insufficient stock for product: " + product.getTitle());
             }
 
@@ -208,18 +210,18 @@ public class OrderService implements OrderServiceInterface {
         Long userId = getUserIdFromToken();
 
         Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         if (user.isBanned()) {
-            throw new ResponseStatusException(FORBIDDEN, "Your account has been banned.");
+            throw new ForbiddenException("Your account has been banned.");
         }
 
         Order order = orderRepository.findByIdAndUserId(orderId, userId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND,
+                .orElseThrow(() -> new NotFoundException(
                         "Order not found or you don't have permission to cancel this order"));
 
         if (order.getStatus() != OrderStatus.PENDING) {
-            throw new ResponseStatusException(BAD_REQUEST,
+            throw new BadRequestException(
                     "Only orders with PENDING status can be cancelled. Current status: " + order.getStatus());
         }
 
@@ -319,7 +321,7 @@ public class OrderService implements OrderServiceInterface {
     private Long getUserIdFromToken() {
         Long userId = SecurityUtils.getCurrentUserId();
         if (userId == null) {
-            throw new ResponseStatusException(UNAUTHORIZED, "User not authenticated");
+            throw new UnauthorizedException("User not authenticated");
         }
         return userId;
     }

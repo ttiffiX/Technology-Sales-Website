@@ -1,5 +1,10 @@
 package com.example.sale_tech_web.feature.users.manager.admin;
 
+import com.example.sale_tech_web.exception.BadRequestException;
+import com.example.sale_tech_web.exception.ConflictException;
+import com.example.sale_tech_web.exception.ForbiddenException;
+import com.example.sale_tech_web.exception.NotFoundException;
+import com.example.sale_tech_web.exception.UnauthorizedException;
 import com.example.sale_tech_web.feature.jwt.SecurityUtils;
 import com.example.sale_tech_web.feature.users.dto.admin.AdminPasswordRequest;
 import com.example.sale_tech_web.feature.users.dto.admin.AdminRegisterRequest;
@@ -14,13 +19,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.springframework.http.HttpStatus.*;
 
 @Service
 @RequiredArgsConstructor
@@ -43,19 +45,19 @@ public class AdminService implements AdminServiceInterface {
     @Transactional
     public UserDTO addUser(AdminRegisterRequest request) {
         if (!request.getPassword().equals(request.getConfirmPassword())) {
-            throw new ResponseStatusException(BAD_REQUEST, "Password and Confirm Password do not match.");
+            throw new BadRequestException("Password and Confirm Password do not match.");
         }
 
         if (userRepository.existsByUsername(request.getUsername())) {
-            throw new ResponseStatusException(CONFLICT, "Username '" + request.getUsername() + "' already exists.");
+            throw new ConflictException("Username '" + request.getUsername() + "' already exists.");
         }
 
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new ResponseStatusException(CONFLICT, "Email '" + request.getEmail() + "' already exists.");
+            throw new ConflictException("Email '" + request.getEmail() + "' already exists.");
         }
 
         if (request.getRole() == Role.ADMIN) {
-            throw new ResponseStatusException(FORBIDDEN, "You are not allowed to create an administrator.");
+            throw new ForbiddenException("You are not allowed to create an administrator.");
         }
 
         Users newUser = Users.builder()
@@ -77,14 +79,14 @@ public class AdminService implements AdminServiceInterface {
     @Transactional
     public UserDTO updateUserRole(Long id, Role role) {
         Users user = userRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "User not found."));
+                .orElseThrow(() -> new NotFoundException("User not found."));
 
         if (Role.ADMIN.equals(role) || user.getRole().equals(Role.ADMIN)) {
-            throw new ResponseStatusException(BAD_REQUEST, "Cannot change role to or from ADMIN.");
+            throw new BadRequestException("Cannot change role to or from ADMIN.");
         }
 
         if (user.getRole().equals(role)) {
-            throw new ResponseStatusException(BAD_REQUEST, "User already has the role: " + role);
+            throw new BadRequestException("User already has the role: " + role);
         }
 
         user.setRole(role);
@@ -99,27 +101,27 @@ public class AdminService implements AdminServiceInterface {
         Long adminId = SecurityUtils.getCurrentUserId();
 
         if (adminId == null) {
-            throw new ResponseStatusException(UNAUTHORIZED, "User not authenticated");
+            throw new UnauthorizedException("User not authenticated");
         }
 
         Users adminUser = userRepository.findById(adminId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Admin user not found"));
+                .orElseThrow(() -> new NotFoundException("Admin user not found"));
 
         if (!passwordEncoder.matches(adminPassword.getAdminPassword(), adminUser.getPassword())) {
-            throw new ResponseStatusException(UNAUTHORIZED, "Invalid password");
+            throw new UnauthorizedException("Invalid password");
         }
 
         Users user = userRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found."));
+                .orElseThrow(() -> new NotFoundException("User not found."));
 
         if (Role.ADMIN.equals(user.getRole())) {
-            throw new ResponseStatusException(FORBIDDEN, "Cannot delete ADMIN.");
+            throw new ForbiddenException("Cannot delete ADMIN.");
         }
 
         try {
             userRepository.delete(user);
         } catch (DataIntegrityViolationException e) {
-            throw new ResponseStatusException(CONFLICT, "Cannot delete account already has order history.");
+            throw new ConflictException("Cannot delete account already has order history.");
         }
         return "User with username " + user.getUsername() + " has been deleted successfully.";
     }
@@ -128,14 +130,14 @@ public class AdminService implements AdminServiceInterface {
     @Transactional
     public UserDTO updateBanStatus(Long id, Boolean status) {
         Users user = userRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "User not found."));
+                .orElseThrow(() -> new NotFoundException("User not found."));
 
         if (Role.ADMIN.equals(user.getRole())) {
-            throw new ResponseStatusException(FORBIDDEN, "Cannot ban ADMIN user.");
+            throw new ForbiddenException("Cannot ban ADMIN user.");
         }
 
         if (user.isBanned() == status) {
-            throw new ResponseStatusException(BAD_REQUEST, "User is already " + (status ? "banned." : "unbanned."));
+            throw new BadRequestException("User is already " + (status ? "banned." : "unbanned."));
         }
 
         user.setBanned(status);

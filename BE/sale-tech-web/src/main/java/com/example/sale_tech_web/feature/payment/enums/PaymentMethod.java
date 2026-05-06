@@ -1,11 +1,9 @@
 package com.example.sale_tech_web.feature.payment.enums;
 
+import com.example.sale_tech_web.exception.BadRequestException;
 import com.fasterxml.jackson.annotation.JsonCreator;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.stream.Stream;
-
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 public enum PaymentMethod {
     VNPAY,
@@ -21,9 +19,6 @@ public enum PaymentMethod {
         return Stream.of(PaymentMethod.values())
                 .filter(method -> method.name().equals(value.trim().toUpperCase()))
                 .findFirst()
-                .orElseThrow(() -> new ResponseStatusException(
-                        BAD_REQUEST,
-                        "Payment method '" + value + "' is invalid."
-                ));
+                .orElseThrow(() -> new BadRequestException("Payment method '" + value + "' is invalid."));
     }
 }

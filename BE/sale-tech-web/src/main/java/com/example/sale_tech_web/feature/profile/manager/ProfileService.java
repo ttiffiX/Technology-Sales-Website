@@ -1,5 +1,7 @@
 package com.example.sale_tech_web.feature.profile.manager;
 
+import com.example.sale_tech_web.exception.NotFoundException;
+import com.example.sale_tech_web.exception.UnauthorizedException;
 import com.example.sale_tech_web.feature.jwt.SecurityUtils;
 import com.example.sale_tech_web.feature.profile.dto.ProfileResponse;
 import com.example.sale_tech_web.feature.profile.dto.ProfileRequest;
@@ -8,9 +10,6 @@ import com.example.sale_tech_web.feature.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
-
-import static org.springframework.http.HttpStatus.*;
 
 @Service
 @RequiredArgsConstructor
@@ -22,11 +21,11 @@ public class ProfileService implements ProfileServiceInterface {
         Long userId = SecurityUtils.getCurrentUserId();
 
         if (userId == null) {
-            throw new ResponseStatusException(UNAUTHORIZED, "User not authenticated");
+            throw new UnauthorizedException("User not authenticated");
         }
 
         Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         return convertToResponse(user);
     }
@@ -37,11 +36,11 @@ public class ProfileService implements ProfileServiceInterface {
         Long userId = SecurityUtils.getCurrentUserId();
 
         if (userId == null) {
-            throw new ResponseStatusException(UNAUTHORIZED, "User not authenticated");
+            throw new UnauthorizedException("User not authenticated");
         }
 
         Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         // Cập nhật thông tin user
         user.setName(request.getName());

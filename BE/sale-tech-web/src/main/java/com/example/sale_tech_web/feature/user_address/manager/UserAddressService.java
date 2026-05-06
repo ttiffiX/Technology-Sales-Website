@@ -1,5 +1,8 @@
 package com.example.sale_tech_web.feature.user_address.manager;
 
+import com.example.sale_tech_web.exception.BadRequestException;
+import com.example.sale_tech_web.exception.NotFoundException;
+import com.example.sale_tech_web.exception.UnauthorizedException;
 import com.example.sale_tech_web.feature.jwt.SecurityUtils;
 import com.example.sale_tech_web.feature.province.manager.ProvinceService;
 import com.example.sale_tech_web.feature.user_address.dto.AddressResponse;
@@ -11,12 +14,9 @@ import com.example.sale_tech_web.feature.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static org.springframework.http.HttpStatus.*;
 
 @Service
 @RequiredArgsConstructor
@@ -40,7 +40,7 @@ public class UserAddressService implements UserAddressServiceInterface {
         Long userId = SecurityUtils.getCurrentUserId();
 
         UserAddress address = userAddressRepository.findByIdAndUserId(id, userId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Address not found"));
+                .orElseThrow(() -> new NotFoundException("Address not found"));
 
         return convertToResponse(address);
     }
@@ -51,18 +51,18 @@ public class UserAddressService implements UserAddressServiceInterface {
         Long userId = SecurityUtils.getCurrentUserId();
 
         if (userId == null) {
-            throw new ResponseStatusException(UNAUTHORIZED, "User not authenticated");
+            throw new UnauthorizedException("User not authenticated");
         }
 
         Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         boolean exists = userAddressRepository.existsByUserIdAndProvinceCodeAndWardCodeAndAddress(
                 userId, request.getProvinceCode(), request.getWardCode(), request.getAddress());
-        if (exists) throw new ResponseStatusException(BAD_REQUEST, "Address already exists");
+        if (exists) throw new BadRequestException("Address already exists");
 
         if (!provinceService.checkWardInProvince(request.getWardCode(), request.getProvinceCode())) {
-            throw new ResponseStatusException(BAD_REQUEST, "Ward does not belong to the specified province");
+            throw new BadRequestException("Ward does not belong to the specified province");
         }
 
         // Nếu đây là địa chỉ đầu tiên hoặc được đánh dấu là default
@@ -93,14 +93,14 @@ public class UserAddressService implements UserAddressServiceInterface {
         Long userId = SecurityUtils.getCurrentUserId();
 
         UserAddress address = userAddressRepository.findByIdAndUserId(id, userId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Address not found or does not belong to user"));
+                .orElseThrow(() -> new NotFoundException("Address not found or does not belong to user"));
 
         boolean exists = userAddressRepository.existsByUserIdAndProvinceCodeAndWardCodeAndAddressAndIdNot(
                 userId, request.getProvinceCode(), request.getWardCode(), request.getAddress(), id);
-        if (exists) throw new ResponseStatusException(BAD_REQUEST, "Address already exists");
+        if (exists) throw new BadRequestException("Address already exists");
 
         if (!provinceService.checkWardInProvince(request.getWardCode(), request.getProvinceCode())) {
-            throw new ResponseStatusException(BAD_REQUEST, "Ward does not belong to the specified province");
+            throw new BadRequestException("Ward does not belong to the specified province");
         }
 
         address.setProvinceCode(request.getProvinceCode());
@@ -118,7 +118,7 @@ public class UserAddressService implements UserAddressServiceInterface {
         Long userId = SecurityUtils.getCurrentUserId();
 
         UserAddress address = userAddressRepository.findByIdAndUserId(id, userId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Address not found"));
+                .orElseThrow(() -> new NotFoundException("Address not found"));
 
         boolean wasDefault = address.isDefault();
         userAddressRepository.delete(address);
@@ -140,7 +140,7 @@ public class UserAddressService implements UserAddressServiceInterface {
         Long userId = SecurityUtils.getCurrentUserId();
 
         UserAddress address = userAddressRepository.findByIdAndUserId(id, userId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Address not found or does not belong to user"));
+                .orElseThrow(() -> new NotFoundException("Address not found or does not belong to user"));
 
         // Bỏ default của tất cả địa chỉ khác
         userAddressRepository.resetDefaultAddress(userId);

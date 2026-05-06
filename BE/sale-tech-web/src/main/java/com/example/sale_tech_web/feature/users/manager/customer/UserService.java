@@ -1,5 +1,12 @@
 package com.example.sale_tech_web.feature.users.manager.customer;
 
+import com.example.sale_tech_web.exception.BadRequestException;
+import com.example.sale_tech_web.exception.ConflictException;
+import com.example.sale_tech_web.exception.ForbiddenException;
+import com.example.sale_tech_web.exception.GoneException;
+import com.example.sale_tech_web.exception.NotFoundException;
+import com.example.sale_tech_web.exception.TooManyRequestsException;
+import com.example.sale_tech_web.exception.UnauthorizedException;
 import com.example.sale_tech_web.feature.email.config.AccountCleanupConfig;
 import com.example.sale_tech_web.feature.email.entity.EmailVerificationToken;
 import com.example.sale_tech_web.feature.email.manager.EmailService;
@@ -21,13 +28,9 @@ import com.example.sale_tech_web.feature.users.enums.Role;
 import com.example.sale_tech_web.feature.users.repository.UserRepository;
 import com.example.sale_tech_web.feature.jwt.JwtUtils;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
-
-import static org.springframework.http.HttpStatus.*;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -47,18 +50,18 @@ public class UserService implements UserServiceInterface {
     @Override
     public LogInResponse login(LogInRequest logInRequest) {
         Users users = userRepository.findByUsernameOrEmail(logInRequest.getUsernameOrEmail())
-                .orElseThrow(() -> new ResponseStatusException(UNAUTHORIZED, "Invalid account or password"));
+                .orElseThrow(() -> new UnauthorizedException("Invalid account or password"));
 
         if (users.isBanned()) {
-            throw new ResponseStatusException(FORBIDDEN, "Your account has been banned.");
+            throw new ForbiddenException("Your account has been banned.");
         }
 
         if (!passwordEncoder.matches(logInRequest.getPassword(), users.getPassword())) {
-            throw new ResponseStatusException(UNAUTHORIZED, "Invalid account or password");
+            throw new UnauthorizedException("Invalid account or password");
         }
 
         if (!users.isActive()) {
-            throw new ResponseStatusException(UNAUTHORIZED, "Email is not verified. Please verify your email before logging in.");
+            throw new UnauthorizedException("Email is not verified. Please verify your email before logging in.");
         }
 
         String token = jwtUtils.generateToken(users.getId(), users.getRole().name());
@@ -82,15 +85,15 @@ public class UserService implements UserServiceInterface {
         String email = registerRequest.getEmail();
 
         if (!password.equals(registerRequest.getConfirmPassword())) {
-            throw new ResponseStatusException(BAD_REQUEST, "Password and Confirm Password do not match.");
+            throw new BadRequestException("Password and Confirm Password do not match.");
         }
 
         if (userRepository.existsByUsername(username)) {
-            throw new ResponseStatusException(CONFLICT, "Username '" + username + "' already exists.");
+            throw new ConflictException("Username '" + username + "' already exists.");
         }
 
         if (userRepository.existsByEmail(email)) {
-            throw new ResponseStatusException(CONFLICT, "Email '" + email + "' already exists.");
+            throw new ConflictException("Email '" + email + "' already exists.");
         }
 
         Users users = Users.builder()
@@ -135,17 +138,17 @@ public class UserService implements UserServiceInterface {
         Long userId = SecurityUtils.getCurrentUserId();
 
         if (userId == null) {
-            throw new ResponseStatusException(UNAUTHORIZED, "User is not authenticated");
+            throw new UnauthorizedException("User is not authenticated");
         }
 
-        Users users = userRepository.findById(userId).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
+        Users users = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
 
         if (!passwordEncoder.matches(changePassRequest.getOldPassword(), users.getPassword())) {
-            throw new ResponseStatusException(CONFLICT, "Old password is incorrect");
+            throw new ConflictException("Old password is incorrect");
         }
 
         if (!changePassRequest.getNewPassword().equals(changePassRequest.getConfirmPassword())) {
-            throw new ResponseStatusException(BAD_REQUEST, "New password and confirm new password do not match");
+            throw new BadRequestException("New password and confirm new password do not match");
         }
 
         users.setPassword(passwordEncoder.encode(changePassRequest.getNewPassword()));
@@ -160,18 +163,18 @@ public class UserService implements UserServiceInterface {
     public String verifyEmail(String email, String otp) {
         // Tìm user theo email
         Users user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Email not found"));
+                .orElseThrow(() -> new NotFoundException("Email not found"));
 
         if (user.isActive()) {
-            throw new ResponseStatusException(CONFLICT, "Email already verified");
+            throw new ConflictException("Email already verified");
         }
 
         // Tìm token theo userId
         EmailVerificationToken verificationToken = emailVerificationTokenRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "OTP not found. Please request a new one."));
+                .orElseThrow(() -> new NotFoundException("OTP not found. Please request a new one."));
 
         if (verificationToken.isUsed()) {
-            throw new ResponseStatusException(CONFLICT, "OTP has already been used");
+            throw new ConflictException("OTP has already been used");
         }
 
         otpValidationHelper.validateOtp(verificationToken.getId(), otp);
@@ -188,18 +191,17 @@ public class UserService implements UserServiceInterface {
     @Transactional
     public String resendVerificationEmail(String email) {
         Users user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         if (user.isActive()) {
-            throw new ResponseStatusException(CONFLICT, "Email already verified");
+            throw new ConflictException("Email already verified");
         }
 
         // Kiểm tra account đã quá 24h chưa
         LocalDateTime cutoffTime = LocalDateTime.now()
                 .minusHours(AccountCleanupConfig.UNVERIFIED_ACCOUNT_MAX_AGE_HOURS);
         if (user.getCreatedAt().isBefore(cutoffTime)) {
-            throw new ResponseStatusException(HttpStatus.GONE,
-                    "Account registration expired. Please register again.");
+            throw new GoneException("Account registration expired. Please register again.");
         }
 
         EmailVerificationToken verificationToken = emailVerificationTokenRepository.findByUserId(user.getId())
@@ -211,7 +213,7 @@ public class UserService implements UserServiceInterface {
                     .plusSeconds(AccountCleanupConfig.RESEND_VERIFICATION_COOLDOWN_SECONDS);
             if (LocalDateTime.now().isBefore(cooldownExpiry)) {
                 long secondsRemaining = Duration.between(LocalDateTime.now(), cooldownExpiry).getSeconds();
-                throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,
+                throw new TooManyRequestsException(
                         String.format("Please wait %d seconds before requesting another verification email", secondsRemaining));
             }
         }
@@ -235,10 +237,10 @@ public class UserService implements UserServiceInterface {
     @Transactional
     public String forgotPassword(String email) {
         Users user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "No account found with this email address"));
+                .orElseThrow(() -> new NotFoundException("No account found with this email address"));
 
         if (!user.isActive()) {
-            throw new ResponseStatusException(CONFLICT, "Email is not verified. Please verify your email first.");
+            throw new ConflictException("Email is not verified. Please verify your email first.");
         }
 
         // Tạo OTP và lưu DB
@@ -263,14 +265,14 @@ public class UserService implements UserServiceInterface {
     @Transactional
     public VerifyResetOtpResponse verifyResetOtp(String email, String otp) {
         Users user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "No account found with this email address"));
+                .orElseThrow(() -> new NotFoundException("No account found with this email address"));
 
 
         EmailVerificationToken otpToken = emailVerificationTokenRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "OTP not found. Please request a new one."));
+                .orElseThrow(() -> new NotFoundException("OTP not found. Please request a new one."));
 
         if (otpToken.isUsed()) {
-            throw new ResponseStatusException(CONFLICT, "OTP has already been used.");
+            throw new ConflictException("OTP has already been used.");
         }
 
         otpValidationHelper.validateOtp(otpToken.getId(), otp);
@@ -289,24 +291,24 @@ public class UserService implements UserServiceInterface {
     public String resetPassword(String resetToken, String newPassword, String confirmPassword) {
         // Validate mật khẩu khớp nhau
         if (!newPassword.equals(confirmPassword)) {
-            throw new ResponseStatusException(BAD_REQUEST, "Passwords do not match.");
+            throw new BadRequestException("Passwords do not match.");
         }
 
         // Validate resetToken: đúng format, còn hạn
         if (!jwtUtils.validateToken(resetToken)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Reset token is invalid or expired.");
+            throw new UnauthorizedException("Reset token is invalid or expired.");
         }
 
         // Kiểm tra type phải là "reset" — access token thông thường không dùng được
         String tokenType = jwtUtils.getTokenType(resetToken);
         if (!"reset".equals(tokenType)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token type.");
+            throw new UnauthorizedException("Invalid token type.");
         }
 
         // Lấy userId từ token
         Long userId = jwtUtils.getUserIdFromJwtToken(resetToken);
         Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found."));
+                .orElseThrow(() -> new NotFoundException("User not found."));
 
         // Đổi mật khẩu
         user.setPassword(passwordEncoder.encode(newPassword));

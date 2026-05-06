@@ -1,5 +1,6 @@
 package com.example.sale_tech_web.controller.customer;
 
+import com.example.sale_tech_web.exception.UnauthorizedException;
 import com.example.sale_tech_web.feature.email.dto.VerifyOtpRequest;
 import com.example.sale_tech_web.feature.jwt.dto.RefreshTokenResponse;
 import com.example.sale_tech_web.feature.jwt.manager.RefreshTokenService;
@@ -12,10 +13,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Arrays;
 
@@ -146,12 +145,12 @@ public class AuthController {
 
     private String extractRefreshTokenFromCookie(HttpServletRequest request) {
         if (request.getCookies() == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No refresh token cookie found");
+            throw new UnauthorizedException("No refresh token cookie found");
         }
         return Arrays.stream(request.getCookies())
                 .filter(c -> "refreshToken".equals(c.getName()))
                 .map(Cookie::getValue)
                 .findFirst()
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token cookie not found"));
+                .orElseThrow(() -> new UnauthorizedException("Refresh token cookie not found"));
     }
 }

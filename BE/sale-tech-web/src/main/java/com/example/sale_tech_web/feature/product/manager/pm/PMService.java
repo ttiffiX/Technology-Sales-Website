@@ -1,6 +1,8 @@
 package com.example.sale_tech_web.feature.product.manager.pm;
 
 import com.example.sale_tech_web.config.CacheNames;
+import com.example.sale_tech_web.exception.BadRequestException;
+import com.example.sale_tech_web.exception.NotFoundException;
 import com.example.sale_tech_web.feature.cloudinary.dto.CloudinaryResponse;
 import com.example.sale_tech_web.feature.cloudinary.manager.CloudinaryService;
 import com.example.sale_tech_web.feature.product.dto.customer.ProductFilterGroupDTO;
@@ -25,7 +27,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -35,9 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
@@ -65,7 +63,7 @@ public class PMService implements PMServiceInterface {
     @Override
     public PMProductDetailDTO getProductDetailForPM(Long productId) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Product not found"));
+                .orElseThrow(() -> new NotFoundException("Product not found"));
 
         return convertToDetailDTO(product);
     }
@@ -80,7 +78,7 @@ public class PMService implements PMServiceInterface {
     })
     public PMProductListDTO addProduct(ProductRequest request, MultipartFile file) {
         Category category = categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Category not found"));
+                .orElseThrow(() -> new NotFoundException("Category not found"));
 
         validateProductAttributes(category, request.getAttributes());
 
@@ -107,7 +105,7 @@ public class PMService implements PMServiceInterface {
                 productRepository.save(savedProduct);
             } catch (IOException e) {
                 // Rollback thủ công hoặc ném exception để @Transactional tự rollback
-                throw new ResponseStatusException(BAD_REQUEST, "Upload image failed: " + e.getMessage());
+                throw new BadRequestException("Upload image failed: " + e.getMessage());
             }
         } else {
             // Xử lý mặc định nếu không có ảnh
@@ -141,7 +139,7 @@ public class PMService implements PMServiceInterface {
     })
     public PMProductDetailDTO updateProduct(Long productId, ProductRequest request, MultipartFile file) {
         Product existing = productRepository.findById(productId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Product not found"));
+                .orElseThrow(() -> new NotFoundException("Product not found"));
         Category category = existing.getCategory();
 
         validateProductAttributes(category, request.getAttributes());
@@ -164,10 +162,8 @@ public class PMService implements PMServiceInterface {
                 existing.setImageUrl(uploadResult.getImageUrl());
                 existing.setPublicId(uploadResult.getPublicId());
 
-//            productRepository.save(updated);
             } catch (IOException e) {
-                // Rollback thủ công hoặc ném exception để @Transactional tự rollback
-                throw new ResponseStatusException(BAD_REQUEST, "Upload image failed: " + e.getMessage());
+                throw new BadRequestException("Upload image failed: " + e.getMessage());
             }
         }
 
@@ -193,7 +189,7 @@ public class PMService implements PMServiceInterface {
     })
     public String updateState(Long productId, boolean active) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Product not found"));
+                .orElseThrow(() -> new NotFoundException("Product not found"));
 
         if (product.getIsActive() == active) {
             return "Product is already " + (active ? "active" : "inactive") + ". No changes made.";
@@ -217,7 +213,7 @@ public class PMService implements PMServiceInterface {
     })
     public String deleteProduct(Long productId) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Product not found"));
+                .orElseThrow(() -> new NotFoundException("Product not found"));
 
         String result = "Product with ID " + productId + " has been deleted.";
 
@@ -252,14 +248,14 @@ public class PMService implements PMServiceInterface {
 
     private void validateProductAttributes(Category category, Map<String, Object> attributes) {
         if (attributes == null || attributes.isEmpty()) {
-            throw new ResponseStatusException(BAD_REQUEST, "Attributes are required");
+            throw new BadRequestException("Attributes are required");
         }
 
         List<CategoryAttributeSchema> schemas =
                 categoryAttributeSchemaRepository.findByCategoryIdOrdered(category.getId());
 
         if (schemas.isEmpty()) {
-            throw new ResponseStatusException(BAD_REQUEST,
+            throw new BadRequestException(
                     "No attribute schema configured for category id=" + category.getId());
         }
 
@@ -275,18 +271,18 @@ public class PMService implements PMServiceInterface {
             Object rawValue = entry.getValue();
 
             if (rawCode == null || rawCode.isBlank()) {
-                throw new ResponseStatusException(BAD_REQUEST, "Attribute code must not be blank");
+                throw new BadRequestException("Attribute code must not be blank");
             }
 
             String normalizedCode = rawCode.trim().toLowerCase();
             CategoryAttributeSchema schema = schemaByCode.get(normalizedCode);
             if (schema == null) {
-                throw new ResponseStatusException(BAD_REQUEST,
+                throw new BadRequestException(
                         "Unknown attribute code '" + rawCode + "' for category id=" + category.getId());
             }
 
             if (rawValue == null) {
-                throw new ResponseStatusException(BAD_REQUEST,
+                throw new BadRequestException(
                         "Attribute '" + rawCode + "' must not be null");
             }
 
@@ -294,13 +290,13 @@ public class PMService implements PMServiceInterface {
             switch (dataType) {
                 case "number" -> {
                     if (!(rawValue instanceof Number)) {
-                        throw new ResponseStatusException(BAD_REQUEST,
+                        throw new BadRequestException(
                                 "Attribute '" + rawCode + "' must be NUMBER");
                     }
                 }
                 case "boolean" -> {
                     if (!(rawValue instanceof Boolean)) {
-                        throw new ResponseStatusException(BAD_REQUEST,
+                        throw new BadRequestException(
                                 "Attribute '" + rawCode + "' must be BOOLEAN");
                     }
                 }
@@ -313,17 +309,17 @@ public class PMService implements PMServiceInterface {
                             && list.stream().allMatch(item -> item instanceof String);
 
                     if (!isStringList) {
-                        throw new ResponseStatusException(BAD_REQUEST,
+                        throw new BadRequestException(
                                 "Attribute '" + rawCode + "' must be TEXT or list of TEXT");
                     }
                 }
                 case "list" -> {
                     if (!(rawValue instanceof List<?>)) {
-                        throw new ResponseStatusException(BAD_REQUEST,
+                        throw new BadRequestException(
                                 "Attribute '" + rawCode + "' must be LIST");
                     }
                 }
-                default -> throw new ResponseStatusException(BAD_REQUEST,
+                default -> throw new BadRequestException(
                         "Unsupported dataType '" + schema.getDataType() + "' for attribute '" + rawCode + "'");
             }
         }

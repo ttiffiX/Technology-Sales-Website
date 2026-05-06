@@ -1,5 +1,9 @@
 package com.example.sale_tech_web.feature.cart.manager;
 
+import com.example.sale_tech_web.exception.BadRequestException;
+import com.example.sale_tech_web.exception.ConflictException;
+import com.example.sale_tech_web.exception.NotFoundException;
+import com.example.sale_tech_web.exception.UnauthorizedException;
 import com.example.sale_tech_web.feature.cart.config.CartConfig;
 import com.example.sale_tech_web.feature.cart.entity.Cart;
 import com.example.sale_tech_web.feature.cart.dto.CartDetailDTO;
@@ -16,9 +20,6 @@ import com.example.sale_tech_web.feature.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
-
-import static org.springframework.http.HttpStatus.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -45,7 +46,7 @@ public class CartService implements CartServiceInterface {
 
         if (cart == null) {
             Users users = userRepository.findById(userId)
-                    .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
+                    .orElseThrow(() -> new NotFoundException("User not found"));
             Cart newCart = Cart.builder()
                     .user(users)
                     .updatedAt(LocalDateTime.now())
@@ -116,22 +117,22 @@ public class CartService implements CartServiceInterface {
 
         // Validate product exists and is in stock
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Product not found"));
+                .orElseThrow(() -> new NotFoundException("Product not found"));
 
         // Check if product is active
         if (product.getIsActive() != null && !product.getIsActive()) {
-            throw new ResponseStatusException(CONFLICT, "Product is no longer available");
+            throw new ConflictException("Product is no longer available");
         }
 
         if (!product.getStocked()) {
-            throw new ResponseStatusException(CONFLICT, "Product is out of stock");
+            throw new ConflictException("Product is out of stock");
         }
 
         //Get or create cart for user
         Cart cart = cartRepository.findWithCartDetailListByUserId(userId)
                 .orElseGet(() -> {
                     Users user = userRepository.findById(userId)
-                            .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
+                            .orElseThrow(() -> new NotFoundException("User not found"));
 
                     Cart newCart = Cart.builder()
                             .user(user)
@@ -144,13 +145,13 @@ public class CartService implements CartServiceInterface {
         List<CartDetail> cartItems = cart.getCartDetailList();
 
         if (cartItems.size() + 1 > CartConfig.MAX_CART_ITEMS) {
-            throw new ResponseStatusException(BAD_REQUEST, "Cart has reached maximum total quantity of " + CartConfig.MAX_CART_ITEMS);
+            throw new BadRequestException("Cart has reached maximum total quantity of " + CartConfig.MAX_CART_ITEMS);
         }
         boolean exists = cartItems.stream()
                 .anyMatch(item -> item.getProduct().getId().equals(productId));
 
         if (exists) {
-            throw new ResponseStatusException(CONFLICT, "Product already exists in cart. Use change quantity instead.");
+            throw new ConflictException("Product already exists in cart. Use change quantity instead.");
         }
 
         //Add new product to cart
@@ -175,11 +176,11 @@ public class CartService implements CartServiceInterface {
     public CartDTO changeProductQuantity(Long productId, int quantity) {
         // 1. Validate quantity
         if (quantity <= 0) {
-            throw new ResponseStatusException(BAD_REQUEST, "Quantity must be greater than 0. Use remove function to delete item.");
+            throw new BadRequestException("Quantity must be greater than 0. Use remove function to delete item.");
         }
 
         if (quantity > CartConfig.MAX_QUANTITY_PER_ITEM) {
-            throw new ResponseStatusException(BAD_REQUEST, "Maximum quantity per product is " + CartConfig.MAX_QUANTITY_PER_ITEM);
+            throw new BadRequestException("Maximum quantity per product is " + CartConfig.MAX_QUANTITY_PER_ITEM);
         }
 
         // 2. Get current user from JWT
@@ -187,7 +188,7 @@ public class CartService implements CartServiceInterface {
 
         // 3. Get user's cart
         Cart cart = cartRepository.findByUserId(userId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Cart not found"));
+                .orElseThrow(() -> new NotFoundException("Cart not found"));
 
         // 4. Find cart detail for this product
         CartDetail cartDetail = getCartDetail(cart, productId);
@@ -197,12 +198,12 @@ public class CartService implements CartServiceInterface {
 
         // Check if product is active
         if (product.getIsActive() != null && !product.getIsActive()) {
-            throw new ResponseStatusException(CONFLICT, "Product is no longer available");
+            throw new ConflictException("Product is no longer available");
         }
 
         // Check if requested quantity is available in inventory
         if (product.getQuantity() == null || product.getQuantity() < quantity) {
-            throw new ResponseStatusException(CONFLICT, "Insufficient stock. Available quantity: " +
+            throw new ConflictException("Insufficient stock. Available quantity: " +
                     (product.getQuantity() != null ? product.getQuantity() : 0));
         }
 
@@ -293,21 +294,21 @@ public class CartService implements CartServiceInterface {
     private Long getUserIdFromToken() {
         Long userId = SecurityUtils.getCurrentUserId();
         if (userId == null) {
-            throw new ResponseStatusException(UNAUTHORIZED, "User not authenticated");
+            throw new UnauthorizedException("User not authenticated");
         }
         return userId;
     }
 
     private Cart getUserCart(Long userId) {
         return cartRepository.findWithCartDetailListByUserId(userId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Cart not found"));
+                .orElseThrow(() -> new NotFoundException("Cart not found"));
     }
 
     private CartDetail getCartDetail(Cart cart, Long productId) {
         return cart.getCartDetailList().stream()
                 .filter(item -> item.getProduct().getId().equals(productId))
                 .findFirst()
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Cart item not found"));
+                .orElseThrow(() -> new NotFoundException("Cart item not found"));
     }
 
 }

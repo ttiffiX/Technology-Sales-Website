@@ -1,5 +1,7 @@
 package com.example.sale_tech_web.feature.order.manager.pm;
 
+import com.example.sale_tech_web.exception.BadRequestException;
+import com.example.sale_tech_web.exception.NotFoundException;
 import com.example.sale_tech_web.feature.order.dto.StatusCountDTO;
 import com.example.sale_tech_web.feature.order.dto.customer.OrderDTO;
 import com.example.sale_tech_web.feature.order.dto.customer.OrderDetailDTO;
@@ -21,15 +23,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
@@ -69,7 +67,7 @@ public class OMService implements OMServiceInterface {
     @Override
     public List<OrderDetailDTO> getOrderDetailsByOrderId(Long orderId) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Order not found"));
+                .orElseThrow(() -> new NotFoundException("Order not found"));
 
         List<OrderDetail> orderDetails = order.getOrderDetails();
 
@@ -229,12 +227,12 @@ public class OMService implements OMServiceInterface {
 
     private Order findOrderById(Long orderId) {
         return orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Order not found"));
+                .orElseThrow(() -> new NotFoundException("Order not found"));
     }
 
     private void validateTransition(OrderStatus currentStatus, OrderStatus expectedStatus, String action) {
         if (currentStatus != expectedStatus) {
-            throw new ResponseStatusException(BAD_REQUEST,
+            throw new BadRequestException(
                     "Cannot " + action + " order with status " + currentStatus + ". Required status: " + expectedStatus);
         }
     }

@@ -1,5 +1,7 @@
 package com.example.sale_tech_web.feature.payment.service;
 
+import com.example.sale_tech_web.exception.ConflictException;
+import com.example.sale_tech_web.exception.NotFoundException;
 import com.example.sale_tech_web.feature.cart.repository.CartDetailRepository;
 import com.example.sale_tech_web.feature.order.entity.orderdetails.OrderDetail;
 import com.example.sale_tech_web.feature.order.entity.orders.Order;
@@ -13,13 +15,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static org.springframework.http.HttpStatus.*;
 
 @Service
 @RequiredArgsConstructor
@@ -34,26 +33,26 @@ public class PaymentProcessingService {
     @Transactional
     public void processSuccessfulPayment(Long orderId, Long receivedAmount, String transactionId, String transactionNo, String payDate) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Order not found: " + orderId));
+                .orElseThrow(() -> new NotFoundException("Order not found: " + orderId));
 
         // Verify amount
         long expectedAmount = order.getTotalPrice() * 100L;
         if (expectedAmount != receivedAmount) {
-            throw new ResponseStatusException(CONFLICT, "Payment amount mismatch for order " + orderId +
+            throw new ConflictException("Payment amount mismatch for order " + orderId +
                     ": expected " + expectedAmount + ", received " + receivedAmount);
         }
 
         // Find existing Payment (created in placeOrder)
         Payment payment = paymentRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Payment not found for order: " + orderId));
+                .orElseThrow(() -> new NotFoundException("Payment not found for order: " + orderId));
 
         if (payment.getTransactionId() != null && !payment.getTransactionId().equals(transactionId)) {
-            throw new ResponseStatusException(CONFLICT, "Payment transaction ID mismatch for order " + orderId);
+            throw new ConflictException("Payment transaction ID mismatch for order " + orderId);
         }
 
         // Check if already processed
         if (payment.getStatus() == PaymentStatus.PAID) {
-            throw new ResponseStatusException(CONFLICT, "Payment for order " + orderId + " already processed as PAID");
+            throw new ConflictException("Payment for order " + orderId + " already processed as PAID");
         }
 
         // Update Payment to SUCCESS
@@ -67,7 +66,7 @@ public class PaymentProcessingService {
         // Order stays PENDING - waiting for PM approval
         if (order.getStatus() != OrderStatus.PENDING) {
             log.warn("Order {} has unexpected status: {}", orderId, order.getStatus());
-            throw new ResponseStatusException(CONFLICT, "Order has unexpected status: " + order.getStatus());
+            throw new ConflictException("Order has unexpected status: " + order.getStatus());
         }
 
         // Clear cart
@@ -79,11 +78,11 @@ public class PaymentProcessingService {
     @Transactional
     public void processFailedPayment(Long orderId, String transactionId, String transactionNo, String payDate) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Order not found: " + orderId));
+                .orElseThrow(() -> new NotFoundException("Order not found: " + orderId));
 
         // Find existing Payment (created in placeOrder)
         Payment payment = paymentRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Payment not found for order: " + orderId));
+                .orElseThrow(() -> new NotFoundException("Payment not found for order: " + orderId));
 
         // Restore inventory atomically for each product (since payment failed)
         for (OrderDetail orderDetail : order.getOrderDetails()) {
@@ -91,12 +90,12 @@ public class PaymentProcessingService {
         }
 
         if (payment.getTransactionId() != null && !payment.getTransactionId().equals(transactionId)) {
-            throw new ResponseStatusException(CONFLICT, "Payment transaction ID mismatch for order " + orderId);
+            throw new ConflictException("Payment transaction ID mismatch for order " + orderId);
         }
 
         // Check if already processed
         if (payment.getStatus() == PaymentStatus.FAILED || payment.getStatus() == PaymentStatus.PAID) {
-            throw new ResponseStatusException(CONFLICT, "Payment for order " + orderId + " already processed with status: " + payment.getStatus());
+            throw new ConflictException("Payment for order " + orderId + " already processed with status: " + payment.getStatus());
         }
 
         // Update Payment to FAILED

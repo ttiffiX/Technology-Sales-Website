@@ -1,6 +1,8 @@
 package com.example.sale_tech_web.feature.product.manager.customer;
 
 import com.example.sale_tech_web.config.CacheNames;
+import com.example.sale_tech_web.exception.BadRequestException;
+import com.example.sale_tech_web.exception.NotFoundException;
 import com.example.sale_tech_web.feature.product.dto.customer.*;
 import com.example.sale_tech_web.feature.product.entity.CategoryAttributeGroup;
 import com.example.sale_tech_web.feature.product.entity.CategoryAttributeSchema;
@@ -16,13 +18,9 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
@@ -54,7 +52,7 @@ public class ProductService implements ProductServiceInterface {
     @Cacheable(value = CacheNames.PRODUCT_BY_ID, key = "#productId")
     public ProductDetailDTO getProductById(Long productId) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Product not found"));
+                .orElseThrow(() -> new NotFoundException("Product not found"));
         return convertToDetailDTO(product);
     }
 
@@ -162,7 +160,7 @@ public class ProductService implements ProductServiceInterface {
     @Cacheable(value = CacheNames.PRODUCT_BY_CATEGORY, key = "#categoryId")
     public List<ProductListDTO> getProductsByCategory(Long categoryId) {
         categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Category not found"));
+                .orElseThrow(() -> new NotFoundException("Category not found"));
         return productRepository.findByCategoryIdAndIsActiveTrue(categoryId).stream()
                 .map(this::convertToListDTO)
                 .toList();
@@ -188,13 +186,13 @@ public class ProductService implements ProductServiceInterface {
 
         for (Product product : fetchedProducts) {
             if (!product.getCategory().getId().equals(categoryId)) {
-                throw new ResponseStatusException(BAD_REQUEST, "All products must belong to the specified category");
+                throw new BadRequestException("All products must belong to the specified category");
             }
         }
 
         // Check if all products exist
         if (fetchedProducts.size() != productIds.size()) {
-            throw new ResponseStatusException(NOT_FOUND, "One or more products not found");
+            throw new NotFoundException("One or more products not found");
         }
 
         List<CategoryAttributeSchema> schemas = schemaRepository.findByCategoryIdOrdered(categoryId);

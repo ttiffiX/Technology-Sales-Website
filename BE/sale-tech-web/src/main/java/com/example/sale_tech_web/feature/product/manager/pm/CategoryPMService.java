@@ -1,6 +1,8 @@
 package com.example.sale_tech_web.feature.product.manager.pm;
 
 import com.example.sale_tech_web.config.CacheNames;
+import com.example.sale_tech_web.exception.BadRequestException;
+import com.example.sale_tech_web.exception.NotFoundException;
 import com.example.sale_tech_web.feature.product.dto.customer.CategoryDTO;
 import com.example.sale_tech_web.feature.product.entity.Category;
 import com.example.sale_tech_web.feature.product.repository.CategoryAttributeSchemaRepository;
@@ -11,10 +13,6 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
-
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
@@ -42,7 +40,7 @@ public class CategoryPMService implements CategoryPMServiceInterface {
     })
     public CategoryDTO updateCategory(Long categoryId, String name) {
         Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Category not found"));
+                .orElseThrow(() -> new NotFoundException("Category not found"));
         category.setName(name);
         category = categoryRepository.save(category);
         return convertCategoryDTO(category);
@@ -57,16 +55,16 @@ public class CategoryPMService implements CategoryPMServiceInterface {
     })
     public String deleteCategory(Long categoryId) {
         Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Category not found"));
+                .orElseThrow(() -> new NotFoundException("Category not found"));
 
         boolean exist = productRepository.existsByCategory(category);
         if (exist) {
-            throw new ResponseStatusException(BAD_REQUEST, "Cannot delete category that still has products.");
+            throw new BadRequestException("Cannot delete category that still has products.");
         }
 
         boolean existSchema = categoryAttributeSchemaRepository.existsByCategory(category);
         if (existSchema) {
-            throw new ResponseStatusException(BAD_REQUEST, "Cannot delete category that still has attribute schemas.");
+            throw new BadRequestException("Cannot delete category that still has attribute schemas.");
         }
 
         categoryRepository.delete(category);

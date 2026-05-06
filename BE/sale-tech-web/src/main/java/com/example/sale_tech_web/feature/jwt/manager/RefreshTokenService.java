@@ -1,15 +1,15 @@
 package com.example.sale_tech_web.feature.jwt.manager;
 
+import com.example.sale_tech_web.exception.ForbiddenException;
+import com.example.sale_tech_web.exception.UnauthorizedException;
 import com.example.sale_tech_web.feature.jwt.JwtUtils;
 import com.example.sale_tech_web.feature.jwt.entity.RefreshToken;
 import com.example.sale_tech_web.feature.jwt.repository.RefreshTokenRepository;
 import com.example.sale_tech_web.feature.users.entity.Users;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 
@@ -44,7 +44,7 @@ public class RefreshTokenService {
     @Transactional
     public String refreshAccessToken(String refreshTokenValue) {
         RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenValue)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token not found"));
+                .orElseThrow(() -> new UnauthorizedException("Refresh token not found"));
 
         Users user = refreshToken.getUser();
 
@@ -52,21 +52,21 @@ public class RefreshTokenService {
             refreshToken.setRevoked(true);
             refreshTokenRepository.save(refreshToken);
 
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User account is banned");
+            throw new ForbiddenException("User account is banned");
         }
 
         if (refreshToken.isRevoked()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token has been revoked");
+            throw new UnauthorizedException("Refresh token has been revoked");
         }
 
         if (refreshToken.getExpiryAt().isBefore(LocalDateTime.now())) {
             // Xóa token hết hạn
             refreshTokenRepository.delete(refreshToken);
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token has expired, please login again");
+            throw new UnauthorizedException("Refresh token has expired, please login again");
         }
 
         if (!jwtUtils.validateToken(refreshTokenValue)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token");
+            throw new UnauthorizedException("Invalid refresh token");
         }
 
         return jwtUtils.generateToken(user.getId(), user.getRole().name());
@@ -85,4 +85,3 @@ public class RefreshTokenService {
         refreshTokenRepository.deleteAllByUser(user);
     }
 }
-
