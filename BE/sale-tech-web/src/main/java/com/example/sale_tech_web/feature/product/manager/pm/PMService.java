@@ -1,5 +1,6 @@
 package com.example.sale_tech_web.feature.product.manager.pm;
 
+import com.alibaba.excel.EasyExcel;
 import com.example.sale_tech_web.config.CacheNames;
 import com.example.sale_tech_web.exception.BadRequestException;
 import com.example.sale_tech_web.exception.NotFoundException;
@@ -35,7 +36,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
+
+import static com.example.sale_tech_web.feature.product.utils.Validate.validateProductAttributes;
 
 @Service
 @RequiredArgsConstructor
@@ -80,7 +82,15 @@ public class PMService implements PMServiceInterface {
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new NotFoundException("Category not found"));
 
-        validateProductAttributes(category, request.getAttributes());
+        List<CategoryAttributeSchema> schemas =
+                categoryAttributeSchemaRepository.findByCategoryIdOrdered(category.getId());
+
+        if (schemas.isEmpty()) {
+            throw new BadRequestException(
+                    "No attribute schema configured for category id=" + category.getId());
+        }
+
+        validateProductAttributes(schemas, request.getAttributes());
 
         Product product = Product.builder()
                 .title(request.getTitle())
@@ -124,8 +134,24 @@ public class PMService implements PMServiceInterface {
             @CacheEvict(value = CacheNames.FILTER_OPTIONS, key = "#categoryId"),
             @CacheEvict(value = CacheNames.PRODUCT_SEARCH, allEntries = true)
     })
-    public String addProductByExcel(Long categoryId, MultipartFile file) {
-        return "";
+    public String addProductByExcel(Long categoryId, MultipartFile file) throws IOException {
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new NotFoundException("Category not found"));
+
+        List<CategoryAttributeSchema> schemas =
+                categoryAttributeSchemaRepository.findByCategoryIdOrdered(category.getId());
+
+        if (schemas.isEmpty()) {
+            throw new BadRequestException(
+                    "No attribute schema configured for category id=" + category.getId());
+        }
+
+        EasyExcel.read(file.getInputStream(),
+                        new ProductImportListener(productRepository, schemas, cloudinaryService, category))
+                .sheet()
+                .doRead();
+
+        return "Import complete!";
     }
 
     @Override
@@ -142,7 +168,15 @@ public class PMService implements PMServiceInterface {
                 .orElseThrow(() -> new NotFoundException("Product not found"));
         Category category = existing.getCategory();
 
-        validateProductAttributes(category, request.getAttributes());
+        List<CategoryAttributeSchema> schemas =
+                categoryAttributeSchemaRepository.findByCategoryIdOrdered(category.getId());
+
+        if (schemas.isEmpty()) {
+            throw new BadRequestException(
+                    "No attribute schema configured for category id=" + category.getId());
+        }
+
+        validateProductAttributes(schemas, request.getAttributes());
 
         existing.setTitle(request.getTitle());
         existing.setDescription(request.getDescription());
@@ -244,85 +278,6 @@ public class PMService implements PMServiceInterface {
                 .categoryName(p.getCategory().getName())
                 .quantity(p.getQuantity())
                 .build();
-    }
-
-    private void validateProductAttributes(Category category, Map<String, Object> attributes) {
-        if (attributes == null || attributes.isEmpty()) {
-            throw new BadRequestException("Attributes are required");
-        }
-
-        List<CategoryAttributeSchema> schemas =
-                categoryAttributeSchemaRepository.findByCategoryIdOrdered(category.getId());
-
-        if (schemas.isEmpty()) {
-            throw new BadRequestException(
-                    "No attribute schema configured for category id=" + category.getId());
-        }
-
-        Map<String, CategoryAttributeSchema> schemaByCode = schemas.stream()
-                .collect(Collectors.toMap(
-                        s -> s.getCode().trim().toLowerCase(),
-                        s -> s,
-                        (first, ignored) -> first
-                ));
-
-        for (Map.Entry<String, Object> entry : attributes.entrySet()) {
-            String rawCode = entry.getKey();
-            Object rawValue = entry.getValue();
-
-            if (rawCode == null || rawCode.isBlank()) {
-                throw new BadRequestException("Attribute code must not be blank");
-            }
-
-            String normalizedCode = rawCode.trim().toLowerCase();
-            CategoryAttributeSchema schema = schemaByCode.get(normalizedCode);
-            if (schema == null) {
-                throw new BadRequestException(
-                        "Unknown attribute code '" + rawCode + "' for category id=" + category.getId());
-            }
-
-            if (rawValue == null) {
-                throw new BadRequestException(
-                        "Attribute '" + rawCode + "' must not be null");
-            }
-
-            String dataType = schema.getDataType() == null ? "" : schema.getDataType().trim().toLowerCase();
-            switch (dataType) {
-                case "number" -> {
-                    if (!(rawValue instanceof Number)) {
-                        throw new BadRequestException(
-                                "Attribute '" + rawCode + "' must be NUMBER");
-                    }
-                }
-                case "boolean" -> {
-                    if (!(rawValue instanceof Boolean)) {
-                        throw new BadRequestException(
-                                "Attribute '" + rawCode + "' must be BOOLEAN");
-                    }
-                }
-                case "text" -> {
-                    if (rawValue instanceof String) {
-                        continue;
-                    }
-
-                    boolean isStringList = rawValue instanceof List<?> list
-                            && list.stream().allMatch(item -> item instanceof String);
-
-                    if (!isStringList) {
-                        throw new BadRequestException(
-                                "Attribute '" + rawCode + "' must be TEXT or list of TEXT");
-                    }
-                }
-                case "list" -> {
-                    if (!(rawValue instanceof List<?>)) {
-                        throw new BadRequestException(
-                                "Attribute '" + rawCode + "' must be LIST");
-                    }
-                }
-                default -> throw new BadRequestException(
-                        "Unsupported dataType '" + schema.getDataType() + "' for attribute '" + rawCode + "'");
-            }
-        }
     }
 
     private PMProductDetailDTO convertToDetailDTO(Product product) {

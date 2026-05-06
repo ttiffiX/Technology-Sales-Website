@@ -52,6 +52,20 @@ public class PMController {
         return ResponseEntity.ok(productPMService.addProduct(request, file));
     }
 
+    @PostMapping(path = "/category/{categoryId}/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<String> addProductByExcel(
+            @PathVariable Long categoryId,
+            @RequestPart("file") MultipartFile file) {
+        log.info("PM - Add product by excel: categoryId={}, fileName={}", categoryId, file.getOriginalFilename());
+        try {
+            String mes = productPMService.addProductByExcel(categoryId, file);
+            return ResponseEntity.ok(mes);
+        } catch (Exception e) {
+            log.error("PM - Error importing products from excel: {}", e.getMessage());
+            return ResponseEntity.status(500).body("Error importing products from excel: " + e.getMessage());
+        }
+    }
+
     @PutMapping(path = "/{productId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<PMProductDetailDTO> updateProduct(
             @PathVariable Long productId,

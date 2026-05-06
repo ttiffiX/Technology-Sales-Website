@@ -7,6 +7,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+
 public interface PMServiceInterface {
     Page<PMProductListDTO> getAllProductsForPM(String keyword, Integer categoryId, Boolean isActive,
                                                Integer minPrice, Integer maxPrice, Pageable pageable);
@@ -15,7 +17,7 @@ public interface PMServiceInterface {
 
     PMProductListDTO addProduct(ProductRequest request, MultipartFile image);
 
-    String addProductByExcel(Long categoryId, MultipartFile file);
+    String addProductByExcel(Long categoryId, MultipartFile file) throws IOException;
 
     PMProductDetailDTO updateProduct(Long productId, ProductRequest request, MultipartFile file);
 
