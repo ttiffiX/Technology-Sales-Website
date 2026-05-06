@@ -47,7 +47,7 @@ public class PMController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<PMProductListDTO> addProduct(
             @Valid @RequestPart("request") ProductRequest request,
-            @RequestPart("file") MultipartFile file) {
+            @RequestPart(value = "file", required = false) MultipartFile file) {
         log.info("PM - Add product: title={}, categoryId={}", request.getTitle(), request.getCategoryId());
         return ResponseEntity.ok(productPMService.addProduct(request, file));
     }
@@ -56,7 +56,7 @@ public class PMController {
     public ResponseEntity<PMProductDetailDTO> updateProduct(
             @PathVariable Long productId,
             @Valid @RequestPart("request") ProductRequest request,
-            @RequestPart("file") MultipartFile file) {
+            @RequestPart(value = "file", required = false) MultipartFile file) {
         log.info("PM - Update product: id={}", productId);
         return ResponseEntity.ok(productPMService.updateProduct(productId, request, file));
     }
