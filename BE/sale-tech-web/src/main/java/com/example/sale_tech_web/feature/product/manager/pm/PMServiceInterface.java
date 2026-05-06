@@ -15,6 +15,8 @@ public interface PMServiceInterface {
 
     PMProductListDTO addProduct(ProductRequest request, MultipartFile image);
 
+    String addProductByExcel(Long categoryId, MultipartFile file);
+
     PMProductDetailDTO updateProduct(Long productId, ProductRequest request, MultipartFile file);
 
     String updateState(Long productId, boolean active);

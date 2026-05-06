@@ -100,7 +100,7 @@ public class PMService implements PMServiceInterface {
 
         if (file != null && !file.isEmpty()) {
             try {
-                CloudinaryResponse uploadResult = cloudinaryService.uploadImage(file, category.getName(), savedProduct.getId());
+                CloudinaryResponse uploadResult = cloudinaryService.uploadImage(file, category.getName());
                 savedProduct.setImageUrl(uploadResult.getImageUrl());
                 savedProduct.setPublicId(uploadResult.getPublicId());
 
@@ -116,6 +116,18 @@ public class PMService implements PMServiceInterface {
         }
 
         return toListDTO(savedProduct);
+    }
+
+    @Override
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = CacheNames.PRODUCT_LIST_ALL, allEntries = true),
+            @CacheEvict(value = CacheNames.PRODUCT_BY_CATEGORY, key = "#categoryId"),
+            @CacheEvict(value = CacheNames.FILTER_OPTIONS, key = "#categoryId"),
+            @CacheEvict(value = CacheNames.PRODUCT_SEARCH, allEntries = true)
+    })
+    public String addProductByExcel(Long categoryId, MultipartFile file) {
+        return "";
     }
 
     @Override
@@ -142,13 +154,13 @@ public class PMService implements PMServiceInterface {
         existing.setIsActive(request.getIsActive());
         existing.setAttributes(request.getAttributes());
 
-//        String oldPublicId = null;
+        String oldPublicId = null;
 
         if (file != null && !file.isEmpty()) {
             try {
-//                oldPublicId = existing.getPublicId();
+                oldPublicId = existing.getPublicId();
 
-                CloudinaryResponse uploadResult = cloudinaryService.uploadImage(file, category.getName(), existing.getId());
+                CloudinaryResponse uploadResult = cloudinaryService.uploadImage(file, category.getName());
                 existing.setImageUrl(uploadResult.getImageUrl());
                 existing.setPublicId(uploadResult.getPublicId());
 
@@ -161,13 +173,13 @@ public class PMService implements PMServiceInterface {
 
         Product saved = productRepository.save(existing);
 
-//        if (oldPublicId != null) {
-//            try {
-//                cloudinaryService.deleteImage(oldPublicId);
-//            } catch (IOException e) {
-//                log.error("Failed to delete image from Cloudinary for product ID {}: {}", productId, e.getMessage());
-//            }
-//        }
+        if (oldPublicId != null) {
+            try {
+                cloudinaryService.deleteImage(oldPublicId);
+            } catch (IOException e) {
+                log.error("Failed to delete image from Cloudinary for product ID {}: {}", productId, e.getMessage());
+            }
+        }
 
         return convertToDetailDTO(saved);
     }
