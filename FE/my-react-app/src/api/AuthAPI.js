@@ -1,4 +1,5 @@
 import apiClient, { setAccessToken, clearAccessToken } from './apiClient';
+import { getApiErrorMessage, mapApiFieldErrors } from '../utils';
 
 // Hàm đăng nhập
 export const login = async (usernameOrEmail, password) => {
@@ -24,7 +25,7 @@ export const login = async (usernameOrEmail, password) => {
     } catch (error) {
         return {
             success: false,
-            message: error.response?.data?.message || 'Login failed. Please check your credentials.',
+            message: getApiErrorMessage(error, 'Login failed. Please check your credentials.'),
         };
     }
 };
@@ -48,7 +49,8 @@ export const register = async (userData) => {
     } catch (error) {
         return {
             success: false,
-            message: error.response?.data || 'Registration failed. Please try again.',
+            message: getApiErrorMessage(error, 'Registration failed. Please try again.'),
+            errors: mapApiFieldErrors(error, 'Registration failed. Please try again.'),
         };
     }
 };
@@ -64,7 +66,7 @@ export const verifyEmail = async (email, otp) => {
     } catch (error) {
         return {
             success: false,
-            message: error.response?.data?.message || 'OTP verification failed. Please check and try again.',
+            message: getApiErrorMessage(error, 'OTP verification failed. Please check and try again.'),
             status: error.response?.status,
         };
     }
@@ -84,7 +86,7 @@ export const resendVerificationEmail = async (email) => {
     } catch (error) {
         return {
             success: false,
-            message: error.response?.data.message || 'Failed to resend verification email. Please try again.',
+            message: getApiErrorMessage(error, 'Failed to resend verification email. Please try again.'),
             status: error.response?.status,
         };
     }
@@ -116,7 +118,7 @@ export const forgotPassword = async (email) => {
     } catch (error) {
         return {
             success: false,
-            message: error.response?.data?.message || 'Failed to send OTP. Please try again.',
+            message: getApiErrorMessage(error, 'Failed to send OTP. Please try again.'),
             status: error.response?.status,
         };
     }
@@ -129,7 +131,7 @@ export const verifyResetOtp = async (email, otp) => {
     } catch (error) {
         return {
             success: false,
-            message: error.response?.data?.message || 'Invalid OTP. Please try again.',
+            message: getApiErrorMessage(error, 'Invalid OTP. Please try again.'),
             status: error.response?.status,
         };
     }
@@ -144,8 +146,8 @@ export const resetPassword = async (resetToken, newPassword, confirmPassword) =>
     } catch (error) {
         return {
             success: false,
-            message: error.response?.data?.message || 'Failed to reset password. Please try again.',
-            errors: error.response?.data?.errors || null,
+            message: getApiErrorMessage(error, 'Failed to reset password. Please try again.'),
+            errors: mapApiFieldErrors(error, 'Failed to reset password. Please try again.'),
             status: error.response?.status,
         };
     }
@@ -167,8 +169,8 @@ export const changePassword = async (oldPassword, newPassword, confirmPassword) 
     } catch (error) {
         return {
             success: false,
-            message: error.response?.data?.message || 'Failed to change password. Please try again.',
-            errors: error.response?.data?.errors || null,
+            message: getApiErrorMessage(error, 'Failed to change password. Please try again.'),
+            errors: mapApiFieldErrors(error, 'Failed to change password. Please try again.'),
         };
     }
 };

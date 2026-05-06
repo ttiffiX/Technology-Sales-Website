@@ -1,4 +1,5 @@
 import apiClient from '../apiClient';
+import { getApiErrorMessage, mapApiFieldErrors } from '../../utils';
 
 // Lấy thông tin profile của user hiện tại
 export const getProfile = async () => {
@@ -11,7 +12,7 @@ export const getProfile = async () => {
     } catch (error) {
         return {
             success: false,
-            message: error.response?.data?.message || 'Failed to get profile',
+            message: getApiErrorMessage(error, 'Failed to get profile'),
         };
     }
 };
@@ -28,8 +29,8 @@ export const updateProfile = async (profileData) => {
     } catch (error) {
         return {
             success: false,
-            message: error.response?.data?.message || 'Failed to update profile',
-            errors: error.response?.data?.errors || null,
+            message: getApiErrorMessage(error, 'Failed to update profile'),
+            errors: mapApiFieldErrors(error, 'Failed to update profile'),
         };
     }
 };

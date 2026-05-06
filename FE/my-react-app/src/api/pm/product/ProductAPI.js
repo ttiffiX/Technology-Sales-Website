@@ -5,7 +5,7 @@ export const addProduct = async (productRequest, attributeSchemas = []) => {
     const payload = buildAddProductPayload(productRequest, attributeSchemas);
 
     // If caller provided an imageFile (File object), send multipart/form-data
-    if (productRequest && productRequest.imageFile) {
+    // if (productRequest && productRequest.imageFile) {
         const formData = new FormData();
 
         const blob = new Blob([JSON.stringify(payload)], {
@@ -19,11 +19,11 @@ export const addProduct = async (productRequest, attributeSchemas = []) => {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
         return response.data;
-    }
+    // }
 
     // Fallback: send JSON body (no file)
-    const response = await apiClient.post('/pm/products', payload);
-    return response.data;
+    // const response = await apiClient.post('/pm/products', payload);
+    // return response.data;
 };
 
 export const getPMProducts = async (params = {}) => {
@@ -40,7 +40,7 @@ export const updatePMProduct = async (productId, productForm, attributeSchemas =
     const payload = buildUpdateProductPayload(productForm, attributeSchemas, detailAttributes, editedAttributeValues);
 
     // If caller provided an imageFile (File object), send multipart/form-data
-    if (productForm && productForm.imageFile && productForm.imageFile instanceof File) {
+    // if (productForm && productForm.imageFile && productForm.imageFile instanceof File) {
         const formData = new FormData();
 
         const blob = new Blob([JSON.stringify(payload)], {
@@ -54,11 +54,11 @@ export const updatePMProduct = async (productId, productForm, attributeSchemas =
             headers: { 'Content-Type': 'multipart/form-data' },
         });
         return response.data;
-    }
+    // }
 
     // Fallback: send JSON body (no file or imageFile is string URL)
-    const response = await apiClient.put(`/pm/products/${productId}`, payload);
-    return response.data;
+    // const response = await apiClient.put(`/pm/products/${productId}`, payload);
+    // return response.data;
 };
 
 export const updatePMProductState = async (productId, active) => {

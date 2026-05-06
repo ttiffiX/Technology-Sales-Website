@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import apiClient from "../apiClient";
+import { getApiErrorMessage } from '../../utils';
 
 const BASE_URL = '/orders';
 
@@ -29,7 +30,7 @@ export const useGetOrderDetails = (orderId) => {
             setOrderDetails(response.data);
             setError(null);
         } catch (err) {
-            setError(err.response?.data.message || 'Failed to fetch order details');
+            setError(getApiErrorMessage(err, 'Failed to fetch order details'));
             // console.error('Error fetching order details:', err);
         } finally {
             setLoading(false);
@@ -85,7 +86,7 @@ export const usePlaceOrder = () => {
                 };
             }
         } catch (err) {
-            const errorMessage = err.response?.data.message || err.response?.data || 'Failed to place order';
+            const errorMessage = getApiErrorMessage(err, 'Failed to place order');
             // console.error('Error placing order:', err);
             throw new Error(errorMessage);
         } finally {
@@ -108,7 +109,7 @@ export const useCancelOrder = () => {
             const response = await apiClient.patch(`${BASE_URL}/${orderId}/cancel`);
             return { success: true, message: response.data };
         } catch (err) {
-            const errorMessage = err.response?.data.message || 'Failed to cancel order';
+            const errorMessage = getApiErrorMessage(err, 'Failed to cancel order');
             // console.error('Error canceling order:', err);
             throw new Error(errorMessage);
         } finally {

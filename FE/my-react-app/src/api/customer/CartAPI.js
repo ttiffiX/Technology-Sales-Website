@@ -1,5 +1,6 @@
 import apiClient from '../apiClient';
 import {useEffect, useState} from "react";
+import { getApiErrorMessage } from '../../utils';
 
 // Add item to cart
 export const addCartItem = async (productId) => {
@@ -9,7 +10,7 @@ export const addCartItem = async (productId) => {
         });
         return response.data;
     } catch (err) {
-        throw err.response?.data.message || err.message;
+        throw getApiErrorMessage(err, 'Failed to add item to cart');
     }
 };
 
@@ -29,10 +30,10 @@ export const useGetCartItems = () => {
             } catch (err) {
                 // console.error('Failed to fetch cart:', err);
                 // Set user-friendly error message
-                if (err === 'User not authenticated') {
+                if (getApiErrorMessage(err, '') === 'User not authenticated') {
                     setError('Please login to view your cart');
                 } else {
-                    setError('Failed to fetch cart products');
+                    setError(getApiErrorMessage(err, 'Failed to fetch cart products'));
                 }
             } finally {
                 setLoading(false);
@@ -46,8 +47,12 @@ export const useGetCartItems = () => {
 
 // Fetch cart items (direct API call)
 export const fetchCartItems = async () => {
-    const response = await apiClient.get('/cart');
-    return response.data;
+    try {
+        const response = await apiClient.get('/cart');
+        return response.data;
+    } catch (error) {
+        throw getApiErrorMessage(error, 'Failed to fetch cart products');
+    }
 };
 
 // Get total quantity only (lightweight API call)
@@ -56,7 +61,7 @@ export const getTotalQuantity = async () => {
         const response = await apiClient.get('/cart/total-quantity');
         return response.data;
     } catch (error) {
-        throw error.response?.data.message || error.message;
+        throw getApiErrorMessage(error, 'Failed to get cart quantity');
     }
 };
 
@@ -93,7 +98,7 @@ export const updateCartQuantity = async (productId, delta) => {
         });
         return response.data;
     } catch (error) {
-        throw error.response?.data.message || error.message;
+        throw getApiErrorMessage(error, 'Failed to update cart item');
     }
 };
 
@@ -105,7 +110,7 @@ export const removeCartItem = async (productId) => {
         });
         return response.data;
     } catch (error) {
-        throw error.response?.data.message || error.message;
+        throw getApiErrorMessage(error, 'Failed to remove cart item');
     }
 };
 
@@ -117,7 +122,7 @@ export const toggleProductSelection = async (productId) => {
         });
         return response.data;
     } catch (error) {
-        throw error.response?.data.message || error.message;
+        throw getApiErrorMessage(error, 'Failed to toggle product selection');
     }
 };
 
@@ -129,7 +134,7 @@ export const toggleAllProducts = async (selectAll) => {
         });
         return response.data;
     } catch (error) {
-        throw error.response?.data.message || error.message;
+        throw getApiErrorMessage(error, 'Failed to toggle all products');
     }
 };
 

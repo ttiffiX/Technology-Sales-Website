@@ -1,4 +1,5 @@
 import apiClient from "../apiClient";
+import { getApiErrorMessage } from '../../utils';
 
 /**
  * Verify VNPay payment callback
@@ -11,7 +12,7 @@ export const verifyVNPayPayment = async (params) => {
         return response.data;
     } catch (error) {
         console.error('Error verifying VNPay payment:', error);
-        throw error;
+        throw new Error(getApiErrorMessage(error, 'Error verifying payment status'));
     }
 };
 

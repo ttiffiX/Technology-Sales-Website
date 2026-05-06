@@ -1,4 +1,5 @@
 import apiClient from '../apiClient';
+import { getApiErrorMessage } from '../../utils';
 
 // Lấy tất cả tỉnh/thành phố
 export const getAllProvinces = async () => {
@@ -11,7 +12,7 @@ export const getAllProvinces = async () => {
     } catch (error) {
         return {
             success: false,
-            message: error.response?.data?.message || 'Failed to get provinces',
+            message: getApiErrorMessage(error, 'Failed to get provinces'),
         };
     }
 };
@@ -27,7 +28,7 @@ export const getWardsByProvinceCode = async (provinceCode) => {
     } catch (error) {
         return {
             success: false,
-            message: error.response?.data?.message || 'Failed to get wards',
+            message: getApiErrorMessage(error, 'Failed to get wards'),
         };
     }
 };

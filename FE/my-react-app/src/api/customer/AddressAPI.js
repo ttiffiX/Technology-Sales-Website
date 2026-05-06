@@ -1,4 +1,5 @@
 import apiClient from '../apiClient';
+import { getApiErrorMessage, mapApiFieldErrors } from '../../utils';
 
 // Lấy tất cả địa chỉ của user
 export const getAllAddresses = async () => {
@@ -11,7 +12,7 @@ export const getAllAddresses = async () => {
     } catch (error) {
         return {
             success: false,
-            message: error.response?.data?.message || 'Failed to get addresses',
+            message: getApiErrorMessage(error, 'Failed to get addresses'),
         };
     }
 };
@@ -27,7 +28,7 @@ export const getAddressById = async (id) => {
     } catch (error) {
         return {
             success: false,
-            message: error.response?.data?.message || 'Failed to get address',
+            message: getApiErrorMessage(error, 'Failed to get address'),
         };
     }
 };
@@ -44,7 +45,8 @@ export const createAddress = async (addressData) => {
     } catch (error) {
         return {
             success: false,
-            message: error.response?.data?.message || 'Failed to create address',
+            message: getApiErrorMessage(error, 'Failed to create address'),
+            errors: mapApiFieldErrors(error, 'Failed to create address'),
         };
     }
 };
@@ -61,7 +63,8 @@ export const updateAddress = async (id, addressData) => {
     } catch (error) {
         return {
             success: false,
-            message: error.response?.data?.message || 'Failed to update address',
+            message: getApiErrorMessage(error, 'Failed to update address'),
+            errors: mapApiFieldErrors(error, 'Failed to update address'),
         };
     }
 };
@@ -77,7 +80,7 @@ export const deleteAddress = async (id) => {
     } catch (error) {
         return {
             success: false,
-            message: error.response?.data?.message || 'Failed to delete address',
+            message: getApiErrorMessage(error, 'Failed to delete address'),
         };
     }
 };
@@ -94,7 +97,7 @@ export const setDefaultAddress = async (id) => {
     } catch (error) {
         return {
             success: false,
-            message: error.response?.data?.message || 'Failed to set default address',
+            message: getApiErrorMessage(error, 'Failed to set default address'),
         };
     }
 };

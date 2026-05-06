@@ -2,7 +2,10 @@
  * Return readable API error message from common axios error shapes.
  */
 export const getApiErrorMessage = (error, fallbackMessage) =>
-    error?.response?.data?.message || error?.response?.data || fallbackMessage;
+    error?.response?.data?.message ||
+    error?.response?.data?.error ||
+    error?.response?.data ||
+    fallbackMessage;
 
 export const getSuccessMessage = (result, fallback) => result?.message || result || fallback;
 
@@ -11,18 +14,19 @@ export const getSuccessMessage = (result, fallback) => result?.message || result
  */
 export const mapApiFieldErrors = (error, fallbackMessage) => {
     const errorBody = error?.response?.data;
+    const fieldErrors = errorBody?.details?.errors || errorBody?.errors;
     const mapped = {};
 
-    if (Array.isArray(errorBody?.errors)) {
-        errorBody.errors.forEach((item) => {
+    if (Array.isArray(fieldErrors)) {
+        fieldErrors.forEach((item) => {
             const field = item?.field;
             const message = item?.defaultMessage || item?.message;
             if (field && message) {
                 mapped[field] = message;
             }
         });
-    } else if (errorBody?.errors && typeof errorBody.errors === 'object') {
-        Object.assign(mapped, errorBody.errors);
+    } else if (fieldErrors && typeof fieldErrors === 'object') {
+        Object.assign(mapped, fieldErrors);
     }
 
     if (!Object.keys(mapped).length) {

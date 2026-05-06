@@ -102,13 +102,11 @@ function Register() {
                     state: { email: formData.email }
                 });
             } else {
-                setErrors({general: result.message.message});
-                if (result.message.errors) {
-                    setErrors(prev => ({
-                        ...prev,
-                        ...result.message.errors
-                    }));
+                const mappedErrors = { general: result.message };
+                if (result.errors) {
+                    Object.assign(mappedErrors, result.errors);
                 }
+                setErrors(mappedErrors);
 
             }
         } catch (err) {

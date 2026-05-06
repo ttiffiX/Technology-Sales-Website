@@ -14,6 +14,7 @@ import { useToast } from '../../../components/Toast/Toast';
 import {
     formatDateTimeOrFallback,
     getApiErrorMessage,
+    mapApiFieldErrors,
     passwordsMatch,
     normalizeAdminUserFilterParams,
     normalizeAdminUserPageResponse,
@@ -178,29 +179,6 @@ function AdminUserManagement() {
         });
     };
 
-    const mapAddUserErrors = (error) => {
-        const errorBody = error?.response?.data;
-        const mapped = {};
-
-        if (Array.isArray(errorBody?.errors)) {
-            errorBody.errors.forEach((item) => {
-                const field = item?.field;
-                const message = item?.defaultMessage || item?.message;
-                if (field && message) {
-                    mapped[field] = message;
-                }
-            });
-        } else if (errorBody?.errors && typeof errorBody.errors === 'object') {
-            Object.assign(mapped, errorBody.errors);
-        }
-
-        const generalMessage = getApiErrorMessage(error, 'Failed to create user');
-        if (generalMessage && !Object.keys(mapped).length) {
-            mapped.general = generalMessage;
-        }
-
-        return mapped;
-    };
 
     const handleCreateUser = async (event) => {
         event.preventDefault();
@@ -226,7 +204,7 @@ function AdminUserManagement() {
             setAddUserModalOpen(false);
             triggerToast('success', 'User created successfully');
         } catch (error) {
-            const mappedErrors = mapAddUserErrors(error);
+            const mappedErrors = mapApiFieldErrors(error, 'Failed to create user');
             setAddUserErrors(mappedErrors);
             triggerToast('error', mappedErrors.general || getApiErrorMessage(error, 'Failed to create user'));
         } finally {
