@@ -60,10 +60,11 @@ public class AttributePMService implements AttributePMServiceInterface {
 
         List<CategoryAttributeResponse> finalResult = new ArrayList<>();
         CategoryAttributeResponse currentGroup = null;
+        List<CategoryAttributeGroup> group = categoryAttributeGroupRepository.findByCategoryIdOrderByGroupOrderAsc(categoryId);
 
         for (CategoryAttributeSchema schema : schemas) {
             Long groupId = schema.getCategoryAttributeGroup().getId();
-
+            group.remove(schema.getCategoryAttributeGroup());
             // Nếu là phần tử đầu tiên (currentGroup == null)
             // HOẶC ID của Group hiện tại khác với ID của Group trước đó
             if (currentGroup == null || !currentGroup.getGroupId().equals(groupId)) {
@@ -78,6 +79,16 @@ public class AttributePMService implements AttributePMServiceInterface {
                 finalResult.add(currentGroup);
             }
             currentGroup.getCategoryAttributeList().add(convertToCADTO(schema));
+        }
+
+        if (!group.isEmpty()) {
+            group.forEach(g -> finalResult.add(
+                    CategoryAttributeResponse.builder()
+                            .groupId(g.getId())
+                            .groupName(g.getName())
+                            .groupOrder(g.getGroupOrder())
+                            .categoryAttributeList(new ArrayList<>())
+                            .build()));
         }
 
         return finalResult;

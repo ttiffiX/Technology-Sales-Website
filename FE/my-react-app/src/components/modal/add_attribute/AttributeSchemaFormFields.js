@@ -87,10 +87,22 @@ function AttributeSchemaFormFields({
                         id="attr-filterable"
                         type="checkbox"
                         name="isFilterable"
-                        checked={form.isFilterable}
-                        onChange={onChange}
+                        checked={form.isFilterable || false}
+                        onChange={(e) => {
+                            onChange(e);
+                        }}
                     />
-                    <span className="pm-toggle-slider"/>
+                    <span
+                        className="pm-toggle-slider"
+                        onClick={() => {
+                            const input = document.getElementById('attr-filterable');
+                            if (input) {
+                                input.click();
+                            }
+                        }}
+                        role="button"
+                        tabIndex={0}
+                    />
                 </span>
             </div>
         </div>

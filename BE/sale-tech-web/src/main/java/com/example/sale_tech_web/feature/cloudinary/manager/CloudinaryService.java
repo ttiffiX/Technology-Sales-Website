@@ -23,9 +23,10 @@ public class CloudinaryService {
         String slugCategory = SlugUtils.toSlug(categoryName);
         String folderPath = "products/";
         String tempUuid = UUID.randomUUID().toString();
-        String publicId = folderPath + slugCategory + "_" + tempUuid;
+        String publicId = slugCategory + "_" + tempUuid;
 
         Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.asMap(
+                "folder", folderPath + slugCategory,
                 "public_id", publicId,
                 "overwrite", true,
                 "resource_type", "image"
@@ -47,9 +48,10 @@ public class CloudinaryService {
         String slugCategory = SlugUtils.toSlug(categoryName);
         String folderPath = "products/";
         String tempUuid = UUID.randomUUID().toString();
-        String publicId = folderPath + slugCategory + "_" + tempUuid;
+        String publicId = slugCategory + "_" + tempUuid;
 
         Map uploadResult = cloudinary.uploader().upload(url, ObjectUtils.asMap(
+                "folder", folderPath + slugCategory,
                 "public_id", publicId
         ));
         return CloudinaryResponse.builder()

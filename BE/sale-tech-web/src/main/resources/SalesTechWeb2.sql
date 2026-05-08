@@ -68,7 +68,7 @@ CREATE TABLE product
 (
     id            SERIAL PRIMARY KEY,
     title         VARCHAR(255) NOT NULL,
-    description   VARCHAR(5000),
+    description   TEXT,
     price         INT          NOT NULL,
     quantity_sold INT,
     quantity      INT,
