@@ -53,7 +53,7 @@ public class ProductImportListener extends AnalysisEventListener<Map<Integer, Ob
             // Lấy toàn bộ dữ liệu thô của dòng hiện tại (dạng Map<Index, Object>)
             ProductImportDTO data = ExcelMappingUtils.mapToDTO(rowData, this.headMap);
 
-            validateProductAttributes(schemas, data.getAttributes());
+            Map<String, Object> finalAttributes = validateProductAttributes(schemas, data.getAttributes());
 
             CloudinaryResponse res = cloudinaryService.uploadFromUrl(data.getImageUrl(), category.getName());
 
@@ -68,7 +68,7 @@ public class ProductImportListener extends AnalysisEventListener<Map<Integer, Ob
                             .isActive(data.getIsActive())
                             .imageUrl(res.getImageUrl())
                             .publicId(res.getPublicId())
-                            .attributes(data.getAttributes())
+                            .attributes(finalAttributes)
                             .createdAt(LocalDateTime.now())
                             .build());
 

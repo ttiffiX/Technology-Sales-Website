@@ -90,7 +90,7 @@ public class PMService implements PMServiceInterface {
                     "No attribute schema configured for category id=" + category.getId());
         }
 
-        validateProductAttributes(schemas, request.getAttributes());
+        Map<String, Object> finalAttributes = validateProductAttributes(schemas, request.getAttributes());
 
         Product product = Product.builder()
                 .title(request.getTitle())
@@ -100,7 +100,7 @@ public class PMService implements PMServiceInterface {
                 .quantitySold(request.getQuantitySold() == null ? 0 : request.getQuantitySold())
                 .isActive(request.getIsActive())
                 .category(category)
-                .attributes(request.getAttributes())
+                .attributes(finalAttributes)
                 .createdAt(LocalDateTime.now())
                 .build();
 
@@ -176,7 +176,7 @@ public class PMService implements PMServiceInterface {
                     "No attribute schema configured for category id=" + category.getId());
         }
 
-        validateProductAttributes(schemas, request.getAttributes());
+        Map<String, Object> finalAttributes = validateProductAttributes(schemas, request.getAttributes());
 
         existing.setTitle(request.getTitle());
         existing.setDescription(request.getDescription());
@@ -184,7 +184,7 @@ public class PMService implements PMServiceInterface {
         existing.setQuantity(request.getQuantity());
         existing.setQuantitySold(request.getQuantitySold() == null ? 0 : request.getQuantitySold());
         existing.setIsActive(request.getIsActive());
-        existing.setAttributes(request.getAttributes());
+        existing.setAttributes(finalAttributes);
 
         String oldPublicId = null;
 
