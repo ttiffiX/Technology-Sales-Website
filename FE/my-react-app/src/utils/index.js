@@ -117,6 +117,18 @@ export {
     formatProductAttributeValue
 } from './productAttributeUtils';
 
+// Filter sidebar utilities
+export {
+    FILTER_MAX_PRICE_VALUE,
+    MAX_RANGE_GROUPS,
+    buildDisplayOptions,
+    dedupeFilterValues,
+    normalizeFilterOptionsResponse,
+    normalizeText,
+    sortFilterValues,
+    toNumericValue,
+} from './filterSidebarUtils';
+
 // API error utilities
 export {
     getApiErrorMessage,
