@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { getPMProductDetail, updatePMProduct } from '../../../api/pm/product/ProductAPI';
 import { getAttributesByCategory } from '../../../api/pm/product/AttributeAPI';
 import { useToast } from '../../../components/Toast/Toast';
@@ -27,6 +27,7 @@ const INITIAL_FORM = {
 
 function PMProductDetail() {
     const navigate = useNavigate();
+    const location = useLocation();
     const { productId } = useParams();
     const { triggerToast } = useToast();
 
@@ -378,7 +379,7 @@ function PMProductDetail() {
 
             <div className="pm-product-detail-content">
                 <div className="pm-product-detail-toolbar">
-                    <button type="button" className="pm-btn-back" onClick={() => navigate('/pm/products/list')}>
+                    <button type="button" className="pm-btn-back" onClick={() => navigate(`/pm/products/list${location.search}`)}>
                         ← Product list
                     </button>
                 </div>

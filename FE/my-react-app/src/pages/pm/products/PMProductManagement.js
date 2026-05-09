@@ -1,5 +1,5 @@
-import React, {useEffect, useRef, useState} from 'react';
-import {useNavigate} from 'react-router-dom';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
+import {useLocation, useNavigate} from 'react-router-dom';
 import {getAllCategories} from '../../../api/customer/ProductAPI';
 import {
     addProduct,
@@ -45,7 +45,9 @@ const extractCreatedProduct = (payload) => {
 
 function PMProductManagement() {
     const navigate = useNavigate();
+    const location = useLocation();
     const {triggerToast} = useToast();
+    const initialSearchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
     const [categories, setCategories] = useState([]);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [productForm, setProductForm] = useState(INITIAL_FORM);
@@ -58,11 +60,14 @@ function PMProductManagement() {
     const [products, setProducts] = useState([]);
     const [loadingProducts, setLoadingProducts] = useState(true);
     const [productsError, setProductsError] = useState(null);
-    const [keywordInput, setKeywordInput] = useState('');
-    const [appliedKeyword, setAppliedKeyword] = useState('');
-    const [categoryFilterId, setCategoryFilterId] = useState('');
-    const [sortBy, setSortBy] = useState('id,desc');
-    const [pageNumber, setPageNumber] = useState(0);
+    const [keywordInput, setKeywordInput] = useState(initialSearchParams.get('keyword') || '');
+    const [appliedKeyword, setAppliedKeyword] = useState(initialSearchParams.get('keyword') || '');
+    const [categoryFilterId, setCategoryFilterId] = useState(initialSearchParams.get('categoryId') || '');
+    const [sortBy, setSortBy] = useState(initialSearchParams.get('sort') || 'id,desc');
+    const [pageNumber, setPageNumber] = useState(() => {
+        const parsedPage = Number.parseInt(initialSearchParams.get('page') || '0', 10);
+        return Number.isFinite(parsedPage) && parsedPage >= 0 ? parsedPage : 0;
+    });
     const [pageSize] = useState(10);
     const [totalPages, setTotalPages] = useState(0);
     const [totalElements, setTotalElements] = useState(0);
@@ -100,6 +105,27 @@ function PMProductManagement() {
         }
     };
 
+    const syncListUrl = (nextState = {}) => {
+        const params = new URLSearchParams();
+        const nextKeyword = String(nextState.keyword ?? appliedKeyword).trim();
+        const nextCategoryId = String(nextState.categoryId ?? categoryFilterId).trim();
+        const nextSort = String(nextState.sort ?? sortBy).trim();
+        const nextPage = Number.isFinite(nextState.page) ? nextState.page : pageNumber;
+
+        if (nextKeyword) params.set('keyword', nextKeyword);
+        if (nextCategoryId) params.set('categoryId', nextCategoryId);
+        if (nextSort) params.set('sort', nextSort);
+        if (Number.isFinite(nextPage) && nextPage > 0) params.set('page', String(nextPage));
+
+        navigate(
+            {
+                pathname: '/pm/products/list',
+                search: params.toString() ? `?${params.toString()}` : '',
+            },
+            { replace: true }
+        );
+    };
+
     useEffect(() => {
         if (hasFetchedInitialDataRef.current) {
             return;
@@ -114,6 +140,12 @@ function PMProductManagement() {
 
         loadProducts();
     }, [triggerToast]);
+
+    useEffect(() => {
+        if (!hasFetchedInitialDataRef.current) return;
+        syncListUrl();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [appliedKeyword, categoryFilterId, sortBy, pageNumber]);
 
     useEffect(() => {
         if (!isAddModalOpen || !productForm.categoryId) {
@@ -367,6 +399,7 @@ function PMProductManagement() {
         setCategoryFilterId('');
         setSortBy('id,desc');
         setPageNumber(0);
+        navigate('/pm/products/list', { replace: true });
     };
 
     useEffect(() => {
@@ -528,7 +561,7 @@ function PMProductManagement() {
                                         <button
                                             type="button"
                                             className="pm-action-btn pm-action-btn--view"
-                                            onClick={() => navigate(`/pm/products/list/${product.id}`)}
+                                            onClick={() => navigate(`/pm/products/list/${product.id}${location.search}`)}
                                         >
                                             View
                                         </button>
