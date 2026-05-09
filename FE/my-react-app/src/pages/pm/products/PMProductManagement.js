@@ -5,6 +5,7 @@ import {
     addProduct,
     deletePMProduct,
     getPMProducts,
+    importPMProductsByExcel,
     updatePMProductState,
 } from '../../../api/pm/product/ProductAPI';
 import {getAttributesByCategory} from '../../../api/pm/product/AttributeAPI';
@@ -57,6 +58,7 @@ function PMProductManagement() {
     const [loadingAttr, setLoadingAttr] = useState(false);
     const [errorAttr, setErrorAttr] = useState(null);
     const [savingProduct, setSavingProduct] = useState(false);
+    const [importProgress, setImportProgress] = useState(0);
     const [products, setProducts] = useState([]);
     const [loadingProducts, setLoadingProducts] = useState(true);
     const [productsError, setProductsError] = useState(null);
@@ -366,6 +368,40 @@ function PMProductManagement() {
         }
     };
 
+    const handleImportProducts = async ({categoryId, file}) => {
+        if (!categoryId || !file) {
+            return;
+        }
+
+        setSavingProduct(true);
+        setImportProgress(0);
+
+        try {
+            await importPMProductsByExcel(categoryId, file, (event) => {
+                if (!event?.total) {
+                    return;
+                }
+
+                const percent = Math.round((event.loaded * 100) / event.total);
+                setImportProgress(Math.min(95, percent));
+            });
+
+            setImportProgress(100);
+            triggerToast('success', 'Products imported successfully');
+            await loadProducts(pageNumber);
+            closeAddModal();
+        } catch (error) {
+            const message =
+                error?.response?.data?.message ||
+                error?.response?.data ||
+                'Failed to import products from Excel';
+            triggerToast('error', message);
+        } finally {
+            setSavingProduct(false);
+            setTimeout(() => setImportProgress(0), 300);
+        }
+    };
+
     const handleDeleteProduct = async (productId) => {
         const confirmed = window.confirm('Are you sure you want to delete this product?');
         if (!confirmed) {
@@ -606,7 +642,9 @@ function PMProductManagement() {
                 isOpen={isAddModalOpen}
                 onClose={closeAddModal}
                 onSubmit={handleAddProduct}
+                onImportSubmit={handleImportProducts}
                 savingProduct={savingProduct}
+                importProgress={importProgress}
                 categories={categories}
                 productForm={productForm}
                 formErrors={formErrors}

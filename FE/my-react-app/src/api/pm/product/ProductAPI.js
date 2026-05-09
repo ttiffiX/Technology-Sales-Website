@@ -26,6 +26,18 @@ export const addProduct = async (productRequest, attributeSchemas = []) => {
     // return response.data;
 };
 
+export const importPMProductsByExcel = async (categoryId, file, onUploadProgress) => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await apiClient.post(`/pm/products/category/${categoryId}/import`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress,
+    });
+
+    return response.data;
+};
+
 export const getPMProducts = async (params = {}) => {
     const response = await apiClient.get('/pm/products', { params });
     return response.data;

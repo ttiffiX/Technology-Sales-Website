@@ -5,7 +5,9 @@ function AddProductModal({
     isOpen,
     onClose,
     onSubmit,
+    onImportSubmit,
     savingProduct,
+    importProgress = 0,
     categories,
     productForm,
     formErrors,
@@ -22,8 +24,11 @@ function AddProductModal({
     onFileChange,
 }) {
     const { useMemo, useState, useEffect } = React;
+    const [activeMode, setActiveMode] = useState('add');
     const [previewUrl, setPreviewUrl] = useState(null);
     const [fileError, setFileError] = useState('');
+    const [excelFile, setExcelFile] = useState(null);
+    const [excelError, setExcelError] = useState('');
     const groupedAttributes = useMemo(() => groupAttributesByGroupName(attributes), [attributes]);
 
     useEffect(() => {
@@ -49,9 +54,84 @@ function AddProductModal({
         };
     }, [productForm?.imageFile]);
 
+    useEffect(() => {
+        if (!isOpen) {
+            setActiveMode('add');
+            setExcelFile(null);
+            setExcelError('');
+            setFileError('');
+        }
+    }, [isOpen]);
+
+    useEffect(() => {
+        setExcelFile(null);
+        setExcelError('');
+    }, [productForm?.categoryId]);
+
     if (!isOpen) {
         return null;
     }
+
+    const isImportMode = activeMode === 'import';
+
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+
+        if (isImportMode) {
+            if (!productForm.categoryId) {
+                setExcelError('Please choose a category first');
+                return;
+            }
+
+            if (!excelFile) {
+                setExcelError('Please select an Excel file');
+                return;
+            }
+
+            setExcelError('');
+
+            if (typeof onImportSubmit === 'function') {
+                await onImportSubmit({
+                    categoryId: productForm.categoryId,
+                    file: excelFile,
+                });
+            }
+
+            return;
+        }
+
+        if (typeof onSubmit === 'function') {
+            await onSubmit(event);
+        }
+    };
+
+    const handleExcelFileChange = (event) => {
+        const file = event.target.files && event.target.files[0];
+
+        if (!file) {
+            setExcelFile(null);
+            setExcelError('');
+            return;
+        }
+
+        const fileName = file.name.toLowerCase();
+        const isExcelFile = fileName.endsWith('.xlsx') || fileName.endsWith('.xls');
+        if (!isExcelFile) {
+            setExcelFile(null);
+            setExcelError('Please choose an .xlsx or .xls file');
+            return;
+        }
+
+        const maxBytes = 25 * 1024 * 1024;
+        if (file.size > maxBytes) {
+            setExcelFile(null);
+            setExcelError('Excel file must be smaller than 25MB');
+            return;
+        }
+
+        setExcelError('');
+        setExcelFile(file);
+    };
 
     const renderAttributeInput = (attribute) => {
         const inputVariant = getAttributeInputVariant(attribute.dataType);
@@ -142,19 +222,42 @@ function AddProductModal({
     };
 
     return (
-        <div className="pm-add-modal-overlay" onClick={onClose}>
+        <div className="pm-add-modal-overlay" onClick={() => !savingProduct && onClose()}>
             <div className="pm-add-modal" onClick={(event) => event.stopPropagation()}>
                 <div className="pm-add-modal__header">
                     <div>
-                        <h2>Add Product</h2>
-                        <p>Select a category first, then fill in the required product information.</p>
+                        <h2>{isImportMode ? 'Import Products from Excel' : 'Add Product'}</h2>
+                        <p>
+                            {isImportMode
+                                ? 'Choose a category first, then upload an Excel file to import products in bulk.'
+                                : 'Select a category first, then fill in the required product information.'}
+                        </p>
                     </div>
-                    <button type="button" className="pm-add-modal__close" onClick={onClose}>
+                    <button type="button" className="pm-add-modal__close" onClick={onClose} disabled={savingProduct}>
                         ×
                     </button>
                 </div>
 
-                <form className="pm-add-form" onSubmit={onSubmit}>
+                <form className="pm-add-form" onSubmit={handleSubmit}>
+                    <div className="pm-add-modal__tabs" role="tablist" aria-label="Add product mode">
+                        <button
+                            type="button"
+                            className={`pm-add-modal__tab ${!isImportMode ? 'pm-add-modal__tab--active' : ''}`}
+                            onClick={() => setActiveMode('add')}
+                            disabled={savingProduct}
+                        >
+                            Add Product
+                        </button>
+                        <button
+                            type="button"
+                            className={`pm-add-modal__tab ${isImportMode ? 'pm-add-modal__tab--active' : ''}`}
+                            onClick={() => setActiveMode('import')}
+                            disabled={savingProduct}
+                        >
+                            Import Excel
+                        </button>
+                    </div>
+
                     <div className="pm-add-form__section">
                         <div className="pm-add-form__section-title">Category</div>
                         <div className="pm-form-group pm-form-group--full">
@@ -185,15 +288,65 @@ function AddProductModal({
                         </div>
                     )}
 
-                    {productForm.categoryId && loadingAttr && (
+                    {productForm.categoryId && !isImportMode && loadingAttr && (
                         <div className="pm-add-form__status">Loading category attributes...</div>
                     )}
 
-                    {productForm.categoryId && errorAttr && (
+                    {productForm.categoryId && !isImportMode && errorAttr && (
                         <div className="pm-add-form__status pm-add-form__status--error">{errorAttr}</div>
                     )}
 
-                    {productForm.categoryId && !loadingAttr && !errorAttr && (
+                    {productForm.categoryId && isImportMode && (
+                        <>
+                            <div className="pm-add-form__section">
+                                <div className="pm-add-form__section-title">Excel File</div>
+                                <div className="pm-form-group pm-form-group--full">
+                                    <label htmlFor="pm-product-excel-file">
+                                        Excel file <span>*</span>
+                                    </label>
+                                    <input
+                                        id="pm-product-excel-file"
+                                        name="excelFile"
+                                        type="file"
+                                        accept=".xlsx,.xls"
+                                        onChange={handleExcelFileChange}
+                                        disabled={savingProduct}
+                                    />
+                                    <div className="pm-form-hint">
+                                        Upload an Excel file (.xlsx or .xls). The backend will import products for the selected category.
+                                    </div>
+                                    {excelError && <span className="pm-form-error">{excelError}</span>}
+                                </div>
+
+                                {excelFile && (
+                                    <div className="pm-file-preview">
+                                        <div className="pm-file-preview__icon">XLSX</div>
+                                        <div className="pm-file-preview__meta">
+                                            <div className="pm-file-preview__name">{excelFile.name}</div>
+                                            <div className="pm-file-preview__size">{(excelFile.size / 1024 / 1024).toFixed(2)} MB</div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {savingProduct && (
+                                <div className="pm-upload-progress">
+                                    <div className="pm-upload-progress__row">
+                                        <span>{importProgress < 100 ? 'Uploading...' : 'Processing...'}</span>
+                                        <span>{Math.min(importProgress, 100)}%</span>
+                                    </div>
+                                    <div className="pm-upload-progress__bar">
+                                        <div
+                                            className="pm-upload-progress__fill"
+                                            style={{ width: `${Math.min(importProgress, 100)}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+                        </>
+                    )}
+
+                    {productForm.categoryId && !isImportMode && !loadingAttr && !errorAttr && (
                         <>
                             <div className="pm-add-form__section">
                                 <div className="pm-add-form__section-title">Basic Information</div>
@@ -385,9 +538,11 @@ function AddProductModal({
                         <button
                             type="submit"
                             className="pm-btn-submit"
-                            disabled={savingProduct || loadingAttr || !!errorAttr || !!fileError || !productForm.categoryId}
+                            disabled={savingProduct || (loadingAttr && !isImportMode) || (!!errorAttr && !isImportMode) || !!fileError || !!excelError || !productForm.categoryId}
                         >
-                            {savingProduct ? 'Adding...' : 'Add Product'}
+                            {savingProduct
+                                ? (isImportMode ? 'Importing...' : 'Adding...')
+                                : (isImportMode ? 'Import Excel' : 'Add Product')}
                         </button>
                     </div>
                 </form>
