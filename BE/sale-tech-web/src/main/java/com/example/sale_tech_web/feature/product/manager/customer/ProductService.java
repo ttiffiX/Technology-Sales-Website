@@ -4,6 +4,7 @@ import com.example.sale_tech_web.config.CacheNames;
 import com.example.sale_tech_web.exception.BadRequestException;
 import com.example.sale_tech_web.exception.NotFoundException;
 import com.example.sale_tech_web.feature.product.dto.customer.*;
+import com.example.sale_tech_web.feature.product.entity.Category;
 import com.example.sale_tech_web.feature.product.entity.CategoryAttributeGroup;
 import com.example.sale_tech_web.feature.product.entity.CategoryAttributeSchema;
 import com.example.sale_tech_web.feature.product.entity.Product;
@@ -41,11 +42,26 @@ public class ProductService implements ProductServiceInterface {
     }
 
     @Override
-    @Cacheable(CacheNames.PRODUCT_LIST_ALL)
-    public List<ProductListDTO> getAllProducts() {
-        return productRepository.findByIsActiveTrue().stream()
-                .map(this::convertToListDTO)
-                .toList();
+    @Cacheable(CacheNames.PRODUCT_TOP_10_BY_CATEGORY)
+    public List<ProductCategoryListDTO> getTop10ProductsByCategory() {
+        List<Category> categories = categoryRepository.findAll();
+
+        List<Product> products = productRepository.findTop10ByEachCategoryAndIsActiveTrue();
+
+        List<ProductCategoryListDTO> result = new ArrayList<>();
+        for (Category category : categories) {
+            List<ProductListDTO> productDTOs = products.stream()
+                    .filter(p -> p.getCategory().getId().equals(category.getId()))
+                    .map(this::convertToListDTO)
+                    .toList();
+
+            result.add(ProductCategoryListDTO.builder()
+                    .categoryId(category.getId())
+                    .categoryName(category.getName())
+                    .productList(productDTOs)
+                    .build());
+        }
+        return result;
     }
 
     @Override
@@ -58,7 +74,7 @@ public class ProductService implements ProductServiceInterface {
 
     @Override
     @Cacheable(value = CacheNames.FILTER_OPTIONS, key = "#categoryId")
-        public Map<Integer, FilterGroupDTO> getFilterOptions(Long categoryId) {
+    public Map<Integer, FilterGroupDTO> getFilterOptions(Long categoryId) {
         List<CategoryAttributeSchema> schemas = schemaRepository.findByCategoryIdOrdered(categoryId);
         Map<String, List<String>> attributeValuesMap = getFilterValuesMap(categoryId);
 
@@ -93,7 +109,8 @@ public class ProductService implements ProductServiceInterface {
     }
 
     @Override
-    public List<ProductListDTO> filterByAttributes(Long categoryId, Map<String, List<String>> attributeFilters, Integer minPrice, Integer maxPrice, String sort) {
+    public List<ProductListDTO> filterByAttributes(Long
+                                                           categoryId, Map<String, List<String>> attributeFilters, Integer minPrice, Integer maxPrice, String sort) {
 
         // 1. Khởi tạo Specification cơ bản
         // Lưu ý: Đảm bảo Entity Product có field 'category' và 'isActive' (đúng hoa thường)
@@ -170,7 +187,7 @@ public class ProductService implements ProductServiceInterface {
     @Cacheable(value = CacheNames.PRODUCT_SEARCH, key = "#keyword == null ? 'ALL' : #keyword.trim().toLowerCase()")
     public List<ProductListDTO> searchProducts(String keyword) {
         if (keyword == null || keyword.isBlank()) {
-            return getAllProducts();
+//            return getAllProducts();
         }
         return productRepository.findByIsActiveTrueAndTitleContainingIgnoreCase(keyword.trim()).stream()
                 .map(this::convertToListDTO)

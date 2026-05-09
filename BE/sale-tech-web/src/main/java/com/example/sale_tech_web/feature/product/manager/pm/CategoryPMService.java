@@ -36,7 +36,9 @@ public class CategoryPMService implements CategoryPMServiceInterface {
     @Override
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = CacheNames.CATEGORIES, allEntries = true)
+            @CacheEvict(value = CacheNames.CATEGORIES, allEntries = true),
+            @CacheEvict(value = CacheNames.PRODUCT_TOP_10_BY_CATEGORY, allEntries = true),
+            @CacheEvict(value = CacheNames.PRODUCT_BY_CATEGORY, key = "#categoryId")
     })
     public CategoryDTO updateCategory(Long categoryId, String name) {
         Category category = categoryRepository.findById(categoryId)
@@ -50,8 +52,9 @@ public class CategoryPMService implements CategoryPMServiceInterface {
     @Transactional
     @Caching(evict = {
             @CacheEvict(value = CacheNames.CATEGORIES, allEntries = true),
-            @CacheEvict(value = CacheNames.FILTER_OPTIONS, key = "#categoryId"),
-            @CacheEvict(value = CacheNames.PRODUCT_BY_CATEGORY, key = "#categoryId")
+            @CacheEvict(value = CacheNames.PRODUCT_TOP_10_BY_CATEGORY, allEntries = true),
+            @CacheEvict(value = CacheNames.PRODUCT_BY_CATEGORY, key = "#categoryId"),
+            @CacheEvict(value = CacheNames.FILTER_OPTIONS, key = "#categoryId")
     })
     public String deleteCategory(Long categoryId) {
         Category category = categoryRepository.findById(categoryId)

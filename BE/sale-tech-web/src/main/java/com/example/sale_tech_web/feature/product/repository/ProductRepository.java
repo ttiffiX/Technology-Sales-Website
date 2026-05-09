@@ -17,11 +17,17 @@ import java.util.List;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
-    // Find all active products
-    @EntityGraph(attributePaths = {
-            "category"
-    })
-    List<Product> findByIsActiveTrue();
+    // Find top 10 best-selling active products for each category
+    @Query(value = """
+            SELECT p.* FROM (
+                SELECT *,
+                       ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY quantity_sold DESC) as rank
+                FROM product
+                WHERE is_active = true
+            ) p
+            WHERE p.rank <= 10
+            """, nativeQuery = true)
+    List<Product> findTop10ByEachCategoryAndIsActiveTrue();
 
     @EntityGraph(attributePaths = {"category"})
     List<Product> findByCategoryIdAndIsActiveTrue(Long categoryId);

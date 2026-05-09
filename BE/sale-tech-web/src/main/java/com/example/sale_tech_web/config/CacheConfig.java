@@ -20,7 +20,7 @@ public class CacheConfig {
                 //Product
                 buildCache(CacheNames.CATEGORIES, Duration.ofHours(24), 20, 100),
                 buildCache(CacheNames.FILTER_OPTIONS, Duration.ofHours(6), 50, 500),
-                buildCache(CacheNames.PRODUCT_LIST_ALL, Duration.ofMinutes(30), 5, 50),
+                buildCache(CacheNames.PRODUCT_TOP_10_BY_CATEGORY, Duration.ofMinutes(30), 5, 50),
                 buildCache(CacheNames.PRODUCT_BY_ID, Duration.ofMinutes(30), 200, 2000),
                 buildCache(CacheNames.PRODUCT_BY_CATEGORY, Duration.ofMinutes(30), 50, 500),
                 buildCache(CacheNames.PRODUCT_SEARCH, Duration.ofMinutes(5), 200, 1000),

@@ -73,7 +73,6 @@ public class PMService implements PMServiceInterface {
     @Override
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = CacheNames.PRODUCT_LIST_ALL, allEntries = true),
             @CacheEvict(value = CacheNames.PRODUCT_BY_CATEGORY, key = "#request.categoryId"),
             @CacheEvict(value = CacheNames.FILTER_OPTIONS, key = "#request.categoryId"),
             @CacheEvict(value = CacheNames.PRODUCT_SEARCH, allEntries = true)
@@ -129,7 +128,6 @@ public class PMService implements PMServiceInterface {
     @Override
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = CacheNames.PRODUCT_LIST_ALL, allEntries = true),
             @CacheEvict(value = CacheNames.PRODUCT_BY_CATEGORY, key = "#categoryId"),
             @CacheEvict(value = CacheNames.FILTER_OPTIONS, key = "#categoryId"),
             @CacheEvict(value = CacheNames.PRODUCT_SEARCH, allEntries = true)
@@ -158,7 +156,6 @@ public class PMService implements PMServiceInterface {
     @Transactional
     @Caching(evict = {
             @CacheEvict(value = CacheNames.PRODUCT_BY_ID, key = "#productId"),
-            @CacheEvict(value = CacheNames.PRODUCT_LIST_ALL, allEntries = true),
             @CacheEvict(value = CacheNames.PRODUCT_SEARCH, allEntries = true),
             @CacheEvict(value = CacheNames.PRODUCT_BY_CATEGORY, key = "#request.categoryId"),
             @CacheEvict(value = CacheNames.FILTER_OPTIONS, key = "#request.categoryId")
@@ -218,7 +215,7 @@ public class PMService implements PMServiceInterface {
     @Transactional
     @Caching(evict = {
             @CacheEvict(value = CacheNames.PRODUCT_BY_ID, key = "#productId"),
-            @CacheEvict(value = CacheNames.PRODUCT_LIST_ALL, allEntries = true),
+            @CacheEvict(value = CacheNames.PRODUCT_TOP_10_BY_CATEGORY, allEntries = true),
             @CacheEvict(value = CacheNames.PRODUCT_SEARCH, allEntries = true)
     })
     public String updateState(Long productId, boolean active) {
@@ -242,7 +239,7 @@ public class PMService implements PMServiceInterface {
     @Transactional
     @Caching(evict = {
             @CacheEvict(value = CacheNames.PRODUCT_BY_ID, key = "#productId"),
-            @CacheEvict(value = CacheNames.PRODUCT_LIST_ALL, allEntries = true),
+            @CacheEvict(value = CacheNames.PRODUCT_TOP_10_BY_CATEGORY, allEntries = true),
             @CacheEvict(value = CacheNames.PRODUCT_SEARCH, allEntries = true)
     })
     public String deleteProduct(Long productId) {

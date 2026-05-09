@@ -18,9 +18,9 @@ public class ProductController {
     private final ProductServiceInterface productServiceInterface;
 
     @GetMapping
-    public ResponseEntity<List<ProductListDTO>> getAllProducts() {
-        List<ProductListDTO> products = productServiceInterface.getAllProducts();
-        log.info("Get all products: {} products found", products.size());
+    public ResponseEntity<List<ProductCategoryListDTO>> getTop10ProductsByCategory() {
+        List<ProductCategoryListDTO> products = productServiceInterface.getTop10ProductsByCategory();
+        log.info("Get top 10 products by category: {} categories found", products.size());
         return ResponseEntity.ok(products);
     }
 

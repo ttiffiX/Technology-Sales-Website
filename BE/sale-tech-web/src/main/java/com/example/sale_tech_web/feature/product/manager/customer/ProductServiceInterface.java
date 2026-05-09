@@ -8,7 +8,7 @@ import java.util.Map;
 public interface ProductServiceInterface {
     List<CategoryDTO> getAllCategories();
 
-    List<ProductListDTO> getAllProducts();
+    List<ProductCategoryListDTO> getTop10ProductsByCategory();
 
     ProductDetailDTO getProductById(Long productId);
 
