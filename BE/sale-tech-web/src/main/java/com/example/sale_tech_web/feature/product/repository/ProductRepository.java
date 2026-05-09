@@ -32,9 +32,6 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @EntityGraph(attributePaths = {"category"})
     List<Product> findByCategoryIdAndIsActiveTrue(Long categoryId);
 
-    @EntityGraph(attributePaths = {"category"})
-    List<Product> findByIsActiveTrueAndTitleContainingIgnoreCase(String keyword);
-
     /*
     lấy tất cả giá trị của các thuộc tính filterable trong category, đã được gộp lại thành 1 list duy nhất
     nếu là String thì lấy giá trị đó, nếu là Array thì lấy tất cả phần tử trong array đó

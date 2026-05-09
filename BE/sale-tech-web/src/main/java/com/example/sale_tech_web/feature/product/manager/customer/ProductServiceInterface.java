@@ -4,6 +4,7 @@ import com.example.sale_tech_web.feature.product.dto.customer.*;
 
 import java.util.List;
 import java.util.Map;
+import org.springframework.data.domain.Page;
 
 public interface ProductServiceInterface {
     List<CategoryDTO> getAllCategories();
@@ -16,13 +17,14 @@ public interface ProductServiceInterface {
 
     Map<Integer, FilterGroupDTO> getFilterOptions(Long categoryId);
 
-    List<ProductListDTO> filterByAttributes(Long categoryId,
+    Page<ProductListDTO> filter(Long categoryId,
+                                            String keyword,
                                             Map<String, List<String>> attributeFilters,
                                             Integer minPrice,
                                             Integer maxPrice,
-                                            String sort);
-
-    List<ProductListDTO> searchProducts(String keyword);
+                                            String sort,
+                                            int page,
+                                            int size);
 
     CompareResponse compareProducts(CompareRequest compareRequest);
 

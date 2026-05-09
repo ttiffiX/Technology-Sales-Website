@@ -5,6 +5,7 @@ import com.example.sale_tech_web.feature.product.manager.customer.ProductService
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -55,57 +56,55 @@ public class ProductController {
      * GET /product/category/{categoryId}/filter-options
      * Get all available filter options for a category (attributes and their values)
      */
-    @GetMapping("/category/{categoryId}/filter-options")
+    @GetMapping("/filter-options")
     public ResponseEntity<Map<Integer, FilterGroupDTO>> getFilterOptions(
-            @PathVariable Long categoryId
+            @RequestParam Long categoryId
     ) {
         log.info("Get filter options for category: {}", categoryId);
         Map<Integer, FilterGroupDTO> options = productServiceInterface.getFilterOptions(categoryId);
         return ResponseEntity.ok(options);
     }
 
-    @GetMapping("/category/{categoryId}/filter")
-    public ResponseEntity<List<ProductListDTO>> filterByCategory(
-            @PathVariable Long categoryId,
+    /**
+     * GET /product/filter - Unified filter endpoint (search or category filter)
+     * Support both keyword search and category filtering with attributes
+     */
+    @GetMapping("/filter")
+    public ResponseEntity<Page<ProductListDTO>> filter(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) Integer minPrice,
             @RequestParam(required = false) Integer maxPrice,
             @RequestParam(required = false, defaultValue = "id_desc") String sort,
+            @RequestParam(required = false, defaultValue = "0") Integer page,
+            @RequestParam(required = false, defaultValue = "24") Integer size,
             @RequestParam Map<String, String> allParams
     ) {
-        log.info("Filter Product with attributes for category: {}", categoryId);
-        // 1. Các key không phải thuộc tính sản phẩm
-        Set<String> systemParams = Set.of("minPrice", "maxPrice", "sort", "page", "size");
+        log.info("Filter products - keyword: {}, categoryId: {}", keyword, categoryId);
 
-        // 2. Parse các thuộc tính còn lại thành Map<String, List<String>>
+        // Parse attribute filters from query params
+        Set<String> systemParams = Set.of("keyword", "categoryId", "minPrice", "maxPrice", "sort", "page", "size");
         Map<String, List<String>> attributeFilters = new HashMap<>();
 
         allParams.forEach((key, value) -> {
             if (!systemParams.contains(key) && value != null && !value.isBlank()) {
-                // "8GB,16GB" -> ["8GB", "16GB"]
                 List<String> values = Arrays.asList(value.split(","));
                 attributeFilters.put(key, values);
             }
         });
 
-        // 3. Gọi Service
-        List<ProductListDTO> products = productServiceInterface.filterByAttributes(
+        // Call unified service filter method
+        Page<ProductListDTO> products = productServiceInterface.filter(
                 categoryId,
+                keyword,
                 attributeFilters.isEmpty() ? null : attributeFilters,
                 minPrice,
                 maxPrice,
-                sort
+                sort,
+                page,
+                size
         );
 
-        return ResponseEntity.ok(products);
-    }
-
-    /**
-     * GET /product/search?keyword=xxx - Search products by keyword
-     */
-    @GetMapping("/search")
-    public ResponseEntity<List<ProductListDTO>> searchProducts(@RequestParam String keyword) {
-        log.info("Search products - Keyword: {}", keyword);
-        List<ProductListDTO> products = productServiceInterface.searchProducts(keyword);
         return ResponseEntity.ok(products);
     }
 

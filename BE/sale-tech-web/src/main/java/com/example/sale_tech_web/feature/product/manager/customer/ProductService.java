@@ -17,6 +17,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -75,6 +79,10 @@ public class ProductService implements ProductServiceInterface {
     @Override
     @Cacheable(value = CacheNames.FILTER_OPTIONS, key = "#categoryId")
     public Map<Integer, FilterGroupDTO> getFilterOptions(Long categoryId) {
+        if (categoryId == null) {
+            return Collections.emptyMap();
+        }
+
         List<CategoryAttributeSchema> schemas = schemaRepository.findByCategoryIdOrdered(categoryId);
         Map<String, List<String>> attributeValuesMap = getFilterValuesMap(categoryId);
 
@@ -109,24 +117,33 @@ public class ProductService implements ProductServiceInterface {
     }
 
     @Override
-    public List<ProductListDTO> filterByAttributes(Long
-                                                           categoryId, Map<String, List<String>> attributeFilters, Integer minPrice, Integer maxPrice, String sort) {
+    public Page<ProductListDTO> filter(Long categoryId, String keyword, Map<String, List<String>> attributeFilters, Integer minPrice, Integer maxPrice, String sort, int page, int size) {
+        // Nếu không có keyword và không có categoryId -> return empty
+        if ((keyword == null || keyword.isBlank()) && categoryId == null) {
+            return new PageImpl<>(Collections.emptyList(), PageRequest.of(Math.max(0, page), Math.max(1, size)), 0);
+        }
 
-        // 1. Khởi tạo Specification cơ bản
-        // Lưu ý: Đảm bảo Entity Product có field 'category' và 'isActive' (đúng hoa thường)
-        Specification<Product> spec = Specification.where((root, _, cb) ->
-                cb.and(
-                        cb.equal(root.get("category").get("id"), categoryId),
-                        cb.isTrue(root.get("isActive"))
-                )
-        );
+        // 1. Khởi tạo Specification cơ bản - luôn bao gồm filter active
+        Specification<Product> spec = Specification.where((root, _, cb) -> cb.isTrue(root.get("isActive")));
 
-        // 2. Lọc theo giá
+        // 2. Lọc theo keyword (search title)
+        if (keyword != null && !keyword.isBlank()) {
+            String searchKeyword = keyword.trim().toLowerCase();
+            spec = spec.and((root, _, cb) -> cb.like(cb.lower(root.get("title")), "%" + searchKeyword + "%"));
+        }
+
+        // 3. Lọc theo category (nếu có)
+        if (categoryId != null) {
+            spec = spec.and((root, _, cb) -> cb.equal(root.get("category").get("id"), categoryId));
+        }
+
+        // 4. Lọc theo giá
         if (minPrice != null)
             spec = spec.and((root, _, cb) -> cb.greaterThanOrEqualTo(root.get("price"), minPrice));
-        if (maxPrice != null) spec = spec.and((root, _, cb) -> cb.lessThanOrEqualTo(root.get("price"), maxPrice));
+        if (maxPrice != null)
+            spec = spec.and((root, _, cb) -> cb.lessThanOrEqualTo(root.get("price"), maxPrice));
 
-        // 3. Lọc JSONB: xử lý cả scalar lẫn array
+        // 5. Lọc JSONB: xử lý cả scalar lẫn array
         // - Scalar: jsonb_extract_path_text(attributes, key) IN (values)
         // - Array:  jsonb_path_exists(attributes, '$.key[*] ? (@ == "v1" || @ == "v2")')
         // Dùng OR của cả 2 để Postgres tự chọn đúng theo kiểu thực tế của field
@@ -159,17 +176,20 @@ public class ProductService implements ProductServiceInterface {
             }
         }
 
-        // 4. Xử lý Sắp xếp linh hoạt hơn
+        // 6. Xử lý Sắp xếp
         Sort sortOrder;
         switch (sort) {
             case "price_asc" -> sortOrder = Sort.by("price").ascending();
             case "price_desc" -> sortOrder = Sort.by("price").descending();
-            default -> sortOrder = Sort.by("id").descending(); // Mặc định sản phẩm mới lên đầu
+            case "hot" -> sortOrder = Sort.by("quantitySold").descending();
+            default -> sortOrder = Sort.by("id").descending();
         }
 
-        return productRepository.findAll(spec, sortOrder).stream()
-                .map(this::convertToListDTO)
-                .toList();
+        Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size), sortOrder);
+        Page<Product> productPage = productRepository.findAll(spec, pageable);
+
+        List<ProductListDTO> content = productPage.getContent().stream().map(this::convertToListDTO).toList();
+        return new PageImpl<>(content, pageable, productPage.getTotalElements());
     }
 
 
@@ -183,16 +203,6 @@ public class ProductService implements ProductServiceInterface {
                 .toList();
     }
 
-    @Override
-    @Cacheable(value = CacheNames.PRODUCT_SEARCH, key = "#keyword == null ? 'ALL' : #keyword.trim().toLowerCase()")
-    public List<ProductListDTO> searchProducts(String keyword) {
-        if (keyword == null || keyword.isBlank()) {
-//            return getAllProducts();
-        }
-        return productRepository.findByIsActiveTrueAndTitleContainingIgnoreCase(keyword.trim()).stream()
-                .map(this::convertToListDTO)
-                .toList();
-    }
 
     @Override
     public CompareResponse compareProducts(CompareRequest compareRequest) {
