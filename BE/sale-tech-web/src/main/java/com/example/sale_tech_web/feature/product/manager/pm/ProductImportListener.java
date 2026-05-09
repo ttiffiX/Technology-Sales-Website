@@ -2,7 +2,6 @@ package com.example.sale_tech_web.feature.product.manager.pm;
 
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.event.AnalysisEventListener;
-import com.example.sale_tech_web.feature.cloudinary.dto.CloudinaryResponse;
 import com.example.sale_tech_web.feature.cloudinary.manager.CloudinaryService;
 import com.example.sale_tech_web.feature.product.dto.pm.product_dto.ProductImportDTO;
 import com.example.sale_tech_web.feature.product.entity.Category;
@@ -17,6 +16,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 import static com.example.sale_tech_web.feature.product.utils.Validate.validateProductAttributes;
 
@@ -29,7 +29,7 @@ public class ProductImportListener extends AnalysisEventListener<Map<Integer, Ob
     private final List<Product> cachedDataList = new ArrayList<>();
     private Map<Integer, String> headMap = new HashMap<>();
     private final Category category;
-    private static final int BATCH_COUNT = 50;
+    private static final int BATCH_COUNT = 20;
 
     public ProductImportListener(ProductRepository productRepository,
                                  List<CategoryAttributeSchema> schemas,
@@ -55,7 +55,7 @@ public class ProductImportListener extends AnalysisEventListener<Map<Integer, Ob
 
             Map<String, Object> finalAttributes = validateProductAttributes(schemas, data.getAttributes());
 
-            CloudinaryResponse res = cloudinaryService.uploadFromUrl(data.getImageUrl(), category.getName());
+//            CloudinaryResponse res = cloudinaryService.uploadFromUrl(data.getImageUrl(), category.getName());
 
             cachedDataList.add(
                     Product.builder()
@@ -66,8 +66,8 @@ public class ProductImportListener extends AnalysisEventListener<Map<Integer, Ob
                             .quantitySold(0)
                             .category(category)
                             .isActive(data.getIsActive())
-                            .imageUrl(res.getImageUrl())
-                            .publicId(res.getPublicId())
+                            .imageUrl(data.getImageUrl())
+//                            .publicId(res.getPublicId())
                             .attributes(finalAttributes)
                             .createdAt(LocalDateTime.now())
                             .build());
@@ -92,6 +92,32 @@ public class ProductImportListener extends AnalysisEventListener<Map<Integer, Ob
     }
 
     private void saveData() {
+        log.info("Start upload {} images...", cachedDataList.size());
+
+        // Kích hoạt đa luồng upload ảnh
+        List<CompletableFuture<?>> futures = cachedDataList.stream()
+                .map(product -> {
+                    String originalUrl = product.getImageUrl();
+                    if (originalUrl == null || originalUrl.isBlank()) {
+                        return CompletableFuture.completedFuture(null);
+                    }
+
+                    return cloudinaryService.uploadFromUrlAsync(originalUrl, category.getName())
+                            .thenAccept(res -> {
+                                product.setImageUrl(res.getImageUrl());
+                                product.setPublicId(res.getPublicId());
+                            })
+                            .exceptionally(ex -> {
+                                log.error("Error upload image [{}]: {}", product.getTitle(), ex.getMessage());
+                                product.setImageUrl(null); // Hoặc gán ảnh lỗi mặc định
+                                return null;
+                            });
+                })
+                .toList();
+
+        // Chờ tất cả các luồng upload xong (hoặc lỗi) thì mới đi tiếp
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
         log.info("Save {} data into database...", cachedDataList.size());
         productRepository.saveAll(cachedDataList);
     }

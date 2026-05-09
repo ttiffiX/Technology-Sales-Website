@@ -6,12 +6,14 @@ import com.example.sale_tech_web.feature.cloudinary.dto.CloudinaryResponse;
 import com.example.sale_tech_web.utils.SlugUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
@@ -58,5 +60,15 @@ public class CloudinaryService {
                 .imageUrl(uploadResult.get("secure_url").toString())
                 .publicId(publicId)
                 .build();
+    }
+
+    @Async("cloudinaryExecutor")
+    public CompletableFuture<CloudinaryResponse> uploadFromUrlAsync(String url, String categoryName) {
+        try {
+            return CompletableFuture.completedFuture(uploadFromUrl(url, categoryName));
+        } catch (Exception e) {
+            log.error("Lỗi upload ảnh từ URL {}: {}", url, e.getMessage());
+            return CompletableFuture.failedFuture(e);
+        }
     }
 }
