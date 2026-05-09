@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {useSearchParams} from 'react-router-dom';
+import {useNavigate, useSearchParams} from 'react-router-dom';
 import '../../../App.scss';
 import './Home.scss';
 import 'react-toastify/dist/ReactToastify.css';
@@ -10,8 +10,10 @@ import FilterSidebar from "../../../components/filtersidebar/FilterSidebar";
 import useFetchProducts, {filterProducts, searchProducts, getAllCategories} from "../../../api/customer/ProductAPI";
 import {useCart} from "../../../contexts/CartContext";
 import CompareBar from "../../../components/comparebar/CompareBar";
+import {formatPrice, getImage} from '../../../utils';
 
 function Home() {
+    const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const {products: allProducts, loading: initialLoading, error: initialError} = useFetchProducts();
     const {cartCount} = useCart();
@@ -23,9 +25,10 @@ function Home() {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [searchKeyword, setSearchKeyword] = useState('');
-    const [currentFilters, setCurrentFilters] = useState({});
+    const [, setSearchKeyword] = useState('');
+    const [, setCurrentFilters] = useState({});
     const filterDebounceRef = useRef(null);
+    const groupedCarouselRefs = useRef({});
     // Đảm bảo sync từ URL chỉ chạy 1 lần duy nhất (kể cả khi back về từ trang khác)
     const hasInitialized = useRef(false);
 
@@ -216,6 +219,28 @@ function Home() {
         }
     };
 
+    const isGroupedHomeView =
+        !selectedCategoryId &&
+        Array.isArray(products) &&
+        products.length > 0 &&
+        Array.isArray(products[0]?.productList);
+
+    const handleExploreCategory = async (categoryId) => {
+        if (!categoryId) return;
+        await handleCategoryChangeWithFilters(Number(categoryId), {});
+    };
+
+    const handleCarouselScroll = (carouselKey, direction) => {
+        const container = groupedCarouselRefs.current[carouselKey];
+        if (!container) return;
+        const step = Math.max(280, Math.floor(container.clientWidth * 0.85));
+        container.scrollBy({left: step * direction, behavior: 'smooth'});
+    };
+
+    const handleGroupedProductClick = (productId) => {
+        navigate(`/product/${productId}`);
+    };
+
     if (initialLoading) return <div className="loading-container"><p>Loading products...</p></div>;
     if (initialError) return <div className="error-container"><p>{initialError}</p></div>;
 
@@ -244,11 +269,75 @@ function Home() {
                     </div>
                 )}
 
-                {/* Product Grid */}
+                {/* Product Grid / grouped categories on home */}
                 <div className={`products-container ${selectedCategoryId ? 'with-sidebar' : 'full-width'}`}>
                     {loading && <div className="loading-overlay">Loading...</div>}
                     {error && <div className="error-message">{error}</div>}
-                    <ProductGrid products={products} categoryId={selectedCategoryId}/>
+
+                    {isGroupedHomeView ? (
+                        <div className="category-showcase-list">
+                            {products.map((category, index) => {
+                                const carouselKey = category.categoryId ?? index;
+                                const categoryProducts = Array.isArray(category.productList) ? category.productList : [];
+
+                                return (
+                                    <section className="category-showcase" key={carouselKey}>
+                                        <div className="category-showcase__header">
+                                            <h3 className="category-showcase__title">{category.categoryName}</h3>
+                                            <button
+                                                className="category-showcase__explore"
+                                                onClick={() => handleExploreCategory(category.categoryId)}
+                                            >
+                                                Explore
+                                            </button>
+                                        </div>
+
+                                        <div className="category-showcase__viewport">
+                                            <button
+                                                className="carousel-arrow carousel-arrow--left"
+                                                aria-label={`Xem san pham truoc cua ${category.categoryName}`}
+                                                onClick={() => handleCarouselScroll(carouselKey, -1)}
+                                            >
+                                                &#8249;
+                                            </button>
+
+                                            <div
+                                                className="category-showcase__track"
+                                                ref={(el) => {
+                                                    groupedCarouselRefs.current[carouselKey] = el;
+                                                }}
+                                            >
+                                                {categoryProducts.map((product) => (
+                                                    <article
+                                                        className="category-showcase__item"
+                                                        key={product.id}
+                                                        onClick={() => handleGroupedProductClick(product.id)}
+                                                    >
+                                                        <div
+                                                            className="category-showcase__image"
+                                                            style={{backgroundImage: `url(${getImage(product.imageUrl)})`}}
+                                                        />
+                                                        <h4 className="category-showcase__name">{product.title}</h4>
+                                                        <p className="category-showcase__price">{formatPrice(product.price)}</p>
+                                                    </article>
+                                                ))}
+                                            </div>
+
+                                            <button
+                                                className="carousel-arrow carousel-arrow--right"
+                                                aria-label={`Xem san pham tiep theo cua ${category.categoryName}`}
+                                                onClick={() => handleCarouselScroll(carouselKey, 1)}
+                                            >
+                                                &#8250;
+                                            </button>
+                                        </div>
+                                    </section>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <ProductGrid products={products} categoryId={selectedCategoryId}/>
+                    )}
                 </div>
             </div>
 
