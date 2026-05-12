@@ -58,7 +58,7 @@ public class ProductController {
      */
     @GetMapping("/filter-options")
     public ResponseEntity<Map<Integer, FilterGroupDTO>> getFilterOptions(
-            @RequestParam Long categoryId
+            @RequestParam(required = false) Long categoryId
     ) {
         log.info("Get filter options for category: {}", categoryId);
         Map<Integer, FilterGroupDTO> options = productServiceInterface.getFilterOptions(categoryId);

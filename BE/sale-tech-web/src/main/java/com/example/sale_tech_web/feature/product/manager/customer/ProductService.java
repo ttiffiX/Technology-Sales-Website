@@ -77,7 +77,7 @@ public class ProductService implements ProductServiceInterface {
     }
 
     @Override
-    @Cacheable(value = CacheNames.FILTER_OPTIONS, key = "#categoryId")
+    @Cacheable(value = CacheNames.FILTER_OPTIONS, key = "#categoryId", condition = "#categoryId != null")
     public Map<Integer, FilterGroupDTO> getFilterOptions(Long categoryId) {
         if (categoryId == null) {
             return Collections.emptyMap();
