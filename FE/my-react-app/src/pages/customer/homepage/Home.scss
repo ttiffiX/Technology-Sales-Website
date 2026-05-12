@@ -2,6 +2,7 @@
 
 .home-content {
   display: flex;
+  align-items: flex-start;
   gap: 24px;
   // Space for CompareBar
   padding: 20px 96px 100px;
@@ -11,6 +12,8 @@
   .sidebar-container {
     flex: 0 0 280px;
     min-width: 280px;
+    align-self: stretch;
+    display: flex;
   }
 
   .products-container {
@@ -24,6 +27,26 @@
 
     &.with-sidebar {
       flex: 1;
+      padding-left: 8px;
+    }
+
+    .products-summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 0 0 14px;
+      padding: 12px 16px;
+      border: 1px solid $divider-color;
+      border-radius: 12px;
+      background: $background-color;
+      color: $text-in-header-color;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .products-summary__count {
+      color: $primary-color;
     }
 
     .loading-overlay {
@@ -40,6 +63,10 @@
       background: #ffe6e6;
       border-radius: 8px;
       margin-bottom: 20px;
+    }
+
+    .products-grid-anchor {
+      scroll-margin-top: 24px;
     }
 
       .category-showcase-list {

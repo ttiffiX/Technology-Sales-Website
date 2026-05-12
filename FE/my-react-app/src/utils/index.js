@@ -110,6 +110,7 @@ export {
 // Pagination utilities
 export {
     buildPaginationItems,
+    normalizePageResponse,
 } from './paginationUtils';
 
 // Product attribute display utilities

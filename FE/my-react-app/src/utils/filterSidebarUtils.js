@@ -1,4 +1,4 @@
-export const FILTER_MAX_PRICE_VALUE = 100000000;
+export const FILTER_MAX_PRICE_VALUE = 500000000; // 500 million VND
 const MAX_RANGE_GROUPS = 5;
 
 const stripAccents = (value) => String(value ?? '')

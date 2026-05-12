@@ -11,12 +11,13 @@ import {
 import './FilterSidebar.scss';
 
 function FilterSidebar({ categoryId, onFilterChange }) {
+    const DEFAULT_SORT = 'hot';
     const [searchParams] = useSearchParams();
     const [filterOptions, setFilterOptions] = useState(null);
     const [selectedFilters, setSelectedFilters] = useState({});
     const [priceRange, setPriceRange] = useState({ min: 0, max: FILTER_MAX_PRICE_VALUE });
     const [tempPriceRange, setTempPriceRange] = useState({ min: 0, max: FILTER_MAX_PRICE_VALUE });
-    const [sort, setSort] = useState('price_asc');
+    const [sort, setSort] = useState(DEFAULT_SORT);
     const [loading, setLoading] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
     const [collapsedSections, setCollapsedSections] = useState({});
@@ -30,25 +31,55 @@ function FilterSidebar({ categoryId, onFilterChange }) {
         }));
     };
 
-    // Load filter options + restore UI từ URL khi category thay đổi
     useEffect(() => {
-        if (!categoryId) {
-            setFilterOptions(null);
-            return;
-        }
+        const shouldOpen = Boolean(categoryId) || Boolean(searchParams.get('search')) || Boolean(searchParams.get('category'));
+        setIsOpen(shouldOpen);
+    }, [categoryId, searchParams]);
 
+    const hasCategoryMode = categoryId !== null && categoryId !== undefined && categoryId !== '';
+
+    // Load filter options + restore UI từ URL when category changes or when searching
+    useEffect(() => {
         const loadFilterOptions = async () => {
             setLoading(true);
             try {
                 const options = await getFilterOptions(categoryId);
-                setFilterOptions(normalizeFilterOptionsResponse(options));
+                setFilterOptions(normalizeFilterOptionsResponse(options || {}));
 
-                // Chỉ restore từ URL nếu URL đang ứng với đúng category này
-                // Ngược lại (switch category) → reset sạch
                 const urlCategoryId = searchParams.get('category');
-                const isSameCategory = urlCategoryId && parseInt(urlCategoryId) === categoryId;
 
-                if (isSameCategory) {
+                if (urlCategoryId) {
+                    const isSameCategory = parseInt(urlCategoryId) === categoryId;
+                    if (isSameCategory) {
+                        // Restore filters for this category from URL
+                        const minPrice = searchParams.get('minPrice');
+                        const maxPrice = searchParams.get('maxPrice');
+                        const urlSort = searchParams.get('sort');
+
+                        const defaultMin = minPrice ? parseInt(minPrice) : 0;
+                        const defaultMax = maxPrice ? parseInt(maxPrice) : FILTER_MAX_PRICE_VALUE;
+                        setPriceRange({ min: defaultMin, max: defaultMax });
+                        setTempPriceRange({ min: defaultMin, max: defaultMax });
+                        if (urlSort) setSort(urlSort);
+                        else setSort(DEFAULT_SORT);
+
+                        const systemKeys = new Set(['category', 'minPrice', 'maxPrice', 'sort', 'search', 'page', 'size']);
+                        const attributes = {};
+                        searchParams.forEach((value, key) => {
+                            if (!systemKeys.has(key)) {
+                                attributes[key] = sortFilterValues(value.split(','));
+                            }
+                        });
+                        setSelectedFilters(attributes);
+                    } else {
+                        // URL category is for another category -> reset
+                        setSelectedFilters({});
+                        setPriceRange({ min: 0, max: FILTER_MAX_PRICE_VALUE });
+                        setTempPriceRange({ min: 0, max: FILTER_MAX_PRICE_VALUE });
+                        setSort(DEFAULT_SORT);
+                    }
+                } else {
+                    // No category in URL (likely search) -> restore any filter params from URL
                     const minPrice = searchParams.get('minPrice');
                     const maxPrice = searchParams.get('maxPrice');
                     const urlSort = searchParams.get('sort');
@@ -58,7 +89,7 @@ function FilterSidebar({ categoryId, onFilterChange }) {
                     setPriceRange({ min: defaultMin, max: defaultMax });
                     setTempPriceRange({ min: defaultMin, max: defaultMax });
                     if (urlSort) setSort(urlSort);
-                    else setSort('price_asc');
+                    else setSort(DEFAULT_SORT);
 
                     const systemKeys = new Set(['category', 'minPrice', 'maxPrice', 'sort', 'search', 'page', 'size']);
                     const attributes = {};
@@ -68,12 +99,6 @@ function FilterSidebar({ categoryId, onFilterChange }) {
                         }
                     });
                     setSelectedFilters(attributes);
-                } else {
-                    // Switch sang category khác → reset sạch
-                    setSelectedFilters({});
-                    setPriceRange({ min: 0, max: FILTER_MAX_PRICE_VALUE });
-                    setTempPriceRange({ min: 0, max: FILTER_MAX_PRICE_VALUE });
-                    setSort('price_asc');
                 }
 
             } catch (error) {
@@ -85,7 +110,7 @@ function FilterSidebar({ categoryId, onFilterChange }) {
 
         loadFilterOptions();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [categoryId]);
+    }, [categoryId, searchParams]);
 
     // Gọi onFilterChange ngay khi user thay đổi bất kỳ filter nào
     const applyFilters = (overrides = {}) => {
@@ -141,11 +166,10 @@ function FilterSidebar({ categoryId, onFilterChange }) {
         setSelectedFilters({});
         setPriceRange({ min: 0, max: FILTER_MAX_PRICE_VALUE });
         setTempPriceRange({ min: 0, max: FILTER_MAX_PRICE_VALUE });
-        setSort('price_asc');
-        onFilterChange({ sort: 'price_asc' });
+        setSort(DEFAULT_SORT);
+        onFilterChange({ sort: DEFAULT_SORT });
     };
 
-    if (!categoryId) return null;
 
     if (loading) {
         return (
@@ -177,8 +201,8 @@ function FilterSidebar({ categoryId, onFilterChange }) {
                             type="button"
                             className="filter-section-toggle filter-section-toggle--section"
                             onClick={() => toggleSection('sort')}
-                            title="Thu gon/mo rong: Sap xep theo gia"
-                            aria-label="Thu gon/mo rong sap xep theo gia"
+                            title="Collapse/expand: Sort by price"
+                            aria-label="Collapse/expand sort by price"
                         >
                             <span className={`filter-section-toggle-icon ${isSectionOpen('sort') ? 'open' : ''}`}>
                                 {isSectionOpen('sort') ? '▴' : '▾'}
@@ -187,6 +211,7 @@ function FilterSidebar({ categoryId, onFilterChange }) {
                     </div>
                     <div className={`filter-section-body ${isSectionOpen('sort') ? 'open' : 'collapsed'}`}>
                         <select value={sort} onChange={(e) => handleSortChange(e.target.value)} className="sort-select">
+                            <option value="hot">Hot: best sellers</option>
                             <option value="price_asc">Price: low → high</option>
                             <option value="price_desc">Price: high → low</option>
                         </select>
@@ -201,8 +226,8 @@ function FilterSidebar({ categoryId, onFilterChange }) {
                             type="button"
                             className="filter-section-toggle filter-section-toggle--section"
                             onClick={() => toggleSection('price')}
-                            title="Thu gon/mo rong: Khoang gia"
-                            aria-label="Thu gon/mo rong khoang gia"
+                            title="Collapse/expand: Price range"
+                            aria-label="Collapse/expand price range"
                         >
                             <span className={`filter-section-toggle-icon ${isSectionOpen('price') ? 'open' : ''}`}>
                                 {isSectionOpen('price') ? '▴' : '▾'}
@@ -215,10 +240,44 @@ function FilterSidebar({ categoryId, onFilterChange }) {
                             <span>-</span>
                             <span>{formatPrice(tempPriceRange.max)}</span>
                         </div>
+
+                        <div className="price-inputs">
+                            <div className="price-input-group">
+                                <label>Min Price:</label>
+                                <input
+                                    type="number"
+                                    placeholder="0"
+                                    value={tempPriceRange.min}
+                                    onChange={(e) => {
+                                        const val = parseInt(e.target.value) || 0;
+                                        if (val <= tempPriceRange.max) {
+                                            setTempPriceRange(prev => ({ ...prev, min: val }));
+                                        }
+                                    }}
+                                    className="price-input"
+                                />
+                            </div>
+                            <div className="price-input-group">
+                                <label>Max Price:</label>
+                                <input
+                                    type="number"
+                                    placeholder={String(FILTER_MAX_PRICE_VALUE)}
+                                    value={tempPriceRange.max}
+                                    onChange={(e) => {
+                                        const val = parseInt(e.target.value) || FILTER_MAX_PRICE_VALUE;
+                                        if (val >= tempPriceRange.min) {
+                                            setTempPriceRange(prev => ({ ...prev, max: val }));
+                                        }
+                                    }}
+                                    className="price-input"
+                                />
+                            </div>
+                        </div>
+
                         <div className="price-sliders">
                             <div className="slider-container">
-                                <label>From:</label>
-                                <input type="range" min="0" max="100000000" step="1000000"
+                                <label>Min:</label>
+                                <input type="range" min="0" max={String(FILTER_MAX_PRICE_VALUE)} step="10000"
                                     value={tempPriceRange.min}
                                     onChange={(e) => handlePriceSliderChange('min', e.target.value)}
                                     onMouseUp={handlePriceSliderRelease}
@@ -227,8 +286,8 @@ function FilterSidebar({ categoryId, onFilterChange }) {
                                 />
                             </div>
                             <div className="slider-container">
-                                <label>To:</label>
-                                <input type="range" min="0" max="100000000" step="1000000"
+                                <label>Max:</label>
+                                <input type="range" min="0" max={String(FILTER_MAX_PRICE_VALUE)} step="10000"
                                     value={tempPriceRange.max}
                                     onChange={(e) => handlePriceSliderChange('max', e.target.value)}
                                     onMouseUp={handlePriceSliderRelease}
@@ -237,11 +296,19 @@ function FilterSidebar({ categoryId, onFilterChange }) {
                                 />
                             </div>
                         </div>
+
+                        <button
+                            type="button"
+                            className="apply-price-btn"
+                            onClick={handlePriceSliderRelease}
+                        >
+                            Apply Price Filter
+                        </button>
                     </div>
                 </div>
 
                 {/* Attribute filters */}
-                {filterOptions && Object.entries(filterOptions).map(([groupOrder, group]) => (
+                {hasCategoryMode && filterOptions && Object.entries(filterOptions).map(([groupOrder, group]) => (
                     <div key={groupOrder} className="filter-section">
                         <div className="filter-section-header">
                             <h4 className="filter-group-name">{group.groupName}</h4>
@@ -249,8 +316,8 @@ function FilterSidebar({ categoryId, onFilterChange }) {
                                 type="button"
                                 className="filter-section-toggle filter-section-toggle--group"
                                 onClick={() => toggleSection(`group-${groupOrder}`)}
-                                title={`Thu gon/mo rong nhom: ${group.groupName}`}
-                                aria-label={`Thu gon/mo rong nhom ${group.groupName}`}
+                                title={`Collapse/expand group: ${group.groupName}`}
+                                aria-label={`Collapse/expand group ${group.groupName}`}
                             >
                                 <span className={`filter-section-toggle-icon ${isSectionOpen(`group-${groupOrder}`) ? 'open' : ''}`}>
                                     {isSectionOpen(`group-${groupOrder}`) ? '▴' : '▾'}
@@ -268,8 +335,8 @@ function FilterSidebar({ categoryId, onFilterChange }) {
                                             type="button"
                                             className="filter-section-toggle filter-section-toggle--small filter-section-toggle--attr"
                                             onClick={() => toggleSection(`attr-${attr.code}`)}
-                                            title={`Thu gon/mo rong thuoc tinh: ${attr.attributeName}`}
-                                            aria-label={`Thu gon/mo rong thuoc tinh ${attr.attributeName}`}
+                                            title={`Collapse/expand attribute: ${attr.attributeName}`}
+                                            aria-label={`Collapse/expand attribute ${attr.attributeName}`}
                                         >
                                             <span className={`filter-section-toggle-icon ${isSectionOpen(`attr-${attr.code}`) ? 'open' : ''}`}>
                                                 {isSectionOpen(`attr-${attr.code}`) ? '▴' : '▾'}
@@ -298,6 +365,10 @@ function FilterSidebar({ categoryId, onFilterChange }) {
                         </div>
                     </div>
                 ))}
+
+                {hasCategoryMode && filterOptions && Object.keys(filterOptions).length === 0 && (
+                    <div className="filter-empty">No attribute filters available for this selection.</div>
+                )}
             </div>
 
             {isOpen && <div className="filter-overlay" onClick={() => setIsOpen(false)}></div>}

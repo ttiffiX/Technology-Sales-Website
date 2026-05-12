@@ -32,10 +32,10 @@ function ProductGrid({products, categoryId}) {
 
     return (
         <div className="product-grid">
-            {products.map((product) => (
+            {products.map((product, index) => (
                 <div
                     className="product-item"
-                    key={product.id}
+                    key={product.id ?? `${product.categoryId ?? 'product'}-${product.title ?? 'item'}-${index}`}
                     onClick={() => handleProductClick(product.id)}
                 >
                     <div className="pic" style={{backgroundImage: `url(${getImage(product.imageUrl)})`}}></div>

@@ -25,3 +25,28 @@ export const buildPaginationItems = (currentPage, totalPages, siblingCount = 1) 
     return result;
 };
 
+export const normalizePageResponse = (rawData) => {
+    const pageData = rawData?.data && typeof rawData.data === 'object' ? rawData.data : rawData;
+
+    if (Array.isArray(pageData)) {
+        return {
+            content: pageData,
+            pageNumber: 0,
+            totalPages: pageData.length > 0 ? 1 : 0,
+            totalElements: pageData.length,
+            pageSize: pageData.length,
+        };
+    }
+
+    const content = Array.isArray(pageData?.content) ? pageData.content : [];
+    const pageMeta = pageData?.page && typeof pageData.page === 'object' ? pageData.page : pageData;
+
+    return {
+        content,
+        pageNumber: Number.isFinite(pageMeta?.number ?? pageData?.pageNumber) ? Number(pageMeta?.number ?? pageData?.pageNumber) : 0,
+        totalPages: Number.isFinite(pageMeta?.totalPages ?? pageData?.totalPages) ? Number(pageMeta?.totalPages ?? pageData?.totalPages) : 0,
+        totalElements: Number.isFinite(pageMeta?.totalElements ?? pageData?.totalElements) ? Number(pageMeta?.totalElements ?? pageData?.totalElements) : content.length,
+        pageSize: Number.isFinite(pageMeta?.size ?? pageData?.pageSize) ? Number(pageMeta?.size ?? pageData?.pageSize) : content.length,
+    };
+};
+
