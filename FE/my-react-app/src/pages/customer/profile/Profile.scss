@@ -7,11 +7,14 @@
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  gap: 48px;
+  /* Giảm gap để có thêm không gian khi màn hình hẹp */
+  gap: clamp(20px, 4vw, 48px);
   background-color: $hover-color;
   min-height: calc(100vh - 112px);
   padding: 40px 20px;
-  overflow-y: auto;
+  /* Chống tràn ngang */
+  overflow-x: hidden;
+  box-sizing: border-box;
 
   .loading {
     text-align: center;
@@ -28,6 +31,7 @@
     text-align: center;
     position: sticky;
     top: 40px;
+    flex-shrink: 0;
 
     .avatar {
       width: 140px;
@@ -58,21 +62,26 @@
     gap: 1px;
     max-width: 600px;
     width: 100%;
+    /* Cho phép co giãn tránh bị che khuất */
+    flex: 1 1 auto;
+    min-width: 0;
     padding: 32px;
     background: $background-color;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    box-sizing: border-box;
 
     .info-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
       min-height: 48px;
+      width: 100%;
 
       label {
         font-weight: 600;
         color: $primary-color;
-        flex: 0 0 160px;
+        flex: 0 0 140px;
         font-size: 14px;
       }
 
@@ -80,7 +89,8 @@
         font-size: 14px;
         color: #555;
         flex: 1;
-        word-wrap: break-word;
+        word-break: break-word;
+        overflow-wrap: break-word;
       }
 
       input {
@@ -92,6 +102,7 @@
         font-size: 14px;
         flex: 1;
         background: $background-color;
+        box-sizing: border-box;
 
         &:focus {
           border-color: $primary-color;
@@ -112,7 +123,8 @@
         flex: 1;
         display: flex;
         flex-direction: column;
-        margin-left: 16px;
+        margin-left: 0;
+        min-width: 0;
 
         input {
           margin-left: 0;
@@ -138,22 +150,17 @@
       }
 
       &.address-section {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
         padding: 12px 0;
         min-height: auto;
         cursor: pointer;
 
         label {
+          flex: 0 0 140px;
           margin: 0;
-          font-weight: 600;
-          color: $primary-color;
-          flex: 0 0 160px;
-          font-size: 14px;
           cursor: pointer;
         }
 
+        // --- BẢN ĐÃ PHỤC HỒI STYLE MŨI TÊN CỦA BẠN ---
         .btn-address-arrow {
           background: none;
           border: none;
@@ -165,6 +172,8 @@
           gap: 4px;
           outline: none;
           color: #888;
+          margin-left: auto;
+          white-space: nowrap;
 
           .arrow-label {
             font-size: 12px;
@@ -185,7 +194,6 @@
             .arrow-label {
               color: $primary-color;
             }
-
             .arrow-icon {
               color: $primary-color;
             }
@@ -201,6 +209,7 @@
       margin-top: 20px;
       padding-top: 20px;
       flex-wrap: wrap;
+      width: 100%;
 
       button {
         padding: 11px 24px;
@@ -213,6 +222,7 @@
         font-weight: 500;
         transition: all 0.2s ease;
         min-width: 140px;
+        max-width: 100%;
 
         &:hover {
           background-color: $secondary-color;
@@ -220,72 +230,135 @@
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
         }
 
-        &.btn-save {
+        &.btn-save, &.btn-change-password {
           background-color: $primary-color;
-
-          &:hover {
-            background-color: $secondary-color;
-          }
+          &:hover { background-color: $secondary-color; }
         }
 
         &.btn-cancel {
           background-color: #999;
-
-          &:hover {
-            background-color: #777;
-          }
-        }
-
-        &.btn-change-password {
-          background-color: $primary-color;
-
-          &:hover {
-            background-color: $secondary-color;
-          }
+          &:hover { background-color: #777; }
         }
       }
     }
   }
 
-  // Responsive design
-  @media (max-width: 768px) {
-    flex-direction: column;
+  /* --- RESPONSIVE FIXES --- */
+
+  @media (max-width: 1024px) {
     gap: 24px;
-    padding: 20px 15px;
+    padding: 32px 16px;
+
+    .profile-left {
+      top: 24px;
+    }
+
+    .profile-right {
+      padding: 24px;
+      .buttons {
+        gap: 12px;
+        button { min-width: 128px; }
+      }
+    }
+  }
+
+  @media (max-width: 850px) {
+    flex-direction: column;
+    align-items: center;
 
     .profile-left {
       position: relative;
       top: 0;
+      margin-bottom: 20px;
     }
+  }
+
+  @media (max-width: 768px) {
+    padding: 20px 14px;
 
     .profile-right {
-      max-width: 100%;
       padding: 24px 20px;
 
       .info-item {
         flex-direction: column;
         align-items: flex-start;
-        gap: 8px;
+        gap: 6px;
 
         label {
           flex: none;
-        }
-
-        span {
           width: 100%;
         }
 
-        input {
+        span, input {
+          width: 100%;
           margin-left: 0;
+        }
+
+        &.address-section {
+          flex-direction: row;
+          align-items: center;
+          justify-content: space-between;
+
+          label { width: auto; margin: 0; }
+
+          .btn-address-arrow {
+            width: auto;
+            padding: 6px 0;
+            margin-left: auto;
+            justify-content: flex-end;
+          }
         }
       }
 
       .buttons {
         flex-direction: column;
+        align-items: stretch;
+        button { width: 100%; min-width: 0; }
+      }
+    }
+  }
 
-        button {
-          width: 100%;
+  @media (max-width: 480px) {
+    padding: 14px 12px;
+
+    .profile-left {
+      gap: 12px;
+      padding-top: 4px;
+
+      .avatar {
+        width: 104px;
+        height: 104px;
+        margin-bottom: 4px;
+      }
+
+      .username {
+        font-size: 16px;
+      }
+    }
+
+    .profile-right {
+      padding: 20px 16px;
+
+      .info-item {
+        label, span { font-size: 13px; }
+        input { font-size: 13px; padding: 9px 11px; }
+
+        &.address-section {
+          flex-direction: row;
+          align-items: center;
+
+          label { width: auto; }
+
+          .btn-address-arrow {
+            width: auto;
+            justify-content: flex-end;
+          }
         }
+      }
+
+      .buttons {
+        gap: 10px;
+        button { padding: 10px 16px; font-size: 12px; }
       }
     }
   }
