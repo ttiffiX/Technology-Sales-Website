@@ -6,8 +6,12 @@ import {useGetCartItems} from "../../../api/customer/CartAPI";
 import {useToast} from "../../../components/Toast/Toast";
 import {usePlaceOrder} from "../../../api/customer/OrderAPI";
 import {useNavigate} from "react-router-dom";
-import {formatPrice, getImage, isValidPhone, PROVINCES} from "../../../utils";
+import {formatPrice, getImage, isValidPhone} from "../../../utils";
 import {useCart} from "../../../contexts/CartContext";
+import AddressManagement from "../../../components/modal/address/AddressManagement";
+import {getAllAddresses} from "../../../api/customer/AddressAPI";
+import cashIcon from "../../../assets/icon/dollars.png";
+import vnpayIcon from "../../../assets/icon/Icon-VNPAY-QR.webp";
 
 const Order = () => {
     const {triggerToast} = useToast();
@@ -16,6 +20,10 @@ const Order = () => {
     const [showConfirmPopup, setShowConfirmPopup] = useState(false);
     const navigate = useNavigate();
     const {cartCount, updateCartCount} = useCart();
+    const [addresses, setAddresses] = useState([]);
+    const [selectedAddressId, setSelectedAddressId] = useState(null);
+    const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+    const [addressLoading, setAddressLoading] = useState(false);
 
     // Update context cart count when cart items change
     useEffect(() => {
@@ -33,6 +41,35 @@ const Order = () => {
         paymentMethod: "CASH" // CASH or VNPAY
     });
 
+    const formatShippingAddress = (address) => {
+        if (!address) return '';
+        return [address.address, address.wardName].filter(Boolean).join(', ');
+    };
+
+    const syncFormWithAddress = (address) => {
+        if (!address) return;
+
+        setFormData(prev => ({
+            ...prev,
+            address: formatShippingAddress(address),
+            province: address.provinceName || ''
+        }));
+    };
+
+    const loadAddresses = async () => {
+        setAddressLoading(true);
+        try {
+            const result = await getAllAddresses();
+            if (result.success) {
+                setAddresses(Array.isArray(result.data) ? result.data : []);
+            } else {
+                triggerToast('error', result.message || 'Failed to load addresses');
+            }
+        } finally {
+            setAddressLoading(false);
+        }
+    };
+
     // Load user profile data if available
     useEffect(() => {
         const userEmail = localStorage.getItem('email') || "";
@@ -45,6 +82,29 @@ const Order = () => {
         }));
     }, []);
 
+    useEffect(() => {
+        loadAddresses();
+    }, []);
+
+    useEffect(() => {
+        if (addresses.length === 0) {
+            setSelectedAddressId(null);
+            setFormData(prev => ({...prev, address: '', province: ''}));
+            return;
+        }
+
+        const selected = addresses.find((address) => address.id === selectedAddressId);
+        const defaultAddress = addresses.find((address) => address.isDefault) || addresses[0];
+        const activeAddress = selected || defaultAddress;
+
+        if (activeAddress) {
+            if (selectedAddressId !== activeAddress.id) {
+                setSelectedAddressId(activeAddress.id);
+            }
+            syncFormWithAddress(activeAddress);
+        }
+    }, [addresses, selectedAddressId]);
+
     const handleChange = (e) => {
         const {name, value} = e.target;
         setFormData({...formData, [name]: value});
@@ -54,12 +114,25 @@ const Order = () => {
         setFormData({...formData, paymentMethod: e.target.value});
     };
 
+    const handleOpenAddressModal = () => setIsAddressModalOpen(true);
+    const handleCloseAddressModal = () => setIsAddressModalOpen(false);
+
+    const handleSelectAddress = (address) => {
+        if (!address) return;
+        setSelectedAddressId(address.id);
+        syncFormWithAddress(address);
+    };
+
+    const handleAddressModalSuccess = async () => {
+        await loadAddresses();
+    };
+
     const handlePlaceOrder = (e) => {
         e.preventDefault();
 
         // Validate form
         if (!formData.customerName || !formData.phone || !formData.email ||
-            !formData.address || !formData.province) {
+            !formData.address || !formData.province || !selectedAddressId) {
             triggerToast("error", "Please fill in all required fields");
             return;
         }
@@ -113,7 +186,8 @@ const Order = () => {
     const deliveryFee = 30000; // Fixed for now, can be dynamic based on province
     const total = subtotal + deliveryFee;
 
-    // Vietnamese provinces for dropdown
+    const selectedShippingAddress = addresses.find((address) => address.id === selectedAddressId) || null;
+
     return (
         <>
             {showConfirmPopup && (
@@ -187,36 +261,36 @@ const Order = () => {
                             />
                         </div>
 
-                        {/* 4. province */}
-                        <div className="inputContainer">
-                            <label>Province: <span className="required">*</span></label>
-                            <select
-                                name="province"
-                                value={formData.province}
-                                onChange={handleChange}
-                                required
+                        {/* 4. shipping address */}
+                        <div className="inputContainer address-picker-container">
+                            <label>Shipping Address: <span className="required">*</span></label>
+                            <button
+                                type="button"
+                                className="address-picker-button"
+                                onClick={handleOpenAddressModal}
                             >
-                                <option value="">-- Select Province --</option>
-                                {PROVINCES.map(province => (
-                                    <option key={province} value={province}>{province}</option>
-                                ))}
-                            </select>
+                                <div className="address-picker-button__left">
+                                    <span className="address-picker-button__title">
+                                        {selectedShippingAddress ? (selectedShippingAddress.label || 'Change shipping address') : 'Choose shipping address'}
+                                    </span>
+                                    <span className="address-picker-button__sub">
+                                        {selectedShippingAddress
+                                            ? `${selectedShippingAddress.wardName}, ${selectedShippingAddress.provinceName}`
+                                            : (addressLoading ? 'Loading saved addresses...' : 'Use your saved default address or add a new one')}
+                                    </span>
+                                </div>
+                                <span className="address-picker-button__arrow">›</span>
+                            </button>
+                            {selectedShippingAddress && (
+                                <div className="address-picker-summary">
+                                    <strong>{selectedShippingAddress.label || 'Saved address'}</strong>
+                                    <p>{selectedShippingAddress.address}</p>
+                                    <p>{selectedShippingAddress.wardName}, {selectedShippingAddress.provinceName}</p>
+                                </div>
+                            )}
                         </div>
 
-                        {/* 5. address */}
-                        <div className="inputContainer">
-                            <label>Address: <span className="required">*</span></label>
-                            <textarea
-                                name="address"
-                                value={formData.address}
-                                onChange={handleChange}
-                                placeholder="House number, street, ward, district..."
-                                rows="3"
-                                required
-                            />
-                        </div>
-
-                        {/* 6. description */}
+                        {/* 5. description */}
                         <div className="inputContainer">
                             <label>Note:</label>
                             <textarea
@@ -229,7 +303,7 @@ const Order = () => {
                             />
                         </div>
 
-                        {/* 7. paymentMethod */}
+                        {/* 6. paymentMethod */}
                         <div className="inputContainer payment-container">
                             <label>Payment: <span className="required">*</span></label>
                             <div className="payment-methods">
@@ -241,7 +315,7 @@ const Order = () => {
                                         checked={formData.paymentMethod === "CASH"}
                                         onChange={handlePaymentChange}
                                     />
-                                    <span className="payment-icon">💵</span>
+                                    <img className="payment-icon payment-icon--image" src={cashIcon} alt="Cash" />
                                     <span className="payment-text">Cash on Delivery</span>
                                 </label>
                                 <label className="payment-option">
@@ -252,7 +326,7 @@ const Order = () => {
                                         checked={formData.paymentMethod === "VNPAY"}
                                         onChange={handlePaymentChange}
                                     />
-                                    <span className="payment-icon vnpay">🏦</span>
+                                    <img className="payment-icon payment-icon--image vnpay" src={vnpayIcon} alt="VNPay" />
                                     <span className="payment-text">VNPay</span>
                                 </label>
                             </div>
@@ -314,6 +388,14 @@ const Order = () => {
                     <p>Your cart is empty. Please add items before placing an order.</p>
                 </div>
             )}
+
+            <AddressManagement
+                isOpen={isAddressModalOpen}
+                onClose={handleCloseAddressModal}
+                onSuccess={handleAddressModalSuccess}
+                selectionMode
+                onSelectAddress={handleSelectAddress}
+            />
         </>
     );
 };

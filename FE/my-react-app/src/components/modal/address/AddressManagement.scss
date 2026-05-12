@@ -2,491 +2,574 @@
 @import '../../../styles/mixins';
 
 // ── Overlay ────────────────────────────────────────────────
-.modal-overlay {
+.modal-overlay.address-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(15, 23, 42, 0.58);
+  backdrop-filter: blur(6px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  animation: fadeIn 0.25s ease;
+  padding: 24px;
 }
 
 // ── Modal shell ────────────────────────────────────────────
 .address-management-modal {
-  background: $background-color;
-  border-radius: 10px;
-  width: 100%;
-  max-width: 600px;
-  //max-height: 82vh;
+  width: min(1180px, 96vw);
+  max-height: 92vh;
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
-  animation: slideUp 0.25s ease;
   overflow: hidden;
-
-  //*, *::before, *::after {
-  //  box-sizing: border-box;
-  //}
+  border-radius: 24px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcf8 100%);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
+  border: 1px solid rgba($primary-color, 0.12);
+  animation: slideUp 0.24s ease;
 
   // ── Header ──────────────────────────────────────────────
   .modal-header {
-    padding: 20px 24px;
-    background: $primary-color;
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 24px 28px;
+    color: #fff;
+    background: linear-gradient(135deg, $primary-color 0%, $secondary-color 100%);
     flex-shrink: 0;
 
-    h2 {
-      margin: 0;
-      font-size: 18px;
-      font-weight: 600;
-      color: #fff;
-      font-family: $font-family-main;
-      letter-spacing: 0.3px;
+    &__text {
+      min-width: 0;
+
+      h2 {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 800;
+        letter-spacing: 0.2px;
+      }
+
+      p {
+        margin: 8px 0 0;
+        max-width: 760px;
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 14px;
+        line-height: 1.55;
+      }
     }
 
     .close-btn {
-      background: rgba(255, 255, 255, 0.15);
+      flex-shrink: 0;
+      width: 38px;
+      height: 38px;
       border: none;
-      color: #fff;
-      font-size: 22px;
-      width: 34px;
-      height: 34px;
-      border-radius: 6px;
+      border-radius: 12px;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.16);
+      font-size: 24px;
       line-height: 1;
-      transition: background 0.2s;
-      padding: 0;
+      display: grid;
+      place-items: center;
+      transition: transform 0.2s ease, background 0.2s ease;
 
       &:hover {
-        background: rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.28);
+        transform: translateY(-1px);
       }
     }
   }
 
-  // ── Scrollable body ─────────────────────────────────────
-  .modal-content {
-    padding: 24px;
+  // ── KHU VỰC CUỘN & GRID CHÍNH ────────────────────────────
+  .address-management-grid {
+    display: grid;
+    gap: 24px;
+    /* FIX 1: Tăng padding-bottom lên 180px để khi mở dropdown ở dưới cùng, user vẫn có khoảng trống để cuộn xuống xem hết danh sách */
+    padding: 24px 24px 180px 24px;
     overflow-y: auto;
-    overflow-x: hidden;
-    flex: 1;
-    width: 100%;
+    flex: 1 1 auto;
+    align-items: start;
 
-    // Loading
-    .loading {
-      text-align: center;
-      padding: 60px 0;
-      color: $border-color;
-      font-size: 15px;
+    &.list-only {
+      grid-template-columns: 1fr;
     }
 
-    // ── List view ──────────────────────────────────────
-    .addresses-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
+    &.has-form {
+      grid-template-columns: 1.2fr 1fr;
+    }
+  }
 
-      h3 {
-        margin: 0;
-        font-size: 16px;
-        font-weight: 600;
-        color: #333;
-      }
+  .panel {
+    background: #fff;
+    border-radius: 20px;
+    border: 1px solid rgba($primary-color, 0.1);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+    /* FIX 2: BỎ overflow: hidden; Thay bằng visible để Dropdown có thể tràn ra ngoài Box mà không bị cắt / che mất */
+    overflow: visible;
+    min-width: 0;
+    box-sizing: border-box;
 
-      .btn-add-new {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        background: $primary-color;
-        color: #fff;
-        border: none;
-        padding: 9px 16px;
-        border-radius: 6px;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background 0.2s, transform 0.15s;
-        white-space: nowrap;
-
-        svg {
-          flex-shrink: 0;
-        }
-
-        &:hover {
-          background: $secondary-color;
-          transform: translateY(-1px);
-        }
-      }
+    &--addresses {
+      padding: 20px;
     }
 
-    // Empty state
-    .no-addresses {
-      text-align: center;
-      padding: 64px 24px;
-      border: 2px dashed $divider-color;
-      border-radius: 8px;
-      background: $drop-content-color;
+    &--editor {
+      padding: 20px;
+      position: relative; // Đổi về relative để làm chuẩn cho dropdown
+    }
+  }
 
-      p {
-        color: $border-color;
-        font-size: 15px;
-        margin-bottom: 20px;
-      }
+  .panel__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
 
-      .btn-add-first {
-        background: $primary-color;
-        color: #fff;
-        border: none;
-        padding: 10px 24px;
-        border-radius: 6px;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background 0.2s;
+    h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 800;
+      color: #172033;
+    }
+  }
 
-        &:hover {
-          background: $secondary-color;
-        }
-      }
+  .panel__subtitle {
+    display: block;
+    margin-top: 4px;
+    color: #6b7280;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  // Các nút bấm mặc định
+  .btn-add-new,
+  .btn-add-first,
+  .btn-submit,
+  .btn-cancel,
+  .btn-use,
+  .btn-set-default,
+  .btn-edit,
+  .btn-delete {
+    border: none;
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+    font-weight: 700;
+    outline: none;
+  }
+
+  .btn-add-new,
+  .btn-add-first,
+  .btn-submit,
+  .btn-use {
+    background: $primary-color;
+    color: #fff;
+
+    &:hover:not(:disabled) {
+      background: $secondary-color;
+      transform: translateY(-1px);
+      box-shadow: 0 10px 20px rgba($primary-color, 0.18);
+    }
+  }
+
+  .btn-add-new {
+    padding: 11px 16px;
+    border-radius: 12px;
+    white-space: nowrap;
+    font-size: 13px;
+  }
+
+  .loading-card,
+  .empty-state,
+  .editor-empty {
+    border: 1px dashed #d9e1d3;
+    border-radius: 18px;
+    background: linear-gradient(180deg, #fbfcfa 0%, #f8fbf5 100%);
+  }
+
+  .loading-card {
+    padding: 56px 20px;
+    text-align: center;
+    color: #6b7280;
+    font-size: 14px;
+  }
+
+  .empty-state {
+    padding: 48px 20px;
+    text-align: center;
+
+    &__title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #172033;
+      margin-bottom: 10px;
     }
 
-    // ── Address cards ──────────────────────────────────
-    .addresses-list {
+    p {
+      margin: 0 0 18px;
+      color: #6b7280;
+      line-height: 1.55;
+    }
+  }
+
+  .btn-add-first {
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-size: 14px;
+
+    &--wide {
+      width: 100%;
+      margin-top: 18px;
+      padding: 13px 20px;
+    }
+  }
+
+  // Danh sách địa chỉ
+  .addresses-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+
+  .address-card {
+    border: 1.5px solid #dce5d5;
+    border-radius: 18px;
+    padding: 16px;
+    background: #fff;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+
+    &:hover {
+      border-color: $primary-color;
+      box-shadow: 0 14px 30px rgba($primary-color, 0.12);
+      transform: translateY(-2px);
+    }
+
+    &.default {
+      background: linear-gradient(180deg, #f6fbf6 0%, #ffffff 100%);
+      border-color: rgba($primary-color, 0.38);
+    }
+
+    &__top {
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      width: 100%;
-
-      .address-item {
-        border: 1.5px solid $divider-color;
-        border-radius: 8px;
-        padding: 14px 14px 14px;
-        background: $background-color;
-        transition: border-color 0.2s, box-shadow 0.2s;
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-
-        &.default {
-          border-color: $primary-color;
-          background: #f5fbf6;
-        }
-
-        &:hover {
-          border-color: $secondary-color;
-          box-shadow: 0 3px 12px rgba(66, 107, 31, 0.08);
-        }
-
-        // ── top row: label tag + default badge
-        .card-top {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          margin-bottom: 10px;
-
-          .address-label {
-            background: $primary-color;
-            color: #fff;
-            font-size: 11px;
-            font-weight: 700;
-            padding: 3px 10px;
-            border-radius: 50px;
-            letter-spacing: 0.4px;
-            text-transform: uppercase;
-          }
-
-          .default-badge {
-            background: $primary-color;
-            color: #fff;
-            font-size: 11px;
-            font-weight: 700;
-            padding: 3px 10px;
-            border-radius: 50px;
-            letter-spacing: 0.4px;
-            text-transform: uppercase;
-          }
-        }
-
-        // ── address text body
-        .card-body {
-          margin-bottom: 14px;
-
-          .address-detail {
-            font-size: 14px;
-            font-weight: 600;
-            color: #222;
-            line-height: 1.55;
-            margin-bottom: 4px;
-          }
-
-          .address-location {
-            font-size: 13px;
-            color: #777;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-
-            &::before {
-              content: "📍";
-              font-size: 13px;
-            }
-          }
-        }
-
-        // ── action buttons row
-        .address-actions {
-          display: flex;
-          gap: 8px;
-          flex-wrap: wrap;
-          padding-top: 12px;
-          border-top: 1px solid $divider-color;
-
-          button {
-            padding: 6px 14px;
-            border: none;
-            border-radius: 5px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.15s, transform 0.15s;
-            outline: none;
-
-            &:disabled {
-              opacity: 0.45;
-              cursor: not-allowed;
-              transform: none;
-            }
-
-            &.btn-set-default {
-              background: transparent;
-              color: $primary-color;
-              border: 1.5px solid $primary-color;
-
-              &:hover:not(:disabled) {
-                background: $primary-color;
-                color: #fff;
-              }
-            }
-
-            &.btn-edit {
-              background: transparent;
-              color: #b07800;
-              border: 1.5px solid #ffc107;
-
-              &:hover:not(:disabled) {
-                background: #ffc107;
-                color: #333;
-              }
-            }
-
-            &.btn-delete {
-              background: transparent;
-              color: #c0392b;
-              border: 1.5px solid #e74c3c;
-              margin-left: auto;
-
-              &:hover:not(:disabled) {
-                background: #e74c3c;
-                color: #fff;
-              }
-            }
-          }
-        }
-      }
+      gap: 10px;
     }
 
-    // ── Add / Edit form ────────────────────────────────
-    .address-form {
-      .form-title {
-        font-size: 16px;
-        font-weight: 700;
-        color: $primary-color;
-        margin: 0 0 22px;
-        padding-bottom: 12px;
-        border-bottom: 2px solid $divider-color;
-      }
+    &__badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      min-height: 26px;
+    }
 
-      .form-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
+    &__detail {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #172033;
+      font-weight: 700;
+      word-break: break-word;
+    }
 
-        @media (max-width: 520px) {
-          grid-template-columns: 1fr;
-        }
-      }
+    &__location {
+      color: #6b7280;
+      font-size: 13px;
+      line-height: 1.45;
+    }
 
-      .form-group {
-        margin-bottom: 18px;
-        display: flex;
-        flex-direction: column;
-
-        label {
-          font-size: 13px;
-          font-weight: 600;
-          color: #444;
-          margin-bottom: 6px;
-
-          .required {
-            color: $error-color;
-            margin-left: 2px;
-          }
-        }
-
-        input[type="text"],
-        select,
-        textarea {
-          padding: 10px 12px;
-          border: 1.5px solid $border-color;
-          border-radius: 6px;
-          font-size: 14px;
-          font-family: $font-family-main;
-          color: #333;
-          background: $background-color;
-          transition: border-color 0.2s, box-shadow 0.2s;
-          width: 100%;
-
-          &::placeholder {
-            color: #bbb;
-          }
-
-          &:focus {
-            outline: none;
-            border-color: $primary-color;
-            box-shadow: 0 0 0 3px rgba(66, 107, 31, 0.1);
-          }
-
-          &:disabled {
-            background: $hover-color;
-            border-color: $divider-color;
-            color: #aaa;
-            cursor: not-allowed;
-          }
-        }
-
-        select {
-          appearance: auto;
-        }
-
-        textarea {
-          resize: vertical;
-          min-height: 90px;
-          line-height: 1.5;
-        }
-
-        &.checkbox-group label {
-          flex-direction: row;
-          align-items: center;
-          gap: 8px;
-          cursor: pointer;
-          font-weight: 500;
-
-          input[type="checkbox"] {
-            transform: translateY(3px);
-            width: 16px;
-            height: 16px;
-            accent-color: $primary-color;
-            cursor: pointer;
-          }
-        }
-      }
-
-      .form-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-        margin-top: 8px;
-        padding-top: 20px;
-        border-top: 1px solid $divider-color;
-
-        button {
-          padding: 10px 22px;
-          border: none;
-          border-radius: 6px;
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: background 0.2s, transform 0.15s;
-          outline: none;
-
-          &:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-          }
-
-          &.btn-submit {
-            background: $primary-color;
-            color: #fff;
-            min-width: 100px;
-
-            &:hover:not(:disabled) {
-              background: $secondary-color;
-              transform: translateY(-1px);
-            }
-          }
-
-          &.btn-cancel {
-            background: $hover-color;
-            color: #555;
-            border: 1.5px solid $divider-color;
-
-            &:hover:not(:disabled) {
-              background: $divider-color;
-            }
-          }
-        }
-      }
+    &__meta {
+      color: #64748b;
+      font-size: 12px;
+      line-height: 1.45;
     }
   }
-}
 
-// ── Animations ─────────────────────────────────────────────
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  .address-label,
+  .default-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+  }
+
+  .address-label {
+    color: $primary-color;
+    background: rgba($primary-color, 0.1);
+  }
+
+  .default-badge {
+    color: #fff;
+    background: $primary-color;
+
+    &--placeholder {
+      visibility: hidden;
+      pointer-events: none;
+    }
+  }
+
+  .address-actions {
+    display: grid;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid #e6ece0;
+    align-items: stretch;
+    margin-top: auto;
+
+    &.is-selection {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    &.is-profile {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    button {
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      min-height: 36px;
+      min-width: 0;
+      width: 100%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+
+      &:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+    }
+
+    .btn-use { background: $primary-color; color: #fff; }
+
+    .btn-set-default {
+      background: transparent; color: $primary-color; border: 1.5px solid $primary-color;
+
+      &:hover:not(:disabled) { background: $primary-color; color: #fff; }
+
+      &.is-default,
+      &:disabled {
+        background: #c7d2c0;
+        color: #fff;
+        border-color: #c7d2c0;
+        opacity: 0.95;
+      }
+    }
+
+    .btn-edit {
+      background: transparent; color: #b07800; border: 1.5px solid #ffc107;
+      &:hover:not(:disabled) { background: #ffc107; color: #1f2937; }
+    }
+
+    .btn-delete {
+      background: transparent; color: #c0392b; border: 1.5px solid #e74c3c;
+      &:hover:not(:disabled) { background: #e74c3c; color: #fff; }
+    }
+  }
+
+  // ── BÊN PHẢI: KHU VỰC FORM ─────────────────────────────
+  .form-title-block {
+    margin-bottom: 18px;
+
+    .form-kicker {
+      margin: 0 0 6px;
+      color: $primary-color;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-size: 12px;
+    }
+
+    h3 { margin: 0; font-size: 22px; color: #172033; font-weight: 800; }
+    .form-kicker__note { display: block; margin-top: 8px; color: #6b7280; line-height: 1.55; font-size: 13px; }
+  }
+
+  .address-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    box-sizing: border-box;
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+
+      label {
+        color: #344054;
+        font-size: 13px;
+        font-weight: 700;
+        .required { color: $error-color; margin-left: 2px; }
+        .optional { color: #8b95a7; font-weight: 500; }
+      }
+
+      input[type="text"],
+      textarea {
+        width: 100%; box-sizing: border-box; padding: 12px 14px;
+        border: 1.5px solid #d8e1d1; border-radius: 12px;
+        background: #fff; color: #172033; font-size: 14px;
+        font-family: $font-family-main;
+        transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+
+        &::placeholder { color: #98a2b3; }
+        &:focus { outline: none; border-color: $primary-color; box-shadow: 0 0 0 4px rgba($primary-color, 0.1); }
+      }
+
+      textarea { min-height: 112px; resize: vertical; line-height: 1.55; }
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .checkbox-group label {
+      display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; font-weight: 600;
+      input[type="checkbox"] { width: 16px; height: 16px; accent-color: $primary-color; flex-shrink: 0; }
+    }
+
+    .form-actions {
+      display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; padding-top: 18px; border-top: 1px solid #e6ece0;
+      .btn-cancel { padding: 11px 18px; border-radius: 12px; background: #f3f4f6; color: #475467; border: 1px solid #dde4da; &:hover:not(:disabled) { background: #e5e7eb; } }
+      .btn-submit { padding: 11px 18px; border-radius: 12px; min-width: 132px; background: $primary-color; color: #fff; &:hover:not(:disabled) { background: $secondary-color; } }
+    }
+  }
 }
 
 @keyframes slideUp {
   from { transform: translateY(24px); opacity: 0; }
-  to   { transform: translateY(0);    opacity: 1; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
-// ── Mobile ─────────────────────────────────────────────────
-@media (max-width: 600px) {
+// ── Mobile & Tablet Media Queries ──────────────────────────
+@media (max-width: 1024px) {
   .address-management-modal {
-    width: 95%;
-    max-height: 92vh;
-
-    .modal-content {
-      padding: 16px;
-
-      .addresses-header .btn-add-new {
-        width: 100%;
-        justify-content: center;
-      }
-
-      .addresses-list .address-item .address-actions {
-        .btn-delete {
-          margin-left: 0;
-        }
-      }
-
-      .address-form .form-actions {
-        flex-direction: column-reverse;
-
-        button {
-          width: 100%;
-          justify-content: center;
-        }
-      }
+    .address-management-grid.has-form {
+      /* FIX 3: Dùng Flex direction column để tránh lỗi đè chéo của CSS Grid trên mobile */
+      display: flex;
+      flex-direction: column;
     }
   }
+}
+
+@media (max-width: 768px) {
+  .modal-overlay.address-modal-overlay { padding: 12px; }
+
+  .address-management-modal {
+    width: 100%;
+    max-height: 96vh;
+    border-radius: 20px;
+
+    .modal-header {
+      padding: 18px 18px 16px;
+      &__text h2 { font-size: 20px; }
+      &__text p { font-size: 13px; }
+    }
+  }
+
+  .address-management-grid {
+    padding: 16px 16px 180px 16px; // Giữ nguyên khoảng đệm đáy cho dropdown
+    gap: 16px;
+    &.has-form {
+      display: flex; // Đảm bảo chuyển sang flex để stack theo chiều dọc, giải quyết 100% việc đè lên nhau
+      flex-direction: column;
+    }
+  }
+
+  .panel {
+    padding: 16px;
+    width: 100%; // Chống co rút
+  }
+
+  .panel__header { flex-direction: column; align-items: stretch; }
+  .addresses-list { grid-template-columns: 1fr; }
+  .address-actions.is-selection,
+  .address-actions.is-profile { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .address-actions button { padding: 8px 10px; font-size: 11px; min-height: 34px; }
+  .form-row { grid-template-columns: 1fr !important; }
+  .form-actions { flex-direction: column-reverse; button { width: 100%; } }
+}
+
+// ── Inline Search Dropdown (Linh hồn của phần chọn Tỉnh/Xã) ──
+.inline-search-dropdown {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-sizing: border-box;
+
+  &.disabled { opacity: 0.7; }
+  label { color: #344054; font-size: 13px; font-weight: 700; .required { color: $error-color; margin-left: 2px; } }
+
+  &__trigger {
+    width: 100%; box-sizing: border-box; min-height: 48px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 12px 14px; border: 1.5px solid #d8e1d1; border-radius: 12px;
+    background: #fff; cursor: pointer; text-align: left;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+
+    &:hover:not(:disabled) { border-color: $primary-color; box-shadow: 0 8px 18px rgba($primary-color, 0.08); transform: translateY(-1px); }
+    &:focus-visible { outline: none; border-color: $primary-color; box-shadow: 0 0 0 4px rgba($primary-color, 0.1); }
+    &:disabled { cursor: not-allowed; background: #f8faf7; box-shadow: none; transform: none; }
+  }
+
+  &__trigger-text {
+    min-width: 0; flex: 1; color: #172033; font-size: 14px; font-weight: 600;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    &.placeholder { color: #98a2b3; font-weight: 500; }
+  }
+
+  &__arrow { color: $primary-color; font-size: 18px; flex-shrink: 0; }
+
+  &__menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    z-index: 100; // Đẩy z-index lên cao để luôn nổi lên trên cùng
+    background: #fff;
+    border: 1px solid rgba($primary-color, 0.18);
+    border-radius: 14px;
+    box-shadow: 0 22px 44px rgba(15, 23, 42, 0.25); // Shadow đậm hơn để tách biệt rõ với nền
+    overflow: hidden;
+  }
+
+  &__search {
+    width: 100%; border: none; border-bottom: 1px solid #e6ece0;
+    padding: 13px 14px; background: #f8faf7; font-size: 14px; outline: none;
+    &:focus { background: #fff; }
+  }
+
+  &__options {
+    /* FIX 2.2: Set max-height đủ rộng để hiển thị menu thoải mái */
+    max-height: 280px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__option {
+    width: 100%; border: none; background: #fff; padding: 12px 14px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    cursor: pointer; text-align: left; transition: background 0.15s ease;
+    &:hover, &.selected { background: rgba($primary-color, 0.06); }
+  }
+
+  &__option-label { min-width: 0; flex: 1; color: #172033; font-size: 14px; font-weight: 600; }
+  &__option-check { color: $primary-color; font-weight: 800; flex-shrink: 0; }
+  &__empty { padding: 18px 14px; text-align: center; color: #6b7280; font-size: 13px; }
 }

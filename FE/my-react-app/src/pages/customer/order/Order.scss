@@ -119,12 +119,18 @@
             }
 
             .payment-icon {
-              font-size: 24px;
               margin-right: 0.75rem;
               transition: all 0.3s ease;
 
+              &.payment-icon--image {
+                width: 34px;
+                height: 34px;
+                object-fit: contain;
+                flex-shrink: 0;
+              }
+
               &.vnpay {
-                filter: grayscale(0);
+                filter: none;
               }
             }
 
@@ -135,6 +141,77 @@
               transition: all 0.3s ease;
             }
           }
+        }
+      }
+    }
+
+    .address-picker-container {
+      .address-picker-button {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem 1.1rem;
+        border: 2px solid #dfe8d8;
+        border-radius: 14px;
+        background: linear-gradient(180deg, #ffffff 0%, #fbfdf8 100%);
+        cursor: pointer;
+        transition: all 0.25s ease;
+        text-align: left;
+
+        &:hover {
+          border-color: $primary-color;
+          box-shadow: 0 8px 22px rgba($primary-color, 0.12);
+          transform: translateY(-1px);
+        }
+
+        &__left {
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 0.35rem;
+          flex: 1;
+        }
+
+        &__title {
+          font-weight: 700;
+          color: #1f2937;
+          font-size: 15px;
+        }
+
+        &__sub {
+          color: #6b7280;
+          font-size: 13px;
+          line-height: 1.45;
+        }
+
+        &__arrow {
+          font-size: 28px;
+          line-height: 1;
+          color: $primary-color;
+          flex-shrink: 0;
+        }
+      }
+
+      .address-picker-summary {
+        margin-top: 0.85rem;
+        padding: 0.9rem 1rem;
+        border-radius: 12px;
+        background: #f7fbf4;
+        border: 1px solid rgba($primary-color, 0.16);
+        color: #344054;
+
+        strong {
+          display: block;
+          margin-bottom: 0.4rem;
+          color: $primary-color;
+        }
+
+        p {
+          margin: 0.2rem 0;
+          font-size: 13px;
+          line-height: 1.45;
         }
       }
     }
