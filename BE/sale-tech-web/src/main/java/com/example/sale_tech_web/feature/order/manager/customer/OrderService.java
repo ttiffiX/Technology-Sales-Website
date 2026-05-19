@@ -1,5 +1,6 @@
 package com.example.sale_tech_web.feature.order.manager.customer;
 
+import com.example.sale_tech_web.config.CacheNames;
 import com.example.sale_tech_web.exception.BadRequestException;
 import com.example.sale_tech_web.exception.ConflictException;
 import com.example.sale_tech_web.exception.ForbiddenException;
@@ -16,6 +17,7 @@ import com.example.sale_tech_web.feature.order.entity.orderdetails.OrderDetail;
 import com.example.sale_tech_web.feature.order.entity.orders.Order;
 import com.example.sale_tech_web.feature.order.enums.OrderStatus;
 import com.example.sale_tech_web.feature.order.repository.OrderRepository;
+import com.example.sale_tech_web.feature.payment.dto.VNPayPaymentResponse;
 import com.example.sale_tech_web.feature.payment.dto.VNPayRefundRequest;
 import com.example.sale_tech_web.feature.payment.dto.VNPayRefundResponse;
 import com.example.sale_tech_web.feature.payment.entity.Payment;
@@ -30,6 +32,8 @@ import com.example.sale_tech_web.feature.users.entity.Users;
 import com.example.sale_tech_web.feature.users.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -49,6 +53,9 @@ public class OrderService implements OrderServiceInterface {
     private final PaymentServiceInterface paymentServiceInterface;
     private final PaymentRepository paymentRepository;
     private final ProductRepository productRepository;
+
+    @Autowired
+    private CacheManager cacheManager;
 
     @Override
     public Page<OrderDTO> getOrderByUserId(String orderStatus,
@@ -181,7 +188,7 @@ public class OrderService implements OrderServiceInterface {
             String orderInfo = "Thanh toan don hang " + savedOrder.getId();
 
             // Create VNPay payment record with PENDING status
-            var vnpayResponse = vnPayService.createPayment(
+            VNPayPaymentResponse vnpayResponse = vnPayService.createPayment(
                     savedOrder.getId(),
                     savedOrder.getTotalPrice(),
                     orderInfo,
@@ -192,7 +199,7 @@ public class OrderService implements OrderServiceInterface {
             Map<String, Object> params = new HashMap<>();
             params.put("txnRef", vnpayResponse.getTxnRef());
             paymentServiceInterface.createPayment(savedOrder, PaymentMethod.VNPAY, params);
-
+            Objects.requireNonNull(cacheManager.getCache(CacheNames.PAYMENT)).put(vnpayResponse.getOrderId(), vnpayResponse);
             // Don't delete cart yet - will delete after successful payment
             return vnpayResponse;
         }
@@ -297,6 +304,40 @@ public class OrderService implements OrderServiceInterface {
     }
 
     @Override
+    public VNPayPaymentResponse continuePayment(Long orderId) {
+        Long userId = getUserIdFromToken();
+
+        Order order = orderRepository.findByIdAndUserId(orderId, userId)
+                .orElseThrow(() -> new NotFoundException(
+                        "Order not found or you don't have permission to continue payment"));
+
+        if (order.getPaymentMethod() != PaymentMethod.VNPAY) {
+            throw new BadRequestException("Continue payment is only supported for VNPay orders");
+        }
+
+        Payment payment = paymentRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new NotFoundException("Payment not found for order: " + orderId));
+
+        if (payment.getProvider() != PaymentMethod.VNPAY) {
+            throw new BadRequestException("Payment provider is not VNPay for this order");
+        }
+
+        if (payment.getStatus() != PaymentStatus.PENDING) {
+            throw new BadRequestException("Only pending VNPay payments can be continued. Current status: " + payment.getStatus());
+        }
+
+        VNPayPaymentResponse response = Optional.ofNullable(cacheManager.getCache(CacheNames.PAYMENT))
+                .map(cache -> cache.get(orderId, VNPayPaymentResponse.class))
+                .orElse(null);
+
+        if (response == null || response.getPaymentUrl() == null || response.getPaymentUrl().isBlank()) {
+            throw new NotFoundException("Payment session expired. Please create a new order.");
+        }
+
+        return response;
+    }
+
+    @Override
     public StatusCountDTO getOrderCountByStatus() {
         Long userId = getUserIdFromToken();
         Map<OrderStatus, Integer> result = OrderStatus.initStatusCountMap();
@@ -346,4 +387,3 @@ public class OrderService implements OrderServiceInterface {
     }
 
 }
-

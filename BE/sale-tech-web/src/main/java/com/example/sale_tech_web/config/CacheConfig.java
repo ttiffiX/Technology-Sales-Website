@@ -10,6 +10,8 @@ import org.springframework.context.annotation.Configuration;
 import java.time.Duration;
 import java.util.List;
 
+import static com.example.sale_tech_web.feature.payment.config.PaymentConfig.PAYMENT_TIMEOUT_MINUTES;
+
 @Configuration
 public class CacheConfig {
 
@@ -25,10 +27,11 @@ public class CacheConfig {
                 buildCache(CacheNames.PRODUCT_BY_CATEGORY, Duration.ofMinutes(30), 50, 500),
                 buildCache(CacheNames.PRODUCT_SEARCH, Duration.ofMinutes(5), 200, 1000),
 
-
-
                 //Revenue
-                buildCache(CacheNames.REVENUE_ANALYTICS, Duration.ofMinutes(10), 50, 500)
+                buildCache(CacheNames.REVENUE_ANALYTICS, Duration.ofMinutes(10), 50, 500),
+
+                //Payment
+                buildCache(CacheNames.PAYMENT, Duration.ofMinutes(PAYMENT_TIMEOUT_MINUTES), 100, 1000)
         );
 
         SimpleCacheManager manager = new SimpleCacheManager();

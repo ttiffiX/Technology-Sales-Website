@@ -4,6 +4,7 @@ import com.example.sale_tech_web.feature.order.dto.customer.OrderDTO;
 import com.example.sale_tech_web.feature.order.dto.customer.OrderDetailDTO;
 import com.example.sale_tech_web.feature.order.dto.customer.PlaceOrderRequest;
 import com.example.sale_tech_web.feature.order.manager.customer.OrderServiceInterface;
+import com.example.sale_tech_web.feature.payment.dto.VNPayPaymentResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -85,6 +86,13 @@ public class OrderController {
         return ResponseEntity.ok(result);
     }
 
+    @GetMapping("/{orderId}/continue-payment")
+    public ResponseEntity<VNPayPaymentResponse> continuePayment(@PathVariable Long orderId) {
+        log.info("Continue payment - Order ID: {}", orderId);
+        VNPayPaymentResponse response = orderServiceInterface.continuePayment(orderId);
+        return ResponseEntity.ok(response);
+    }
+
     @PatchMapping("/{orderId}/cancel")
     public ResponseEntity<String> cancelOrder(
             @PathVariable Long orderId,
@@ -95,4 +103,3 @@ public class OrderController {
         return ResponseEntity.ok(result);
     }
 }
-

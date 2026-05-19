@@ -9,11 +9,11 @@ public final class CacheNames {
     public static final String PRODUCT_BY_CATEGORY = "productByCategory";
     public static final String PRODUCT_SEARCH = "productSearch";
 
-
-
     //Revenue
     public static final String REVENUE_ANALYTICS = "revenueAnalytics";
 
+    //Payment
+    public static final String PAYMENT = "payment";
     private CacheNames() {
     }
 }
