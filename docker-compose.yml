@@ -8,7 +8,7 @@ services:
     ports:
       - "5432:5432"
     env_file:
-      - ./BE/sale-tech-web/.env
+      - .env
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./BE/sale-tech-web/src/main/resources/InitSalesTechWeb.sql:/docker-entrypoint-initdb.d/InitSalesTechWeb.sql:ro
@@ -31,7 +31,7 @@ services:
     ports:
       - "8080:8080"
     env_file:
-      - ./BE/sale-tech-web/.env
+      - .env
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - TZ=Asia/Ho_Chi_Minh
@@ -59,7 +59,7 @@ services:
     image: ngrok/ngrok:latest
     container_name: saletech-ngrok
     env_file:
-      - ./BE/sale-tech-web/.env
+      - .env
     command:
       - "http"
       - "backend-api:8080"

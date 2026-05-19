@@ -718,8 +718,8 @@ This project is private and for educational purposes.
 | Frontend Language | JavaScript (React) |
 | Backend Language  | Java               |
 | Database          | PostgreSQL         |
-| Total Endpoints   | 80                 |
-| Tables            | 13                 |
+| Total Endpoints   | 80+                |
+| Tables            | 13+                |
 | Deployment Ready  | Yes                |
 
 ---
