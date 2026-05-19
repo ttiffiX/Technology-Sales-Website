@@ -38,69 +38,12 @@ function FilterSidebar({ categoryId, onFilterChange }) {
 
     const hasCategoryMode = categoryId !== null && categoryId !== undefined && categoryId !== '';
 
-    // Load filter options + restore UI từ URL when category changes or when searching
     useEffect(() => {
         const loadFilterOptions = async () => {
             setLoading(true);
             try {
                 const options = await getFilterOptions(categoryId);
                 setFilterOptions(normalizeFilterOptionsResponse(options || {}));
-
-                const urlCategoryId = searchParams.get('category');
-
-                if (urlCategoryId) {
-                    const isSameCategory = parseInt(urlCategoryId) === categoryId;
-                    if (isSameCategory) {
-                        // Restore filters for this category from URL
-                        const minPrice = searchParams.get('minPrice');
-                        const maxPrice = searchParams.get('maxPrice');
-                        const urlSort = searchParams.get('sort');
-
-                        const defaultMin = minPrice ? parseInt(minPrice) : 0;
-                        const defaultMax = maxPrice ? parseInt(maxPrice) : FILTER_MAX_PRICE_VALUE;
-                        setPriceRange({ min: defaultMin, max: defaultMax });
-                        setTempPriceRange({ min: defaultMin, max: defaultMax });
-                        if (urlSort) setSort(urlSort);
-                        else setSort(DEFAULT_SORT);
-
-                        const systemKeys = new Set(['category', 'minPrice', 'maxPrice', 'sort', 'search', 'page', 'size']);
-                        const attributes = {};
-                        searchParams.forEach((value, key) => {
-                            if (!systemKeys.has(key)) {
-                                attributes[key] = sortFilterValues(value.split(','));
-                            }
-                        });
-                        setSelectedFilters(attributes);
-                    } else {
-                        // URL category is for another category -> reset
-                        setSelectedFilters({});
-                        setPriceRange({ min: 0, max: FILTER_MAX_PRICE_VALUE });
-                        setTempPriceRange({ min: 0, max: FILTER_MAX_PRICE_VALUE });
-                        setSort(DEFAULT_SORT);
-                    }
-                } else {
-                    // No category in URL (likely search) -> restore any filter params from URL
-                    const minPrice = searchParams.get('minPrice');
-                    const maxPrice = searchParams.get('maxPrice');
-                    const urlSort = searchParams.get('sort');
-
-                    const defaultMin = minPrice ? parseInt(minPrice) : 0;
-                    const defaultMax = maxPrice ? parseInt(maxPrice) : FILTER_MAX_PRICE_VALUE;
-                    setPriceRange({ min: defaultMin, max: defaultMax });
-                    setTempPriceRange({ min: defaultMin, max: defaultMax });
-                    if (urlSort) setSort(urlSort);
-                    else setSort(DEFAULT_SORT);
-
-                    const systemKeys = new Set(['category', 'minPrice', 'maxPrice', 'sort', 'search', 'page', 'size']);
-                    const attributes = {};
-                    searchParams.forEach((value, key) => {
-                        if (!systemKeys.has(key)) {
-                            attributes[key] = sortFilterValues(value.split(','));
-                        }
-                    });
-                    setSelectedFilters(attributes);
-                }
-
             } catch (error) {
                 console.error('Failed to load filter options:', error);
             } finally {
@@ -109,8 +52,41 @@ function FilterSidebar({ categoryId, onFilterChange }) {
         };
 
         loadFilterOptions();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [categoryId, searchParams]);
+    }, [categoryId]);
+
+    useEffect(() => {
+        if (!hasCategoryMode && !searchParams.get('search') && !searchParams.get('category')) {
+            return;
+        }
+
+        const urlCategoryId = searchParams.get('category');
+        if (urlCategoryId && parseInt(urlCategoryId) !== categoryId) {
+            setSelectedFilters({});
+            setPriceRange({ min: 0, max: FILTER_MAX_PRICE_VALUE });
+            setTempPriceRange({ min: 0, max: FILTER_MAX_PRICE_VALUE });
+            setSort(DEFAULT_SORT);
+            return;
+        }
+
+        const minPrice = searchParams.get('minPrice');
+        const maxPrice = searchParams.get('maxPrice');
+        const urlSort = searchParams.get('sort');
+
+        const defaultMin = minPrice ? parseInt(minPrice) : 0;
+        const defaultMax = maxPrice ? parseInt(maxPrice) : FILTER_MAX_PRICE_VALUE;
+        setPriceRange({ min: defaultMin, max: defaultMax });
+        setTempPriceRange({ min: defaultMin, max: defaultMax });
+        setSort(urlSort || DEFAULT_SORT);
+
+        const systemKeys = new Set(['category', 'minPrice', 'maxPrice', 'sort', 'search', 'page', 'size']);
+        const attributes = {};
+        searchParams.forEach((value, key) => {
+            if (!systemKeys.has(key)) {
+                attributes[key] = sortFilterValues(value.split(','));
+            }
+        });
+        setSelectedFilters(attributes);
+    }, [categoryId, searchParams, hasCategoryMode]);
 
     // Gọi onFilterChange ngay khi user thay đổi bất kỳ filter nào
     const applyFilters = (overrides = {}) => {
