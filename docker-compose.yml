@@ -1,0 +1,70 @@
+services:
+  # ────────────────────────────────────────────────────────
+  # 1. CONTAINER DATABASE (POSTGRESQL)
+  # ────────────────────────────────────────────────────────
+  postgres-db:
+    image: postgres:16-alpine
+    container_name: saletech-postgres
+    ports:
+      - "5432:5432"
+    env_file:
+      - ./BE/sale-tech-web/.env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./BE/sale-tech-web/src/main/resources/InitSalesTechWeb.sql:/docker-entrypoint-initdb.d/InitSalesTechWeb.sql:ro
+    healthcheck:
+      # Dùng 2 dấu $$ để Docker Compose không cố dịch biến này, mà nhường lại cho Shell bên trong container tự dịch
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # ────────────────────────────────────────────────────────
+  # 2. CONTAINER BACKEND (SPRING BOOT API)
+  # ────────────────────────────────────────────────────────
+  backend-api:
+    build:
+      context: ./BE/sale-tech-web
+      dockerfile: Dockerfile
+    container_name: saletech-backend
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./BE/sale-tech-web/.env
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - TZ=Asia/Ho_Chi_Minh
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+
+  # ────────────────────────────────────────────────────────
+  # 3. CONTAINER FRONTEND (REACT UI - BẢN CRA CŨ)
+  # ────────────────────────────────────────────────────────
+  frontend-ui:
+    build:
+      context: ./FE/my-react-app
+      dockerfile: Dockerfile
+    container_name: saletech-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend-api
+
+  # ────────────────────────────────────────────────────────
+  # 4. CONTAINER NGROK TUNNEL (TỰ ĐỘNG KHỞI CHẠY ĐÃ FIX TOKEN)
+  # ────────────────────────────────────────────────────────
+  ngrok-tunnel:
+    image: ngrok/ngrok:latest
+    container_name: saletech-ngrok
+    env_file:
+      - ./BE/sale-tech-web/.env
+    command:
+      - "http"
+      - "backend-api:8080"
+    depends_on:
+      - backend-api
+
+volumes:
+  postgres_data:
