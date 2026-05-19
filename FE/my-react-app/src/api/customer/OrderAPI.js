@@ -12,6 +12,22 @@ export const getOrders = async (params = {}) => {
     return response.data;
 };
 
+export const continueOrderPayment = async (orderId) => {
+    try {
+        const response = await apiClient.get(`${BASE_URL}/${orderId}/continue-payment`);
+        const data = response.data || {};
+
+        return {
+            success: true,
+            paymentUrl: data.paymentUrl,
+            txnRef: data.txnRef,
+            orderId: data.orderId,
+        };
+    } catch (err) {
+        throw new Error(getApiErrorMessage(err, 'Failed to continue payment'));
+    }
+};
+
 /**
  * Hook to get order details (products) for a specific order
  * @param {number} orderId

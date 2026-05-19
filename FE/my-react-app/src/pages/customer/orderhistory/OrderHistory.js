@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import './OrderHistory.scss';
 import Nav from "../../../components/navigation/Nav";
 import Header from "../../../components/header/Header";
-import {getOrders, useCancelOrder} from "../../../api/customer/OrderAPI";
+import {continueOrderPayment, getOrders, useCancelOrder} from "../../../api/customer/OrderAPI";
 import {useToast} from "../../../components/Toast/Toast";
 import OrderDetailModal from "./OrderDetailModal";
 import PaginationControls from "../../../components/pagination/PaginationControls";
@@ -40,6 +40,7 @@ const OrderHistory = () => {
     const [error, setError] = useState('');
     const [totalPages, setTotalPages] = useState(0);
     const [totalElements, setTotalElements] = useState(0);
+    const [continuingOrderId, setContinuingOrderId] = useState(null);
     const {cancelOrder, loading: cancelling} = useCancelOrder();
     const {triggerToast} = useToast();
 
@@ -93,6 +94,35 @@ const OrderHistory = () => {
     const handleViewDetails = (orderId) => {
         setSelectedOrderId(orderId);
         setShowDetailModal(true);
+    };
+
+    const isContinuePaymentEligible = (order) => {
+        return order?.paymentMethod === 'VNPAY'
+            && order?.paymentStatus === 'PENDING'
+            && order?.status === 'PENDING';
+    };
+
+    const handleContinuePayment = async (order) => {
+        if (!order?.id) return;
+
+        try {
+            setContinuingOrderId(order.id);
+            const response = await continueOrderPayment(order.id);
+
+            if (!response?.paymentUrl) {
+                triggerToast('error', 'Payment URL is missing');
+                return;
+            }
+
+            triggerToast('info', 'Redirecting to VNPay payment...');
+            setTimeout(() => {
+                window.location.href = response.paymentUrl;
+            }, 400);
+        } catch (err) {
+            triggerToast('error', err.message || 'Unable to continue payment');
+        } finally {
+            setContinuingOrderId(null);
+        }
     };
 
     const handleCancelClick = (order) => {
@@ -347,11 +377,20 @@ const OrderHistory = () => {
                                     >
                                         View Products
                                     </button>
+                                    {isContinuePaymentEligible(order) && (
+                                        <button
+                                            className="btn-details"
+                                            onClick={() => handleContinuePayment(order)}
+                                            disabled={continuingOrderId === order.id}
+                                        >
+                                            {continuingOrderId === order.id ? 'Redirecting...' : 'Continue Payment'}
+                                        </button>
+                                    )}
                                     {order.status === 'PENDING' && (
                                         <button
                                             className="btn-cancel"
                                             onClick={() => handleCancelClick(order)}
-                                            disabled={cancelling}
+                                            disabled={cancelling || continuingOrderId === order.id}
                                         >
                                             Cancel Order
                                         </button>
