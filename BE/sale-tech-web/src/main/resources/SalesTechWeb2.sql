@@ -327,6 +327,29 @@ CREATE TABLE refresh_tokens
     CONSTRAINT fk_rt_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
+
+-- 13. PRODUCT REVIEWS TABLE
+CREATE TABLE product_reviews
+(
+    id         SERIAL PRIMARY KEY,
+    product_id INT  NOT NULL,
+    user_id    INT  NOT NULL,                                            -- Người viết (Customer hoặc PM)
+    rating     INT CHECK (rating >= 1 AND rating <= 5),                  -- Sao (Customer bắt buộc từ 1-5, PM reply thì để NULL)
+    comment    TEXT,
+    parent_id  INT REFERENCES product_reviews (id) ON DELETE CASCADE, -- Đệ quy để PM phản hồi
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    -- [QUAN TRỌNG]: Chặn spam - Mỗi user chỉ được đánh giá gốc 1 lần duy nhất trên 1 sản phẩm
+    -- Nếu parent_id khác NULL (tức là PM đi reply), ràng buộc này không bị vi phạm.
+    CONSTRAINT unique_customer_review_per_product UNIQUE (user_id, product_id, parent_id)
+);
+
+
+-- Giúp tăng tốc khi Backend chạy câu lệnh GROUP BY đếm sao và phân trang bình luận theo sản phẩm
+CREATE INDEX idx_review_product_parent ON product_reviews (product_id, parent_id);
+CREATE INDEX idx_review_created_at ON product_reviews (created_at DESC);
+
 -- ========================================================
 -- VIEW (BẢNG ẢO)
 -- ========================================================
@@ -354,6 +377,7 @@ FROM order_detail od
          JOIN product p ON od.product_id = p.id
 WHERE o.status = 'COMPLETED'
   AND i.status = 'PAID';
+
 
 
 -- ========================================================
