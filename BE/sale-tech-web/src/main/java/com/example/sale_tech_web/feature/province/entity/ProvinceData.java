@@ -1,13 +1,12 @@
 package com.example.sale_tech_web.feature.province.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 public class ProvinceData {
     @JsonProperty("province_code")
     private String provinceCode;
