@@ -1,6 +1,7 @@
 package com.example.sale_tech_web.feature.product_reviews.repository;
 
 import com.example.sale_tech_web.feature.product_reviews.entity.ProductReviews;
+import com.example.sale_tech_web.feature.product_reviews.enums.ReviewStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -44,7 +45,7 @@ public interface ProductReviewsRepository extends JpaRepository<ProductReviews, 
     List<Object[]> countRootRatingsGrouped(@Param("productId") Long productId);
 
 
-    @EntityGraph(attributePaths = {"user", "product"})
+    @EntityGraph(attributePaths = {"user", "product", "user.cart"})
     @Query("""
             SELECT r FROM ProductReviews r
             WHERE r.product.id = :productId
@@ -77,4 +78,29 @@ public interface ProductReviewsRepository extends JpaRepository<ProductReviews, 
               AND r.isDeleted = false
             """)
     Optional<ProductReviews> findRootReviewById(@Param("reviewId") Long reviewId);
+
+    @EntityGraph(attributePaths = {"user", "product", "user.cart"})
+    @Query("""
+            SELECT r FROM ProductReviews r\s
+            JOIN r.product p
+            WHERE r.parentId IS NULL\s
+              AND (CAST(:kw AS string) IS NULL OR LOWER(p.title) LIKE LOWER(CONCAT('%', CAST(:kw AS string), '%')))
+              AND (:star IS NULL OR r.rating = :star)
+              AND (:status IS NULL OR r.processStatus = :status)
+            \s""")
+    Page<ProductReviews> findAllReviewsForManager(
+            @Param("kw") String keyword,
+            @Param("star") Integer star,
+            @Param("status") ReviewStatus status,
+            Pageable pageable
+    );
+    Boolean existsByParentId(Long parentId);
+
+    @EntityGraph(attributePaths = {"user", "product", "user.cart"})
+    @Query("""
+            SELECT r FROM ProductReviews r\s
+            WHERE r.id = :reviewId\s
+             AND r.isDeleted = false
+            \s""")
+    Optional<ProductReviews> findByReviewId(@Param("reviewId") Long reviewId);
 }

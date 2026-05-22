@@ -14,6 +14,7 @@ import com.example.sale_tech_web.feature.product_reviews.dto.customer.ProductRev
 import com.example.sale_tech_web.feature.product_reviews.dto.customer.ProductReviewUpdateRequest;
 import com.example.sale_tech_web.feature.product_reviews.entity.ProductReviews;
 import com.example.sale_tech_web.feature.product_reviews.enums.ReviewStatus;
+import com.example.sale_tech_web.feature.product_reviews.manager.ProductReviewHelperService;
 import com.example.sale_tech_web.feature.product_reviews.repository.ProductReviewsRepository;
 import com.example.sale_tech_web.feature.users.entity.Users;
 import com.example.sale_tech_web.feature.users.repository.UserRepository;
@@ -34,6 +35,7 @@ public class ProductReviewsService implements ProductReviewsServiceInterface {
     private final ProductReviewsRepository productReviewsRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final ProductReviewHelperService reviewHelperService;
 
     @Override
     public ProductReviewStarsDTO getProductStars(Long productId) {
@@ -76,7 +78,7 @@ public class ProductReviewsService implements ProductReviewsServiceInterface {
                 .map(ProductReviews::getId)
                 .toList();
 
-        Map<Long, List<ProductReviewReplyDTO>> repliesByParentId = loadRepliesByParentIds(parentIds);
+        Map<Long, List<ProductReviewReplyDTO>> repliesByParentId = reviewHelperService.loadRepliesByParentIds(parentIds);
 
         List<ProductReviewCommentDTO> content = reviewPage.getContent().stream()
                 .map(review -> toCommentDTO(review, repliesByParentId.getOrDefault(review.getId(), Collections.emptyList())))
@@ -108,6 +110,8 @@ public class ProductReviewsService implements ProductReviewsServiceInterface {
                 .rating(request.getRating())
                 .comment(comment)
                 .parentId(null)
+                .isDeleted(false)
+                .processStatus(ReviewStatus.PENDING)
                 .build();
 
         ProductReviews saved = productReviewsRepository.save(review);
@@ -139,9 +143,8 @@ public class ProductReviewsService implements ProductReviewsServiceInterface {
         }
 
         ProductReviews saved = productReviewsRepository.save(review);
-        List<ProductReviewReplyDTO> replies = loadRepliesByParentIds(List.of(saved.getId()))
-                .getOrDefault(saved.getId(), Collections.emptyList());
-        return toCommentDTO(saved, replies);
+
+        return toCommentDTO(saved, Collections.emptyList());
     }
 
     @Override
@@ -168,28 +171,11 @@ public class ProductReviewsService implements ProductReviewsServiceInterface {
         return userId;
     }
 
-    private Map<Long, List<ProductReviewReplyDTO>> loadRepliesByParentIds(List<Long> parentIds) {
-        if (parentIds == null || parentIds.isEmpty()) {
-            return Collections.emptyMap();
-        }
-
-        List<ProductReviews> replies = productReviewsRepository.findRepliesByParentIds(parentIds);
-        Map<Long, List<ProductReviewReplyDTO>> result = new HashMap<>();
-
-        for (ProductReviews reply : replies) {
-            if (reply.getParentId() == null) {
-                continue;
-            }
-            result.computeIfAbsent(reply.getParentId(), _ -> new ArrayList<>()).add(toReplyDTO(reply));
-        }
-        return result;
-    }
-
     private ProductReviewCommentDTO toCommentDTO(ProductReviews review, List<ProductReviewReplyDTO> replies) {
         return ProductReviewCommentDTO.builder()
                 .id(review.getId())
                 .userId(review.getUser().getId())
-                .userName(resolveDisplayName(review.getUser()))
+                .userName(reviewHelperService.resolveDisplayName(review.getUser()))
                 .rating(review.getRating())
                 .comment(review.getComment())
                 .createdAt(review.getCreatedAt())
@@ -198,25 +184,5 @@ public class ProductReviewsService implements ProductReviewsServiceInterface {
                 .build();
     }
 
-    private ProductReviewReplyDTO toReplyDTO(ProductReviews review) {
-        return ProductReviewReplyDTO.builder()
-                .id(review.getId())
-                .userId(review.getUser().getId())
-                .userName(resolveDisplayName(review.getUser()))
-                .userRole(review.getUser().getRole() != null ? review.getUser().getRole().name() : null)
-                .comment(review.getComment())
-                .createdAt(review.getCreatedAt())
-                .updatedAt(review.getUpdatedAt())
-                .build();
-    }
 
-    private String resolveDisplayName(Users user) {
-        if (user.getName() != null && !user.getName().isBlank()) {
-            return user.getName();
-        }
-        if (user.getUsername() != null && !user.getUsername().isBlank()) {
-            return user.getUsername();
-        }
-        return user.getEmail();
-    }
 }

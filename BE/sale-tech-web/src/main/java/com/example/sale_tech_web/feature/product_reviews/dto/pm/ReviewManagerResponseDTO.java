@@ -17,12 +17,13 @@ public class ReviewManagerResponseDTO {
     private Long id;
     private Long productId;
     private String productName;
-    private Long customerId;
-    private String customerName;
+    private Long userId;
+    private String userName;
     private Integer rating;
     private String comment;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private Boolean isReplied;
+    private Boolean isProcessed;
+    private Boolean isDeleted;
     private List<ProductReviewReplyDTO> replies;
 }
