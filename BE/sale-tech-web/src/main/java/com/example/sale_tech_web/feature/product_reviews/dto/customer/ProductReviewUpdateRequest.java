@@ -1,4 +1,4 @@
-package com.example.sale_tech_web.feature.product_reviews.dto;
+package com.example.sale_tech_web.feature.product_reviews.dto.customer;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

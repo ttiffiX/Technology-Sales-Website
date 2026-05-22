@@ -1,6 +1,7 @@
 package com.example.sale_tech_web.feature.product_reviews.entity;
 
 import com.example.sale_tech_web.feature.product.entity.Product;
+import com.example.sale_tech_web.feature.product_reviews.enums.ReviewStatus;
 import com.example.sale_tech_web.feature.users.entity.Users;
 import jakarta.persistence.*;
 import lombok.*;
@@ -41,6 +42,13 @@ public class ProductReviews {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "is_deleted")
+    private Boolean isDeleted = false;
+
+    @Column(name = "process_status")
+    @Enumerated(EnumType.STRING)
+    private ReviewStatus processStatus = ReviewStatus.PENDING;
 
     @PrePersist
     public void onCreate() {

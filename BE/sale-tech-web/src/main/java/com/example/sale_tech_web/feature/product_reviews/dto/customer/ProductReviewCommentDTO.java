@@ -1,5 +1,6 @@
-package com.example.sale_tech_web.feature.product_reviews.dto;
+package com.example.sale_tech_web.feature.product_reviews.dto.customer;
 
+import com.example.sale_tech_web.feature.product_reviews.dto.ProductReviewReplyDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

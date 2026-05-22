@@ -1,9 +1,9 @@
 package com.example.sale_tech_web.controller.customer;
 
-import com.example.sale_tech_web.feature.product_reviews.dto.ProductReviewCommentDTO;
-import com.example.sale_tech_web.feature.product_reviews.dto.ProductReviewCreateRequest;
-import com.example.sale_tech_web.feature.product_reviews.dto.ProductReviewStarsDTO;
-import com.example.sale_tech_web.feature.product_reviews.dto.ProductReviewUpdateRequest;
+import com.example.sale_tech_web.feature.product_reviews.dto.customer.ProductReviewCommentDTO;
+import com.example.sale_tech_web.feature.product_reviews.dto.customer.ProductReviewCreateRequest;
+import com.example.sale_tech_web.feature.product_reviews.dto.customer.ProductReviewStarsDTO;
+import com.example.sale_tech_web.feature.product_reviews.dto.customer.ProductReviewUpdateRequest;
 import com.example.sale_tech_web.feature.product_reviews.manager.customer.ProductReviewsServiceInterface;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

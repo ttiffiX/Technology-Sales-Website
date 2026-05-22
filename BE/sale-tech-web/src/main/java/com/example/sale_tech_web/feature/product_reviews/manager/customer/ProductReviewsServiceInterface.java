@@ -1,6 +1,9 @@
 package com.example.sale_tech_web.feature.product_reviews.manager.customer;
 
-import com.example.sale_tech_web.feature.product_reviews.dto.*;
+import com.example.sale_tech_web.feature.product_reviews.dto.customer.ProductReviewCommentDTO;
+import com.example.sale_tech_web.feature.product_reviews.dto.customer.ProductReviewCreateRequest;
+import com.example.sale_tech_web.feature.product_reviews.dto.customer.ProductReviewStarsDTO;
+import com.example.sale_tech_web.feature.product_reviews.dto.customer.ProductReviewUpdateRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
