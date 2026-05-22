@@ -13,6 +13,7 @@ import com.example.sale_tech_web.feature.product_reviews.dto.ProductReviewReplyD
 import com.example.sale_tech_web.feature.product_reviews.dto.customer.ProductReviewStarsDTO;
 import com.example.sale_tech_web.feature.product_reviews.dto.customer.ProductReviewUpdateRequest;
 import com.example.sale_tech_web.feature.product_reviews.entity.ProductReviews;
+import com.example.sale_tech_web.feature.product_reviews.enums.ReviewStatus;
 import com.example.sale_tech_web.feature.product_reviews.repository.ProductReviewsRepository;
 import com.example.sale_tech_web.feature.users.entity.Users;
 import com.example.sale_tech_web.feature.users.repository.UserRepository;
@@ -122,7 +123,11 @@ public class ProductReviewsService implements ProductReviewsServiceInterface {
                 .orElseThrow(() -> new NotFoundException("Review not found"));
 
         if (!review.getUser().getId().equals(userId)) {
-            throw new ForbiddenException("You can only update your own review");
+            throw new ForbiddenException("You can only edit your own review");
+        }
+
+        if (review.getProcessStatus() != ReviewStatus.PENDING) {
+            throw new ConflictException("You can no longer edit this review.");
         }
 
         if (!Objects.equals(review.getRating(), request.getRating())) {
