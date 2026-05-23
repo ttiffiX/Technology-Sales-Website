@@ -1,0 +1,321 @@
+@import '../../../styles/variables';
+@import '../../../styles/mixins';
+
+// Modal overlay
+.pm-add-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+// Modal container
+.pm-add-modal {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  width: 92%;
+  max-width: 640px;
+  animation: slideUp 0.3s ease-out;
+  overflow: hidden;
+
+  // Modal header
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 24px 28px;
+    border-bottom: 1px solid $divider-color;
+    background: linear-gradient(135deg, rgba($primary-color, 0.02) 0%, rgba($primary-color, 0.04) 100%);
+
+    h2 {
+      font-size: 22px;
+      font-weight: 700;
+      color: $text-in-header-color;
+      margin: 0 0 8px 0;
+      letter-spacing: -0.5px;
+    }
+
+    p {
+      font-size: 14px;
+      color: #666;
+      margin: 0;
+      font-weight: 500;
+    }
+  }
+
+  // Close button
+  &__close {
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: #999;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s;
+
+    &:hover:not(:disabled) {
+      background: rgba(0, 0, 0, 0.05);
+      color: $text-in-header-color;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+  }
+
+  // Action buttons
+  &__actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding: 20px 28px;
+    border-top: 1px solid $divider-color;
+    background: #fafafa;
+  }
+}
+
+// Form
+.pm-add-form {
+  padding: 24px 28px;
+  display: block;
+
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    label {
+      font-size: 14px;
+      font-weight: 600;
+      color: $text-in-header-color;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    textarea {
+      padding: 12px 14px;
+      border: 1px solid $divider-color;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      color: $text-in-header-color;
+      resize: vertical;
+      min-height: 100px;
+      transition: all 0.2s;
+
+      &:focus {
+        outline: none;
+        border-color: $primary-color;
+        box-shadow: 0 0 0 3px rgba($primary-color, 0.1);
+        background: rgba($primary-color, 0.01);
+      }
+
+      &::placeholder {
+        color: #999;
+      }
+    }
+  }
+}
+
+// Star rating input
+.review-stars-input {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: rgba($primary-color, 0.06);
+  border-radius: 10px;
+  border: 1px solid rgba($primary-color, 0.12);
+  flex-wrap: wrap;
+  margin: 0 auto;
+}
+
+.review-star {
+  background: none;
+  border: none;
+  font-size: 32px;
+  cursor: pointer;
+  color: #ddd;
+  padding: 0;
+  transition: all 0.2s;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    transform: scale(1.15);
+    color: #f5a623;
+  }
+
+  &.selected {
+    color: #f5a623;
+    text-shadow: 0 2px 4px rgba(245, 166, 35, 0.3);
+  }
+}
+
+// Rating label
+.review-rating-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #666;
+  padding: 8px 12px;
+  background: white;
+  border-radius: 6px;
+  white-space: nowrap;
+  text-align: center;
+  min-width: 140px;
+}
+
+// Buttons
+.pm-btn-cancel,
+.pm-btn-submit {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pm-btn-cancel {
+  background: #f0f0f0;
+  color: $text-in-header-color;
+
+  &:hover:not(:disabled) {
+    background: #e0e0e0;
+  }
+
+  &:disabled {
+    background: #e8e8e8;
+    color: #999;
+    cursor: not-allowed;
+  }
+}
+
+.pm-btn-submit {
+  background: $primary-color;
+  color: white;
+
+  &:hover:not(:disabled) {
+    background: $secondary-color;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba($primary-color, 0.3);
+  }
+
+  &:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+}
+
+// Responsive
+@media (max-width: 600px) {
+  .pm-add-modal {
+    width: 95%;
+    max-width: 100%;
+
+    &__header {
+      padding: 16px 20px;
+
+      h2 {
+        font-size: 18px;
+      }
+
+      p {
+        font-size: 12px;
+      }
+    }
+
+    &__actions {
+      padding: 16px 20px;
+      gap: 8px;
+    }
+  }
+
+  .pm-add-form {
+    padding: 20px;
+    gap: 16px;
+
+    &__section {
+      label {
+        font-size: 13px;
+      }
+
+      textarea {
+        font-size: 13px;
+        min-height: 90px;
+        padding: 10px 12px;
+      }
+    }
+  }
+
+  .review-stars-input {
+    gap: 12px;
+    padding: 12px 16px;
+  }
+
+  .review-star {
+    font-size: 28px;
+    width: 36px;
+    height: 36px;
+  }
+
+  .review-rating-label {
+    font-size: 12px;
+    min-width: 120px;
+  }
+
+  .pm-btn-cancel,
+  .pm-btn-submit {
+    padding: 8px 16px;
+    font-size: 12px;
+  }
+}
+

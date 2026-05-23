@@ -17,6 +17,7 @@ public class ProductReviewCommentDTO {
     private Long id;
     private Long userId;
     private String userName;
+    private String userRealName;
     private Integer rating;
     private String comment;
     private LocalDateTime createdAt;
