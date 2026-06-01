@@ -14,12 +14,17 @@ function PMProductHub() {
         {
             title: 'Categories',
             description: 'Add, update, or delete categories.',
-            path: '/pm/categories',
+            path: '/pm/products/categories',
         },
         {
             title: 'Attribute Schema',
             description: 'Manage attribute fields by category.',
-            path: '/pm/attributes',
+            path: '/pm/products/attributes',
+        },
+        {
+            title: 'Product Reviews',
+            description: 'Review customer feedback, manage replies, and resolve issues.',
+            path: '/pm/products/reviews',
         },
     ];
 

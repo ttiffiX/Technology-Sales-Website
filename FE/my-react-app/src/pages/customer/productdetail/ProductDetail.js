@@ -10,7 +10,7 @@ import { isAuthenticated, getCurrentUser } from "../../../api/AuthAPI";
 import {formatPrice, formatProductAttributeValue, getImage, normalizePageResponse} from "../../../utils";
 import WriteReviewModal from "../../../components/modal/review/WriteReviewModal";
 import ProductReviewAPI from "../../../api/pm/product/ProductReviewAPI";
-import { formatAverage, percentForCount } from "../../../utils/reviewUtils";
+import { StarDisplay, formatAverage, percentForCount } from "../../../utils/reviewUtils";
 import {useCart} from "../../../contexts/CartContext";
 import PaginationControls from "../../../components/pagination/PaginationControls";
 
@@ -262,16 +262,7 @@ function ProductDetail() {
                           <div className="review-stats-panel">
                               <div className="review-left">
                                   <div className="avg-score">{formatAverage(reviewSummary?.averageRating || 0)}<span>/5</span></div>
-                                  <div className="stars-display">
-                                      {[1,2,3,4,5].map(n => {
-                                          const avg = reviewSummary?.averageRating || 0;
-                                          let isFilled = n <= Math.floor(avg);
-                                          let isHalf = n === Math.ceil(avg) && avg % 1 !== 0;
-                                          return (
-                                              <span key={n} className={`star ${isFilled ? 'filled' : isHalf ? 'half' : ''}`}>★</span>
-                                          );
-                                      })}
-                                  </div>
+                                  <StarDisplay rating={reviewSummary?.averageRating || 0} />
                                   <div className="review-count">{reviewSummary?.totalReviewCount ?? 0} rating(s)</div>
                                   <button className="write-review-btn" onClick={() => setShowWriteModal(true)}>Write a Review</button>
                               </div>

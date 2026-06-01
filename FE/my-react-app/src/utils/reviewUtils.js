@@ -1,19 +1,4 @@
-export const ratingLabel = (rating) => {
-    switch (rating) {
-        case 5:
-            return 'Rất tốt';
-        case 4:
-            return 'Tốt';
-        case 3:
-            return 'Bình thường';
-        case 2:
-            return 'Kém';
-        case 1:
-            return 'Rất kém';
-        default:
-            return '';
-    }
-};
+import React from 'react';
 
 export const formatAverage = (avg) => {
     if (avg == null) return '0.0';
@@ -37,10 +22,25 @@ export const starsArray = (rating) => {
     return arr;
 };
 
-export default {
-    ratingLabel,
-    formatAverage,
-    percentForCount,
-    starsArray,
+export const StarDisplay = ({ rating = 0, className = '', showValue = false, valueSuffix = '/5' }) => {
+    const stars = starsArray(Number(rating) || 0);
+
+    return (
+        <div className={`stars-display ${className}`.trim()}>
+            {stars.map((type, index) => (
+                <span
+                    key={`${type}-${index}`}
+                    className={`star${type === 'filled' || type === 'full' ? ' filled' : ''}${type === 'half' ? ' half' : ''}`}
+                >
+                    ★
+                </span>
+            ))}
+            {showValue && (
+                <span className="star-display-value">
+                    {Number(rating || 0).toFixed(1)} {valueSuffix}
+                </span>
+            )}
+        </div>
+    );
 };
 

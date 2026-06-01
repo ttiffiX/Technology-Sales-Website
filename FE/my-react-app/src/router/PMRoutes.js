@@ -8,6 +8,7 @@ import PMProductDetail from "../pages/pm/products/PMProductDetail";
 import PMOrderManagement from "../pages/pm/orders/PMOrderManagement";
 import PMAttributeSchemaManagement from "../pages/pm/products/attributes/PMAttributeSchemaManagement";
 import PMCategoryManagement from "../pages/pm/products/categories/PMCategoryManagement";
+import PMReviewManagement from "../pages/pm/reviews/PMReviewManagement";
 
 const PM_ROLES = ['ADMIN', 'PM'];
 
@@ -34,12 +35,12 @@ const PMRoutes = () => [
                     <PMProductHub/>
                 </RoleProtectedRoute>
             }/>,
-            <Route key="pm-categories" path="categories" element={
+            <Route key="pm-categories" path="products/categories" element={
                 <RoleProtectedRoute allowedRoles={PM_ROLES}>
                     <PMCategoryManagement/>
                 </RoleProtectedRoute>
             }/>,
-            <Route key="pm-attributes" path="attributes" element={
+            <Route key="pm-attributes" path="products/attributes" element={
                 <RoleProtectedRoute allowedRoles={PM_ROLES}>
                     <PMAttributeSchemaManagement/>
                 </RoleProtectedRoute>
@@ -47,6 +48,11 @@ const PMRoutes = () => [
             <Route key="pm-orders" path="orders" element={
                 <RoleProtectedRoute allowedRoles={PM_ROLES}>
                     <PMOrderManagement/>
+                </RoleProtectedRoute>
+            }/>,
+            <Route key="pm-reviews" path="products/reviews" element={
+                <RoleProtectedRoute allowedRoles={PM_ROLES}>
+                    <PMReviewManagement/>
                 </RoleProtectedRoute>
             }/>
         ]

@@ -8,12 +8,20 @@
 }
 
 .pm-dashboard__content {
+  min-width: 0;
   padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 @media (max-width: 900px) {
   .pm-dashboard {
     grid-template-columns: 1fr;
+  }
+
+  .pm-dashboard__content {
+    padding: 16px;
   }
 }
 
