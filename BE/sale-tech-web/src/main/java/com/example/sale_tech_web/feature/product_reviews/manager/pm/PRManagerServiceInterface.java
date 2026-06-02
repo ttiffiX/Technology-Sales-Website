@@ -9,7 +9,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface PRManagerServiceInterface {
 
-    Page<ReviewManagerResponseDTO> getAllReviewsForManager(String keyword, Integer star, Integer status, Pageable pageable);
+    Page<ReviewManagerResponseDTO> getAllReviewsForManager(String keyword, Integer star, Integer status, Boolean isDeleted, Pageable pageable);
 
     ProductReviewReplyDTO addReplyFromPM(Long reviewId, ReplyRequestDTO replyRequestDTO);
 

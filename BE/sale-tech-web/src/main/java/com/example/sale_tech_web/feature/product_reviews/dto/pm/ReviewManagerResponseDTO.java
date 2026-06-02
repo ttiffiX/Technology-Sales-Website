@@ -1,6 +1,7 @@
 package com.example.sale_tech_web.feature.product_reviews.dto.pm;
 
 import com.example.sale_tech_web.feature.product_reviews.dto.ProductReviewReplyDTO;
+import com.example.sale_tech_web.feature.product_reviews.enums.ReviewStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,7 +24,8 @@ public class ReviewManagerResponseDTO {
     private String comment;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private Boolean isProcessed;
+    private Integer reviewStatusCode;
+    private ReviewStatus reviewStatus;
     private Boolean isDeleted;
     private List<ProductReviewReplyDTO> replies;
 }

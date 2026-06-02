@@ -34,18 +34,18 @@ public class PRManagerService implements PRManagerServiceInterface {
     private final UserRepository userRepository;
 
     @Override
-    public Page<ReviewManagerResponseDTO> getAllReviewsForManager(String keyword, Integer star, Integer status, Pageable pageable) {
+    public Page<ReviewManagerResponseDTO> getAllReviewsForManager(String keyword, Integer star, Integer status, Boolean isDeleted, Pageable pageable) {
         ReviewStatus enumStatus = status != null ? ReviewStatus.fromCode(status) : null;
 
         Page<ProductReviews> reviewsPage = productReviewsRepository.findAllReviewsForManager(
-                keyword, star, enumStatus, pageable
+                keyword, star, enumStatus, isDeleted, pageable
         );
 
         List<Long> parentIds = reviewsPage.getContent().stream()
                 .map(ProductReviews::getId)
                 .toList();
 
-        Map<Long, List<ProductReviewReplyDTO>> repliesByParentId = reviewHelperService.loadRepliesByParentIds(parentIds);
+        Map<Long, List<ProductReviewReplyDTO>> repliesByParentId = reviewHelperService.loadRepliesByParentIds(parentIds, true);
 
         List<ReviewManagerResponseDTO> content = reviewsPage.getContent().stream()
                 .map(review -> toCommentDTO(review, repliesByParentId.getOrDefault(review.getId(), Collections.emptyList())))
@@ -76,7 +76,7 @@ public class PRManagerService implements PRManagerServiceInterface {
                 .comment(normalizeText(request.getComment()))
                 .parentId(reviewId)
                 .isDeleted(false)
-                .processStatus(ReviewStatus.REPLIED)
+                .processStatus(null)
                 .build();
 
         if (parentReview.getProcessStatus() == ReviewStatus.PENDING) {
@@ -114,9 +114,11 @@ public class PRManagerService implements PRManagerServiceInterface {
         ProductReviews review = productReviewsRepository.findRootReviewById(reviewId)
                 .orElseThrow(() -> new NotFoundException("Review not found or is deleted"));
 
-        if (review.getProcessStatus() != ReviewStatus.PENDING) {
+        if (review.getProcessStatus() == ReviewStatus.PENDING) {
             review.setProcessStatus(ReviewStatus.RESOLVED);
             productReviewsRepository.save(review);
+        } else {
+            return "Review #" + reviewId + " already resolved or replied.";
         }
 
         return "Review #" + reviewId + " has been marked as resolved.";
@@ -179,13 +181,6 @@ public class PRManagerService implements PRManagerServiceInterface {
     }
 
     private ReviewManagerResponseDTO toCommentDTO(ProductReviews review, List<ProductReviewReplyDTO> replies) {
-        boolean isDeleted = review.getIsDeleted() != null && review.getIsDeleted();
-        boolean isProcessed;
-
-        if (isDeleted) {
-            isProcessed = true;
-        } else isProcessed = review.getProcessStatus() != ReviewStatus.PENDING;
-
         return ReviewManagerResponseDTO.builder()
                 .id(review.getId())
                 .productId(review.getProduct().getId())
@@ -196,8 +191,9 @@ public class PRManagerService implements PRManagerServiceInterface {
                 .comment(review.getComment())
                 .createdAt(review.getCreatedAt())
                 .updatedAt(review.getUpdatedAt())
-                .isProcessed(isProcessed)
-                .isDeleted(isDeleted)
+                .reviewStatusCode(review.getProcessStatus().getCode())
+                .reviewStatus(review.getProcessStatus())
+                .isDeleted(review.getIsDeleted())
                 .replies(replies == null ? Collections.emptyList() : replies)
                 .build();
     }

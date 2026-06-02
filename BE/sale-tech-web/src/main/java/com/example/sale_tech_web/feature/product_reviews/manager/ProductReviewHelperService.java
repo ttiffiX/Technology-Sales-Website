@@ -15,12 +15,17 @@ import java.util.*;
 public class ProductReviewHelperService {
     private final ProductReviewsRepository productReviewsRepository;
 
-    public Map<Long, List<ProductReviewReplyDTO>> loadRepliesByParentIds(List<Long> parentIds) {
+    public Map<Long, List<ProductReviewReplyDTO>> loadRepliesByParentIds(List<Long> parentIds, Boolean isPM) {
         if (parentIds == null || parentIds.isEmpty()) {
             return Collections.emptyMap();
         }
 
-        List<ProductReviews> replies = productReviewsRepository.findRepliesByParentIds(parentIds);
+        List<ProductReviews> replies;
+        if (isPM) {
+            replies = productReviewsRepository.findRepliesByParentIdsPM(parentIds);
+        } else {
+            replies = productReviewsRepository.findRepliesByParentIds(parentIds);
+        }
         Map<Long, List<ProductReviewReplyDTO>> result = new HashMap<>();
 
         for (ProductReviews reply : replies) {

@@ -68,6 +68,15 @@ public interface ProductReviewsRepository extends JpaRepository<ProductReviews, 
             """)
     List<ProductReviews> findRepliesByParentIds(@Param("parentIds") Collection<Long> parentIds);
 
+    @EntityGraph(attributePaths = {"user"})
+    @Query("""
+            SELECT r FROM ProductReviews r
+            WHERE r.parentId IN :parentIds
+            ORDER BY r.parentId ASC, r.createdAt ASC
+            """)
+    List<ProductReviews> findRepliesByParentIdsPM(@Param("parentIds") Collection<Long> parentIds);
+
+
     boolean existsByProductIdAndUserIdAndParentIdIsNull(Long productId, Long userId);
 
     @EntityGraph(attributePaths = {"user", "product"})
@@ -87,11 +96,13 @@ public interface ProductReviewsRepository extends JpaRepository<ProductReviews, 
               AND (CAST(:kw AS string) IS NULL OR LOWER(p.title) LIKE LOWER(CONCAT('%', CAST(:kw AS string), '%')))
               AND (:star IS NULL OR r.rating = :star)
               AND (:status IS NULL OR r.processStatus = :status)
+              AND (:isDeleted IS NULL OR r.isDeleted = :isDeleted)
             \s""")
     Page<ProductReviews> findAllReviewsForManager(
             @Param("kw") String keyword,
             @Param("star") Integer star,
             @Param("status") ReviewStatus status,
+            @Param("isDeleted") Boolean isDeleted,
             Pageable pageable
     );
     Boolean existsByParentId(Long parentId);

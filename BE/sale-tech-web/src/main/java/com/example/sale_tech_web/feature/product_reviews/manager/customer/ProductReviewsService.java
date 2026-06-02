@@ -78,7 +78,7 @@ public class ProductReviewsService implements ProductReviewsServiceInterface {
                 .map(ProductReviews::getId)
                 .toList();
 
-        Map<Long, List<ProductReviewReplyDTO>> repliesByParentId = reviewHelperService.loadRepliesByParentIds(parentIds);
+        Map<Long, List<ProductReviewReplyDTO>> repliesByParentId = reviewHelperService.loadRepliesByParentIds(parentIds, false);
 
         List<ProductReviewCommentDTO> content = reviewPage.getContent().stream()
                 .map(review -> toCommentDTO(review, repliesByParentId.getOrDefault(review.getId(), Collections.emptyList())))
