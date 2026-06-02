@@ -1,4 +1,5 @@
 import React from 'react';
+import {capitalize} from "./stringUtils";
 
 export const formatAverage = (avg) => {
     if (avg == null) return '0.0';
@@ -42,5 +43,19 @@ export const StarDisplay = ({ rating = 0, className = '', showValue = false, val
             )}
         </div>
     );
+};
+
+// Hàm map Status (0: Pending, 1: Replied, 2: Resolved)
+export const getStatusMeta = (statusCode, status) => {
+    switch (statusCode) {
+        case 0:
+            return { label: capitalize(status), badgeClass: 'pm-rev-badge--pending', rowClass: 'pm-rev-table__row--pending' };
+        case 1:
+            return { label: capitalize(status), badgeClass: 'pm-rev-badge--replied', rowClass: 'pm-rev-table__row--processed' };
+        case 2:
+            return { label: capitalize(status), badgeClass: 'pm-rev-badge--on', rowClass: 'pm-rev-table__row--processed' };
+        default:
+            return { label: 'Unknown', badgeClass: '', rowClass: '' };
+    }
 };
 

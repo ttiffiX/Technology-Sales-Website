@@ -299,7 +299,7 @@ function ProductDetail() {
                           {loadingReviews ? (
                               <div className="reviews-loading">Loading reviews...</div>
                           ) : reviews.length === 0 ? (
-                              <div className="reviews-empty">No reviews yet</div>
+                              <div className="reviews-empty">No comments yet</div>
                           ) : (
                               <div className="reviews-items">
                                   {reviews.map((r) => {

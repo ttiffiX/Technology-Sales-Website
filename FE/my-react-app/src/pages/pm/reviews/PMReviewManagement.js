@@ -2,8 +2,9 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getReviewsForManager } from '../../../api/pm/product/ProductReviewManagerAPI';
 import PaginationControls from '../../../components/pagination/PaginationControls';
-import { StarDisplay } from '../../../utils/reviewUtils';
-import {capitalize, formatDate, normalizePageResponse} from '../../../utils';
+import { getStatusMeta, StarDisplay } from '../../../utils/reviewUtils';
+import { formatDate, normalizePageResponse } from '../../../utils';
+import PMReviewReplyModal from '../../../components/modal/review/PMReviewReplyModal';
 import './PMReviewManagement.scss';
 
 const PAGE_SIZE = 10;
@@ -16,20 +17,6 @@ const getInitialPage = (searchParams) => {
     return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
 };
 
-// Hàm map Status (0: Pending, 1: Replied, 2: Resolved)
-const getStatusMeta = (statusCode, status) => {
-    switch (statusCode) {
-        case 0:
-            return { label: capitalize(status), badgeClass: 'pm-active-badge--pending', rowClass: 'pm-product-table__row--pending' };
-        case 1:
-            return { label: capitalize(status), badgeClass: 'pm-active-badge--replied', rowClass: 'pm-product-table__row--processed' };
-        case 2:
-            return { label: capitalize(status), badgeClass: 'pm-active-badge--on', rowClass: 'pm-product-table__row--processed' };
-        default:
-            return { label: capitalize(status), badgeClass: '', rowClass: '' };
-    }
-};
-
 function PMReviewManagement() {
     const navigate = useNavigate();
     const location = useLocation();
@@ -40,13 +27,17 @@ function PMReviewManagement() {
     const [loadingReviews, setLoadingReviews] = useState(true);
     const [reviewsError, setReviewsError] = useState(null);
 
+    // --- STATE CHO MODAL ---
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedReview, setSelectedReview] = useState(null);
+
     // --- STATE ĐANG NHẬP TRÊN GIAO DIỆN ---
     const [keywordInput, setKeywordInput] = useState(getInitialValue(initialSearchParams, 'keyword'));
     const [starFilterInput, setStarFilterInput] = useState(getInitialValue(initialSearchParams, 'star'));
     const [statusFilterInput, setStatusFilterInput] = useState(getInitialValue(initialSearchParams, 'status'));
     const [deletedFilterInput, setDeletedFilterInput] = useState(getInitialValue(initialSearchParams, 'isDeleted'));
 
-    // --- STATE ĐÃ ÁP DỤNG (Chỉ cập nhật khi bấm Search) ---
+    // --- STATE ĐÃ ÁP DỤNG ---
     const [appliedKeyword, setAppliedKeyword] = useState(getInitialValue(initialSearchParams, 'keyword'));
     const [appliedStarFilter, setAppliedStarFilter] = useState(getInitialValue(initialSearchParams, 'star'));
     const [appliedStatusFilter, setAppliedStatusFilter] = useState(getInitialValue(initialSearchParams, 'status'));
@@ -72,11 +63,7 @@ function PMReviewManagement() {
 
             if (appliedKeyword.trim()) params.keyword = appliedKeyword.trim();
             if (appliedStarFilter) params.star = Number(appliedStarFilter);
-
-            // Map status về số Integer (0, 1, 2)
             if (appliedStatusFilter !== '') params.status = Number(appliedStatusFilter);
-
-            // Map isDeleted về Boolean (true, false)
             if (appliedDeletedFilter !== '') params.isDeleted = appliedDeletedFilter === 'true';
 
             const rawData = await getReviewsForManager(params);
@@ -143,6 +130,17 @@ function PMReviewManagement() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [appliedKeyword, appliedStarFilter, appliedStatusFilter, appliedDeletedFilter, sortBy, pageNumber]);
 
+    // --- LẮNG NGHE KHI CÓ DATA MỚI ĐỂ UPDATE LÊN MODAL ĐANG MỞ ---
+    useEffect(() => {
+        if (isModalOpen && selectedReview) {
+            // Tìm lại review đó trong danh sách data mới nhất vừa fetch về
+            const updatedReview = reviews.find(r => r.id === selectedReview.id);
+            if (updatedReview) {
+                setSelectedReview(updatedReview); // Bơm dữ liệu mới (có kèm Reply mới) vào Modal
+            }
+        }
+    }, [reviews]); // Kích hoạt mỗi khi loadReviews chạy xong và gán reviews mới
+
     const handleSearch = () => {
         setAppliedKeyword(keywordInput.trim());
         setAppliedStarFilter(starFilterInput);
@@ -166,29 +164,40 @@ function PMReviewManagement() {
         navigate('/pm/products/reviews', { replace: true });
     };
 
-    const handleViewDetails = (reviewId) => {
-        console.log('View review details:', reviewId);
+    // --- MỞ MODAL ---
+    const handleViewDetails = (review) => {
+        setSelectedReview(review);
+        setIsModalOpen(true);
+    };
+
+    // --- SAU KHI MODAL XỬ LÝ XONG (REPLY, DELETE, RESOLVED) ---
+    const handleModalSuccess = (forceClose = false) => {
+        if (forceClose) {
+            setIsModalOpen(false);
+            setSelectedReview(null);
+        }
+        loadReviews(pageNumber); // Update lại danh sách ở ngoài bảng
     };
 
     return (
-        <div className="pm-page">
-            <div className="pm-page-header">
+        <div className="pm-rev-page">
+            <div className="pm-rev-header">
                 <h2>Review Management</h2>
                 <p>Manage customer product reviews</p>
             </div>
 
-            <div className="pm-content">
-                <div className="pm-toolbar">
-                    <button className="pm-btn-back" onClick={() => navigate('/pm/products')}>
+            <div className="pm-rev-content">
+                <div className="pm-rev-toolbar">
+                    <button className="pm-rev-btn-back" onClick={() => navigate('/pm/products')}>
                         ← Product Workspace
                     </button>
                 </div>
 
-                <div className="pm-filter-container">
-                    <div className="pm-filter-row pm-filter-row--first">
+                <div className="pm-rev-filter-container">
+                    <div className="pm-rev-filter-row pm-rev-filter-row--first">
                         <input
                             type="text"
-                            className="pm-filter-input pm-filter-input--full"
+                            className="pm-rev-filter-input pm-rev-filter-input--full"
                             placeholder="Search product or customer..."
                             value={keywordInput}
                             onChange={(event) => setKeywordInput(event.target.value)}
@@ -198,7 +207,7 @@ function PMReviewManagement() {
                         />
 
                         <select
-                            className="pm-filter-select"
+                            className="pm-rev-filter-select"
                             value={starFilterInput}
                             onChange={(event) => setStarFilterInput(event.target.value)}
                         >
@@ -211,7 +220,7 @@ function PMReviewManagement() {
                         </select>
 
                         <select
-                            className="pm-filter-select"
+                            className="pm-rev-filter-select"
                             value={statusFilterInput}
                             onChange={(event) => setStatusFilterInput(event.target.value)}
                         >
@@ -222,7 +231,7 @@ function PMReviewManagement() {
                         </select>
 
                         <select
-                            className="pm-filter-select"
+                            className="pm-rev-filter-select"
                             value={deletedFilterInput}
                             onChange={(event) => setDeletedFilterInput(event.target.value)}
                         >
@@ -231,39 +240,39 @@ function PMReviewManagement() {
                             <option value="true">Deleted</option>
                         </select>
 
-                        <button type="button" className="pm-filter-btn" onClick={handleSearch}>
+                        <button type="button" className="pm-rev-filter-btn" onClick={handleSearch}>
                             Search
                         </button>
-                        <button type="button" className="pm-filter-btn pm-filter-btn--ghost" onClick={handleReset}>
+                        <button type="button" className="pm-rev-filter-btn pm-rev-filter-btn--ghost" onClick={handleReset}>
                             Reset
                         </button>
                     </div>
                 </div>
 
                 {loadingReviews && (
-                    <div className="pm-product-list-placeholder">
+                    <div className="pm-rev-placeholder">
                         <p>Loading reviews...</p>
                     </div>
                 )}
 
                 {!loadingReviews && reviewsError && (
-                    <div className="pm-product-list-placeholder pm-product-list-placeholder--error">
+                    <div className="pm-rev-placeholder pm-rev-placeholder--error">
                         <p>{reviewsError}</p>
-                        <button type="button" className="pm-btn-reload" onClick={() => loadReviews(pageNumber)}>
+                        <button type="button" className="pm-rev-btn-reload" onClick={() => loadReviews(pageNumber)}>
                             Reload
                         </button>
                     </div>
                 )}
 
                 {!loadingReviews && !reviewsError && reviews.length === 0 && (
-                    <div className="pm-product-list-placeholder">
+                    <div className="pm-rev-placeholder">
                         <p>No reviews found.</p>
                     </div>
                 )}
 
                 {!loadingReviews && !reviewsError && reviews.length > 0 && (
-                    <div className="pm-product-table-wrapper">
-                        <table className="pm-product-table">
+                    <div className="pm-rev-table-wrapper">
+                        <table className="pm-rev-table">
                             <thead>
                             <tr>
                                 <th>Product Name</th>
@@ -272,51 +281,39 @@ function PMReviewManagement() {
                                 <th>Date</th>
                                 <th>Status</th>
                                 <th>Visibility</th>
-                                <th className="pm-product-table__actions">Actions</th>
+                                <th className="pm-rev-table__actions">Actions</th>
                             </tr>
                             </thead>
                             <tbody>
                             {reviews.map((review) => {
-                                // 1. Lấy thông tin màu sắc/label của Status (Pending/Replied/Resolved)
                                 const statusMeta = getStatusMeta(review.reviewStatusCode, review.reviewStatus);
-
-                                // 2. Xét màu sắc nền cho thẻ TR: Nếu bị xóa thì màu đỏ, nếu không thì xét theo Status
-                                const rowClassName = `pm-product-table__row ${review.isDeleted ? 'pm-product-table__row--deleted' : statusMeta.rowClass}`;
+                                const rowClassName = `pm-rev-table__row ${review.isDeleted ? 'pm-rev-table__row--deleted' : statusMeta.rowClass}`;
 
                                 return (
                                     <tr key={review.id} className={rowClassName}>
                                         <td>{review.productName || '-'}</td>
                                         <td>{review.userName || review.customerName || '-'}</td>
                                         <td>
-                                            <StarDisplay rating={review.rating} className="pm-review-star-display" />
+                                            <StarDisplay rating={review.rating} className="pm-rev-star-display" />
                                         </td>
                                         <td>{review.createdAt ? formatDate(review.createdAt) : '-'}</td>
-
-                                        {/* CỘT STATUS */}
                                         <td>
-                                                <span className={`pm-active-badge ${statusMeta.badgeClass}`}>
-                                                    {statusMeta.label}
-                                                </span>
+                                            <span className={`pm-rev-badge ${statusMeta.badgeClass}`}>
+                                                {statusMeta.label}
+                                            </span>
                                         </td>
-
-                                        {/* CỘT VISIBILITY (TRẠNG THÁI DELETE) */}
                                         <td>
                                             {review.isDeleted ? (
-                                                <span className="pm-active-badge pm-active-badge--deleted">
-                                                        Deleted
-                                                    </span>
+                                                <span className="pm-rev-badge pm-rev-badge--deleted">Deleted</span>
                                             ) : (
-                                                <span className="pm-active-badge pm-active-badge--on">
-                                                        Active
-                                                    </span>
+                                                <span className="pm-rev-badge pm-rev-badge--on">Active</span>
                                             )}
                                         </td>
-
-                                        <td className="pm-product-table__actions">
+                                        <td className="pm-rev-table__actions">
                                             <button
                                                 type="button"
-                                                className="pm-action-btn pm-action-btn--view"
-                                                onClick={() => handleViewDetails(review.id)}
+                                                className="pm-rev-action-btn pm-rev-action-btn--view"
+                                                onClick={() => handleViewDetails(review)}
                                             >
                                                 View Details
                                             </button>
@@ -339,6 +336,17 @@ function PMReviewManagement() {
                     />
                 )}
             </div>
+
+            {/* RENDER MODAL */}
+            <PMReviewReplyModal
+                isOpen={isModalOpen}
+                onClose={() => {
+                    setIsModalOpen(false);
+                    setSelectedReview(null);
+                }}
+                review={selectedReview}
+                onReplySubmitted={handleModalSuccess}
+            />
         </div>
     );
 }
