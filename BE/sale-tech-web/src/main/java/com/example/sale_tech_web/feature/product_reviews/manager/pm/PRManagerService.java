@@ -34,11 +34,11 @@ public class PRManagerService implements PRManagerServiceInterface {
     private final UserRepository userRepository;
 
     @Override
-    public Page<ReviewManagerResponseDTO> getAllReviewsForManager(String keyword, Integer star, Integer status, Boolean isDeleted, Pageable pageable) {
+    public Page<ReviewManagerResponseDTO> getAllReviewsForManager(Long id, String keyword, Integer star, Integer status, Boolean isDeleted, Pageable pageable) {
         ReviewStatus enumStatus = status != null ? ReviewStatus.fromCode(status) : null;
 
         Page<ProductReviews> reviewsPage = productReviewsRepository.findAllReviewsForManager(
-                keyword, star, enumStatus, isDeleted, pageable
+                id, keyword, star, enumStatus, isDeleted, pageable
         );
 
         List<Long> parentIds = reviewsPage.getContent().stream()

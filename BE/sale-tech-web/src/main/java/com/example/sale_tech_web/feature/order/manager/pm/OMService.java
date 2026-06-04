@@ -38,7 +38,8 @@ public class OMService implements OMServiceInterface {
     private final VNPayService vnPayService;
 
     @Override
-    public Page<OrderDTO> getAllOrderByStatus(String orderStatus,
+    public Page<OrderDTO> getAllOrderByStatus(Long id,
+                                              String orderStatus,
                                               String paymentStatus,
                                               String keyword,
                                               LocalDateTime startDate,
@@ -55,7 +56,7 @@ public class OMService implements OMServiceInterface {
         }
 
         Page<Order> orderPage = orderRepository.findAllOrderCustom(
-                oStatus, pStatus, keyword, startDate, endDate, pageable);
+                id, oStatus, pStatus, keyword, startDate, endDate, pageable);
 
         return orderPage.map(order -> {
             String status = (order.getPayment() != null)

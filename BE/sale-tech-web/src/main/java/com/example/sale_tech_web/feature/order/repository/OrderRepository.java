@@ -22,6 +22,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             "LEFT JOIN o.user u " +
             "LEFT JOIN o.payment p " +
             "WHERE (:orderStatus IS NULL OR o.status = :orderStatus) " +
+            "AND (:id IS NULL OR o.id = :id) " +
             "AND (:paymentStatus IS NULL OR p.status = :paymentStatus) " +
             "AND (:keyword IS NULL OR " +
             "     LOWER(u.username) LIKE LOWER(CONCAT('%', CAST(:keyword as string), '%')) OR " +
@@ -30,6 +31,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             "AND (CAST(:startDate AS timestamp) IS NULL OR o.createdAt >= :startDate) " +
             "AND (CAST(:endDate AS timestamp) IS NULL OR o.createdAt <= :endDate)")
     Page<Order> findAllOrderCustom(
+            @Param("id") Long id,
             @Param("orderStatus") OrderStatus orderStatus,
             @Param("paymentStatus") PaymentStatus paymentStatus,
             @Param("keyword") String keyword,

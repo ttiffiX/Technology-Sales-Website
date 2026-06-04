@@ -93,12 +93,14 @@ public interface ProductReviewsRepository extends JpaRepository<ProductReviews, 
             SELECT r FROM ProductReviews r\s
             JOIN r.product p
             WHERE r.parentId IS NULL\s
+              AND (:id is null OR r.id = :id)
               AND (CAST(:kw AS string) IS NULL OR LOWER(p.title) LIKE LOWER(CONCAT('%', CAST(:kw AS string), '%')))
               AND (:star IS NULL OR r.rating = :star)
               AND (:status IS NULL OR r.processStatus = :status)
               AND (:isDeleted IS NULL OR r.isDeleted = :isDeleted)
             \s""")
     Page<ProductReviews> findAllReviewsForManager(
+            @Param("id") Long id,
             @Param("kw") String keyword,
             @Param("star") Integer star,
             @Param("status") ReviewStatus status,

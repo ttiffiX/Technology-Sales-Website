@@ -30,6 +30,7 @@ public class OMController {
 
     @GetMapping()
     public ResponseEntity<Page<OrderDTO>> getOrdersForPM(
+            @RequestParam(required = false) Long id,
             @RequestParam(required = false) String orderStatus,
             @RequestParam(required = false) String paymentStatus,
             @RequestParam(required = false) String keyword,
@@ -40,7 +41,7 @@ public class OMController {
 
         LocalDateTime startDateTime = (startDate != null) ? startDate.atStartOfDay() : null;
         LocalDateTime endDateTime = (endDate != null) ? endDate.atTime(LocalTime.MAX) : null;
-        return ResponseEntity.ok(omServiceInterface.getAllOrderByStatus(orderStatus, paymentStatus, keyword, startDateTime, endDateTime, pageable));
+        return ResponseEntity.ok(omServiceInterface.getAllOrderByStatus(id, orderStatus, paymentStatus, keyword, startDateTime, endDateTime, pageable));
     }
 
     @GetMapping("/{orderId}")

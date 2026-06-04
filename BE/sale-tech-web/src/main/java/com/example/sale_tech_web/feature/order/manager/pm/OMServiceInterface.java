@@ -12,7 +12,8 @@ import java.util.List;
 
 public interface OMServiceInterface {
 
-    Page<OrderDTO> getAllOrderByStatus(String orderStatus,
+    Page<OrderDTO> getAllOrderByStatus(Long id,
+                                       String orderStatus,
                                        String paymentStatus,
                                        String keyword,
                                        LocalDateTime startDate,

@@ -24,16 +24,17 @@ public class PRManagerController {
 
     @GetMapping
     public ResponseEntity<Page<ReviewManagerResponseDTO>> getAllReviews(
+            @RequestParam(required = false) Long id,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Integer star,
             @RequestParam(required = false) Integer status,
             @RequestParam(required = false) Boolean isDeleted,
             @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
-        log.info("Get all reviews for manager with params:  keyword: {}, star: {}, status: {}, isDeleted: {}, pageable: {}", keyword, star, status, isDeleted, pageable);
+        log.info("Get all reviews for manager with params: ID {},  keyword: {}, star: {}, status: {}, isDeleted: {}, pageable: {}", id, keyword, star, status, isDeleted, pageable);
 
         Page<ReviewManagerResponseDTO> response = prManagerService.getAllReviewsForManager(
-                keyword, star, status, isDeleted, pageable
+                id, keyword, star, status, isDeleted, pageable
         );
         return ResponseEntity.ok(response);
     }
