@@ -1,5 +1,6 @@
 package com.example.sale_tech_web.feature.jwt;
 
+import com.example.sale_tech_web.feature.users.enums.Role;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -14,14 +15,15 @@ public class SecurityUtils {
 
     /**
      * Lấy userId của user hiện tại từ JWT token
+     *
      * @return userId hoặc null nếu chưa login
      */
     public static Long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication != null && authentication.isAuthenticated()
-            && authentication.getPrincipal() != null
-            && !authentication.getName().equals("anonymousUser")) {
+                && authentication.getPrincipal() != null
+                && !authentication.getName().equals("anonymousUser")) {
             try {
                 // AuthTokenFilter lưu userId vào principal
                 return Long.parseLong(authentication.getName());
@@ -35,17 +37,19 @@ public class SecurityUtils {
 
     /**
      * Check xem user đã login chưa
+     *
      * @return true nếu đã authenticated
      */
     public static boolean isAuthenticated() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication != null
-            && authentication.isAuthenticated()
-            && !authentication.getName().equals("anonymousUser");
+                && authentication.isAuthenticated()
+                && !authentication.getName().equals("anonymousUser");
     }
 
     /**
      * Lấy Authentication object
+     *
      * @return Authentication hoặc null
      */
     public static Authentication getAuthentication() {
@@ -56,15 +60,16 @@ public class SecurityUtils {
      * Lấy role của user hiện tại (không có prefix ROLE_)
      * VD: "ADMIN", "PM", "CUSTOMER"
      */
-    public static String getCurrentUserRole() {
+    public static Role getCurrentUserRole() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) return null;
-        return authentication.getAuthorities().stream()
+        String role = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .filter(a -> a.startsWith("ROLE_"))
                 .map(a -> a.substring(5))
                 .findFirst()
                 .orElse(null);
+        return Role.fromString(role);
     }
 }
 

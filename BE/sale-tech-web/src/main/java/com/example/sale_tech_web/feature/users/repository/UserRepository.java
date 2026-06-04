@@ -25,6 +25,9 @@ public interface UserRepository extends JpaRepository<Users, Long> {
 
     boolean existsByEmail(String email);
 
+    @Query("SELECT u.id FROM Users u WHERE u.role IN :role")
+    List<Long> findAllUserIdsByRole(@Param("role") List<Role> role);
+
     /**
      *
      * @param cutoffTime Thời điểm cutoff (VD: 24 giờ trước)

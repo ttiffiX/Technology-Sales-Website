@@ -362,6 +362,53 @@ CREATE INDEX idx_review_client_display
     ON product_reviews (product_id, parent_id)
     WHERE is_deleted = false;
 
+
+-- 14. NOTIFICATIONS TABLE
+CREATE TABLE notifications
+(
+    id           SERIAL PRIMARY KEY,
+    user_id      INT,                  -- ID người nhận (Nếu null mà target_role='PM' thì gửi cho TẤT CẢ PM)
+    target_role  VARCHAR(50),          -- 'PM', 'ADMIN', 'CUSTOMER'
+    type         VARCHAR(50) NOT NULL, -- 'NEW_ORDER', 'NEW_REVIEW', 'SYSTEM_UPDATE'
+    reference_id INT,                  -- Gắn với ID của Order hoặc Review để FE bấm vào điều hướng
+    content      TEXT        NOT NULL, -- Nội dung thông báo hiển thị
+    is_read      BOOLEAN   DEFAULT FALSE,
+    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Đánh Index để tối ưu API đếm số lượng thông báo chưa đọc
+CREATE INDEX idx_notification_unread ON notifications (user_id, is_read);
+
+
+-- 15. NOTIFICATION READ TRACKER TABLE
+CREATE TABLE notification_read_tracker
+(
+    id              BIGSERIAL PRIMARY KEY,
+    notification_id BIGINT NOT NULL,
+    user_id         BIGINT NOT NULL,
+    read_at         TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+    -- Khóa ngoại liên kết tới bảng notifications
+    CONSTRAINT fk_notification_read_tracker_notification
+        FOREIGN KEY (notification_id)
+            REFERENCES notifications (id)
+            ON DELETE CASCADE,
+
+    -- Khóa ngoại liên kết tới bảng users
+    CONSTRAINT fk_notification_read_tracker_user
+        FOREIGN KEY (user_id)
+            REFERENCES users (id)
+            ON DELETE CASCADE,
+
+    -- Ràng buộc duy nhất: Một user chỉ đọc một thông báo 1 lần
+    CONSTRAINT uq_notification_user UNIQUE (notification_id, user_id)
+);
+
+-- Tạo Index để tối ưu tốc độ cho hàm đếm (COUNT) và tìm kiếm (EXISTS)
+CREATE INDEX idx_notification_read_tracker_lookup ON notification_read_tracker (notification_id, user_id);
+
+
+
 -- ========================================================
 -- VIEW (BẢNG ẢO)
 -- ========================================================

@@ -5,6 +5,10 @@ import com.example.sale_tech_web.exception.ForbiddenException;
 import com.example.sale_tech_web.exception.NotFoundException;
 import com.example.sale_tech_web.exception.UnauthorizedException;
 import com.example.sale_tech_web.feature.jwt.SecurityUtils;
+import com.example.sale_tech_web.feature.notification.entity.Notification;
+import com.example.sale_tech_web.feature.notification.enums.NotificationType;
+import com.example.sale_tech_web.feature.notification.manager.SseNotificationService;
+import com.example.sale_tech_web.feature.notification.repository.NotificationRepository;
 import com.example.sale_tech_web.feature.product.entity.Product;
 import com.example.sale_tech_web.feature.product.repository.ProductRepository;
 import com.example.sale_tech_web.feature.product_reviews.dto.customer.ProductReviewCommentDTO;
@@ -17,8 +21,10 @@ import com.example.sale_tech_web.feature.product_reviews.enums.ReviewStatus;
 import com.example.sale_tech_web.feature.product_reviews.manager.ProductReviewHelperService;
 import com.example.sale_tech_web.feature.product_reviews.repository.ProductReviewsRepository;
 import com.example.sale_tech_web.feature.users.entity.Users;
+import com.example.sale_tech_web.feature.users.enums.Role;
 import com.example.sale_tech_web.feature.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -31,11 +37,14 @@ import static com.example.sale_tech_web.utils.StringUtils.normalizeText;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ProductReviewsService implements ProductReviewsServiceInterface {
     private final ProductReviewsRepository productReviewsRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final ProductReviewHelperService reviewHelperService;
+    private final NotificationRepository notificationRepository;
+    private final SseNotificationService sseNotificationService;
 
     @Override
     public ProductReviewStarsDTO getProductStars(Long productId) {
@@ -115,6 +124,34 @@ public class ProductReviewsService implements ProductReviewsServiceInterface {
                 .build();
 
         ProductReviews saved = productReviewsRepository.save(review);
+
+        NotificationType type = NotificationType.NEW_REVIEW;
+        Notification notification = Notification.builder()
+                .userId(null) // Notification để broadcast thì null
+                .targetRole(type.getTargetRole())
+                .type(type)
+                .referenceId(saved.getId())
+                .content("New review added for product " + product.getTitle() + " by user " + user.getUsername())
+                .isRead(null) // Notification để broadcast thì null
+                .build();
+        notification = notificationRepository.save(notification);
+
+        List<Role> roles = Role.getRolesGreaterThanOrEqual(type.getTargetRole());
+
+        if (roles.isEmpty()) {
+            log.warn("Notification #{} has no target roles defined", notification.getId());
+        } else {
+            log.info("{} Notification #{} will be sent | Dest: {} | ROLES: {} | TYPE: {} | REF_ID: {}",
+                    notification.getUserId() == null ? "[BROADCAST]" : "[DIRECT]",
+                    notification.getId(),
+                    notification.getUserId() == null ? "All appropriate users" : "User #" + notification.getUserId(),
+                    roles,
+                    notification.getType(),
+                    notification.getReferenceId());
+            List<Long> pmUserIds = new ArrayList<>(userRepository.findAllUserIdsByRole(roles));
+            sseNotificationService.broadcastToPMs(pmUserIds, notification.getContent());
+        }
+
         return toCommentDTO(saved, Collections.emptyList());
     }
 
