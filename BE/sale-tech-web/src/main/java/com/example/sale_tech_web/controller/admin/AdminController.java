@@ -57,7 +57,7 @@ public class AdminController {
     }
 
     @DeleteMapping("/users/{id}")
-    public ResponseEntity<String> deleteUser(@PathVariable Long id, @RequestBody AdminPasswordRequest adminPassword) {
+    public ResponseEntity<String> deleteUser(@PathVariable Long id, @Valid @RequestBody AdminPasswordRequest adminPassword) {
         log.info("Admin - Delete user: id={}", id);
         return ResponseEntity.ok(adminServiceInterface.deleteUser(id, adminPassword));
     }

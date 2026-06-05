@@ -58,7 +58,8 @@ CREATE TABLE users
     is_active  BOOLEAN,
     is_banned  BOOLEAN DEFAULT FALSE,
     created_at DATE,
-    image_url  VARCHAR(255)
+    image_url  VARCHAR(255),
+    is_deleted BOOLEAN DEFAULT FALSE
 );
 
 

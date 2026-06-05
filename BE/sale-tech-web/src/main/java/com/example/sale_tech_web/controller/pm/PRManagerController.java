@@ -4,6 +4,7 @@ import com.example.sale_tech_web.feature.product_reviews.dto.ProductReviewReplyD
 import com.example.sale_tech_web.feature.product_reviews.dto.pm.ReplyRequestDTO;
 import com.example.sale_tech_web.feature.product_reviews.dto.pm.ReviewManagerResponseDTO;
 import com.example.sale_tech_web.feature.product_reviews.manager.pm.PRManagerServiceInterface;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -42,7 +43,7 @@ public class PRManagerController {
     @PostMapping("/{reviewId}")
     public ResponseEntity<ProductReviewReplyDTO> addReply(
             @PathVariable Long reviewId,
-            @RequestBody ReplyRequestDTO request) {
+            @Valid @RequestBody ReplyRequestDTO request) {
         log.info("Add reply to review (id {})", reviewId);
         ProductReviewReplyDTO response = prManagerService.addReplyFromPM(reviewId, request);
         return ResponseEntity.ok(response);

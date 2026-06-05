@@ -27,7 +27,7 @@ public class SseNotificationService {
         }
 
         // Cài đặt timeout cho kết nối SSE
-        SseEmitter emitter = new SseEmitter(30 * 60 * 1000L);
+        SseEmitter emitter = new SseEmitter(-1L);
 
         emitters.put(userId, emitter);
 

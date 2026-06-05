@@ -6,6 +6,7 @@ import com.example.sale_tech_web.exception.ForbiddenException;
 import com.example.sale_tech_web.exception.NotFoundException;
 import com.example.sale_tech_web.exception.UnauthorizedException;
 import com.example.sale_tech_web.feature.jwt.SecurityUtils;
+import com.example.sale_tech_web.feature.jwt.manager.RefreshTokenService;
 import com.example.sale_tech_web.feature.users.dto.admin.AdminPasswordRequest;
 import com.example.sale_tech_web.feature.users.dto.admin.AdminRegisterRequest;
 import com.example.sale_tech_web.feature.users.dto.admin.UserDTO;
@@ -13,7 +14,6 @@ import com.example.sale_tech_web.feature.users.entity.Users;
 import com.example.sale_tech_web.feature.users.enums.Role;
 import com.example.sale_tech_web.feature.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -29,6 +29,7 @@ import java.util.List;
 public class AdminService implements AdminServiceInterface {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RefreshTokenService refreshTokenService;
 
     @Override
     public Page<UserDTO> getAllUsers(String keyword, Role role, Pageable pageable) {
@@ -91,6 +92,8 @@ public class AdminService implements AdminServiceInterface {
 
         user.setRole(role);
         userRepository.save(user);
+        refreshTokenService.revokeAllUserTokens(user);
+
         return convertToUserDTO(user);
     }
 
@@ -118,11 +121,9 @@ public class AdminService implements AdminServiceInterface {
             throw new ForbiddenException("Cannot delete ADMIN.");
         }
 
-        try {
-            userRepository.delete(user);
-        } catch (DataIntegrityViolationException e) {
-            throw new ConflictException("Cannot delete account already has order history.");
-        }
+        user.setIsDeleted(true);
+        userRepository.save(user);
+        refreshTokenService.revokeAllUserTokens(user);
         return "User with username " + user.getUsername() + " has been deleted successfully.";
     }
 
@@ -142,6 +143,11 @@ public class AdminService implements AdminServiceInterface {
 
         user.setBanned(status);
         userRepository.save(user);
+
+        if (status) {
+            refreshTokenService.revokeAllUserTokens(user);
+        }
+
         return convertToUserDTO(user);
     }
 
