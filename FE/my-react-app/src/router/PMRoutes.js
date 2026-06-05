@@ -8,7 +8,7 @@ import PMProductDetail from "../pages/pm/products/PMProductDetail";
 import PMOrderManagement from "../pages/pm/orders/PMOrderManagement";
 import PMAttributeSchemaManagement from "../pages/pm/products/attributes/PMAttributeSchemaManagement";
 import PMCategoryManagement from "../pages/pm/products/categories/PMCategoryManagement";
-import PMReviewManagement from "../pages/pm/reviews/PMReviewManagement";
+import PMReviewManagement from "../pages/pm/products/reviews/PMReviewManagement";
 
 const PM_ROLES = ['ADMIN', 'PM'];
 

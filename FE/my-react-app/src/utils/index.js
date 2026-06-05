@@ -168,3 +168,12 @@ export {
     normalizeDailySeries,
 } from './revenueUtils';
 
+export {
+    formatNotificationType
+} from './notificationUtils';
+
+
+export {
+    getInitialValue,
+    getInitialPage
+} from './paramsUtils';

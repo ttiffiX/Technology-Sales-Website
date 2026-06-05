@@ -1,4 +1,4 @@
-import apiClient from '../../apiClient';
+import apiClient from '../apiClient';
 
 // Customer-facing product review API
 // Backend controllers expose endpoints under /product-reviews

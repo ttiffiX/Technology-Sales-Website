@@ -9,7 +9,7 @@ import { useToast } from "../../../components/Toast/Toast";
 import { isAuthenticated, getCurrentUser } from "../../../api/AuthAPI";
 import {formatPrice, formatProductAttributeValue, getImage, normalizePageResponse} from "../../../utils";
 import WriteReviewModal from "../../../components/modal/review/WriteReviewModal";
-import ProductReviewAPI from "../../../api/pm/product/ProductReviewAPI";
+import ProductReviewAPI from "../../../api/customer/ProductReviewAPI";
 import { StarDisplay, formatAverage, percentForCount } from "../../../utils/reviewUtils";
 import {useCart} from "../../../contexts/CartContext";
 import PaginationControls from "../../../components/pagination/PaginationControls";

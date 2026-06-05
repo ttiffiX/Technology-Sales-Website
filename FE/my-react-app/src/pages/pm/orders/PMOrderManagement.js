@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
     formatDate,
     formatPrice,
@@ -7,15 +8,13 @@ import {
     ORDER_STATUS_FILTERS,
     PAYMENT_STATUS_FILTERS,
     normalizePMOrderFilterParams,
-    normalizePMOrderPageResponse,
+    normalizePMOrderPageResponse, getInitialValue, getInitialPage,
 } from '../../../utils';
 import { useToast } from '../../../components/Toast/Toast';
 import PaginationControls from '../../../components/pagination/PaginationControls';
 import {
     approvePMOrder,
     completePMOrder,
-    // TEMP COMMENT: hide order-status counters to avoid filter misunderstanding.
-    // getOrderCountByStatus,
     getPMOrders,
     movePMOrderToShipping,
     rejectPMOrder,
@@ -25,41 +24,55 @@ import './PMOrderManagement.scss';
 
 function PMOrderManagement() {
     const { triggerToast } = useToast();
-    const triggerToastRef = React.useRef(triggerToast);
+    const navigate = useNavigate();
+    const location = useLocation();
 
-    React.useEffect(() => {
+    const triggerToastRef = useRef(triggerToast);
+    useEffect(() => {
         triggerToastRef.current = triggerToast;
     }, [triggerToast]);
 
-    const [statusFilter, setStatusFilter] = React.useState(null);
-    // TEMP COMMENT: status counter state is disabled for now.
-    // const [statusCounts, setStatusCounts] = React.useState({});
-    // const [totalStatusCount, setTotalStatusCount] = React.useState(0);
-    // const [isStatusCountLoaded, setIsStatusCountLoaded] = React.useState(false);
+    // Các cờ (Ref) để kiểm soát vòng đời tải trang y hệt PMReview
+    const hasFetchedInitialDataRef = useRef(false);
+    const hasSyncedInitialStateRef = useRef(false);
+    const initialSearchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
 
-    const [orders, setOrders] = React.useState([]);
-    const [pageNumber, setPageNumber] = React.useState(0);
-    const [pageSize] = React.useState(10);
-    const [totalPages, setTotalPages] = React.useState(0);
-    const [totalElements, setTotalElements] = React.useState(0);
+    // --- STATES TỪ URL ---
+    const [statusFilter, setStatusFilter] = useState(getInitialValue(initialSearchParams, 'status', null));
 
-    const [keywordInput, setKeywordInput] = React.useState('');
-    const [appliedKeyword, setAppliedKeyword] = React.useState('');
-    const [paymentStatusInput, setPaymentStatusInput] = React.useState('');
-    const [appliedPaymentStatus, setAppliedPaymentStatus] = React.useState('');
-    const [startDateInput, setStartDateInput] = React.useState('');
-    const [endDateInput, setEndDateInput] = React.useState('');
-    const [appliedStartDate, setAppliedStartDate] = React.useState('');
-    const [appliedEndDate, setAppliedEndDate] = React.useState('');
+    const [keywordInput, setKeywordInput] = useState(getInitialValue(initialSearchParams, 'keyword'));
+    const [appliedKeyword, setAppliedKeyword] = useState(getInitialValue(initialSearchParams, 'keyword'));
 
-    const [loading, setLoading] = React.useState(true);
-    const [error, setError] = React.useState('');
+    const [paymentStatusInput, setPaymentStatusInput] = useState(getInitialValue(initialSearchParams, 'paymentStatus'));
+    const [appliedPaymentStatus, setAppliedPaymentStatus] = useState(getInitialValue(initialSearchParams, 'paymentStatus'));
 
-    const [actingOrderId, setActingOrderId] = React.useState(null);
-    const [selectedOrderId, setSelectedOrderId] = React.useState(null);
-    const [showDetailModal, setShowDetailModal] = React.useState(false);
+    const [startDateInput, setStartDateInput] = useState(getInitialValue(initialSearchParams, 'startDate'));
+    const [appliedStartDate, setAppliedStartDate] = useState(getInitialValue(initialSearchParams, 'startDate'));
 
-    const loadOrders = React.useCallback(async (nextPage = 0) => {
+    const [endDateInput, setEndDateInput] = useState(getInitialValue(initialSearchParams, 'endDate'));
+    const [appliedEndDate, setAppliedEndDate] = useState(getInitialValue(initialSearchParams, 'endDate'));
+
+    const [appliedId, setAppliedId] = useState(getInitialValue(initialSearchParams, 'id'));
+
+    const [pageNumber, setPageNumber] = useState(() => getInitialPage(initialSearchParams));
+
+    // --- STATES DỮ LIỆU ---
+    const [orders, setOrders] = useState([]);
+    const [pageSize] = useState(10);
+    const [totalPages, setTotalPages] = useState(0);
+    const [totalElements, setTotalElements] = useState(0);
+
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+
+    const [actingOrderId, setActingOrderId] = useState(null);
+    const [selectedOrderId, setSelectedOrderId] = useState(null);
+    const [showDetailModal, setShowDetailModal] = useState(false);
+
+    // ==========================================
+    // 1. HÀM TẢI DỮ LIỆU TỪ API
+    // ==========================================
+    const loadOrders = async (nextPage = pageNumber) => {
         setLoading(true);
         setError('');
         try {
@@ -72,6 +85,9 @@ function PMOrderManagement() {
                 page: nextPage,
                 size: pageSize,
             });
+            if (appliedId) {
+                params.id = appliedId;
+            }
             const rawData = await getPMOrders(params);
             const pageData = normalizePMOrderPageResponse(rawData);
             const rows = Array.isArray(pageData.content) ? pageData.content : [];
@@ -90,34 +106,89 @@ function PMOrderManagement() {
         } finally {
             setLoading(false);
         }
-    }, [statusFilter, appliedPaymentStatus, appliedKeyword, appliedStartDate, appliedEndDate, pageSize]);
+    };
 
-    // TEMP COMMENT: disable status-count fetching until counter UX is clarified.
-    // const loadStatusCounts = React.useCallback(async () => {
-    //     try {
-    //         const data = await getOrderCountByStatus();
-    //         setStatusCounts(data.orderStatusCountMap || {});
-    //         setTotalStatusCount(data.totalStatusCount ?? 0);
-    //         setIsStatusCountLoaded(true);
-    //     } catch (_) {
-    //         setIsStatusCountLoaded(false);
-    //     }
-    // }, []);
+    // ==========================================
+    // 2. HÀM ĐỒNG BỘ URL
+    // ==========================================
+    const syncListUrl = (nextState = {}) => {
+        const params = new URLSearchParams();
+        const nextKeyword = String(nextState.keyword ?? appliedKeyword).trim();
+        const nextPayment = String(nextState.paymentStatus ?? appliedPaymentStatus).trim();
+        const nextStart = String(nextState.startDate ?? appliedStartDate).trim();
+        const nextEnd = String(nextState.endDate ?? appliedEndDate).trim();
+        const nextId = String(nextState.id ?? appliedId).trim();
+        const nextStatus = String(nextState.status ?? statusFilter).trim();
+        const nextPage = Number.isFinite(nextState.page) ? nextState.page : pageNumber;
 
-    React.useEffect(() => {
+        if (nextKeyword) params.set('keyword', nextKeyword);
+        if (nextPayment) params.set('paymentStatus', nextPayment);
+        if (nextStart) params.set('startDate', nextStart);
+        if (nextEnd) params.set('endDate', nextEnd);
+        if (nextId) params.set('id', nextId);
+        if (nextStatus && nextStatus !== 'null') params.set('status', nextStatus);
+        if (Number.isFinite(nextPage) && nextPage > 0) params.set('page', String(nextPage));
+
+        navigate(
+            {
+                pathname: '/pm/orders',
+                search: params.toString() ? `?${params.toString()}` : '',
+            },
+            { replace: true }
+        );
+    };
+
+    // ==========================================
+    // 3. LẮNG NGHE URL ĐỂ BẮT SỰ KIỆN CLICK NOTIFICATION
+    // ==========================================
+    useEffect(() => {
+        const currentUrlParams = new URLSearchParams(location.search);
+        const idFromUrl = currentUrlParams.get('id') || '';
+
+        // Khi người dùng click chuông thông báo
+        if (idFromUrl !== appliedId) {
+            // Xóa sạch bộ lọc cũ để tránh xung đột (VD: xóa status đang lọc)
+            setKeywordInput('');
+            setPaymentStatusInput('');
+            setStartDateInput('');
+            setEndDateInput('');
+
+            setAppliedKeyword('');
+            setAppliedPaymentStatus('');
+            setAppliedStartDate('');
+            setAppliedEndDate('');
+            setStatusFilter(null); // QUAN TRỌNG: Phải xóa status để không bị trùng filter
+
+            setAppliedId(idFromUrl);
+            setPageNumber(0);
+        }
+    }, [location.search]);
+
+    // ==========================================
+    // 4. KIỂM SOÁT VÒNG ĐỜI VÀ GỌI API
+    // ==========================================
+    useEffect(() => {
+        if (hasFetchedInitialDataRef.current) return;
+        hasFetchedInitialDataRef.current = true;
         loadOrders(pageNumber);
-    }, [loadOrders, pageNumber]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
-    // TEMP COMMENT: do not auto-load status counters.
-    // React.useEffect(() => {
-    //     loadStatusCounts();
-    // }, [loadStatusCounts]);
+    useEffect(() => {
+        if (!hasFetchedInitialDataRef.current) return;
+        if (!hasSyncedInitialStateRef.current) {
+            hasSyncedInitialStateRef.current = true;
+            syncListUrl();
+            return;
+        }
 
-    // TEMP COMMENT: counter helper disabled with status counters.
-    // const getFilterCount = React.useCallback((statusValue) => {
-    //     if (statusValue === null) return totalStatusCount;
-    //     return statusCounts?.[statusValue] ?? 0;
-    // }, [statusCounts, totalStatusCount]);
+        syncListUrl();
+        loadOrders(pageNumber);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [appliedKeyword, appliedPaymentStatus, appliedStartDate, appliedEndDate, appliedId, statusFilter, pageNumber]);
+
+
+    // --- HÀM XỬ LÝ SỰ KIỆN NÚT BẤM ---
 
     const runAction = async (orderId, action) => {
         setActingOrderId(orderId);
@@ -154,6 +225,9 @@ function PMOrderManagement() {
         setAppliedPaymentStatus(paymentStatusInput);
         setAppliedStartDate(startDateInput);
         setAppliedEndDate(endDateInput);
+
+        // Khi user tự thực hiện tìm kiếm tay, tắt force ID để tìm kiếm rộng rãi
+        setAppliedId('');
         setPageNumber(0);
     };
 
@@ -166,7 +240,12 @@ function PMOrderManagement() {
         setEndDateInput('');
         setAppliedStartDate('');
         setAppliedEndDate('');
+        setAppliedId('');
+        setStatusFilter(null); // Reset luôn tab trạng thái
         setPageNumber(0);
+
+        // Khôi phục lại hàm navigate để dọn dẹp thanh URL
+        navigate('/pm/orders', { replace: true });
     };
 
     return (
@@ -174,6 +253,10 @@ function PMOrderManagement() {
             <div className="pm-order-management__header">
                 <h2>Order Management</h2>
                 <p>View and process customer orders</p>
+                {/* Thông báo phụ nếu đang lọc đích danh theo ID */}
+                {appliedId &&
+                    <p style={{color: '#0284c7', fontSize: '14px', marginTop: '4px'}}>Showing direct result for Order
+                        ID: #{appliedId}</p>}
             </div>
 
             <div className="pm-order-management__filters">
@@ -183,13 +266,13 @@ function PMOrderManagement() {
                         type="button"
                         className={`pm-order-management__filter-btn${statusFilter === filter.value ? ' active' : ''}`}
                         onClick={() => {
+                            // Xóa ID nếu người dùng click lại vào các tab trạng thái
+                            setAppliedId('');
                             setStatusFilter(filter.value);
                             setPageNumber(0);
                         }}
                     >
                         {filter.label}
-                        {/* TEMP COMMENT: hide count badge to avoid misunderstanding while filtering */}
-                        {/* {isStatusCountLoaded ? ` (${getFilterCount(filter.value)})` : ''} */}
                     </button>
                 ))}
             </div>
@@ -259,7 +342,8 @@ function PMOrderManagement() {
                 {loading && <div className="pm-order-management__placeholder">Loading orders...</div>}
 
                 {!loading && error && (
-                    <div className="pm-order-management__placeholder pm-order-management__placeholder--error">{error}</div>
+                    <div
+                        className="pm-order-management__placeholder pm-order-management__placeholder--error">{error}</div>
                 )}
 
                 {!loading && !error && orders.length === 0 && (
@@ -291,13 +375,14 @@ function PMOrderManagement() {
 
                                         <div className="pm-order-management__badges">
                                             <span className="pm-order-management__badge-label">Order</span>
-                                            <span className="pm-order-management__status" style={{ backgroundColor: getStatusColor(order.status) }}>
+                                            <span className="pm-order-management__status"
+                                                  style={{backgroundColor: getStatusColor(order.status)}}>
                                                 {order.status || '-'}
                                             </span>
                                             <span className="pm-order-management__badge-label">Payment</span>
                                             <span
                                                 className="pm-order-management__payment-status"
-                                                style={{ backgroundColor: getPaymentStatusColor(order.paymentStatus) }}
+                                                style={{backgroundColor: getPaymentStatusColor(order.paymentStatus)}}
                                             >
                                                 {order.paymentStatus || '-'}
                                             </span>
@@ -307,15 +392,30 @@ function PMOrderManagement() {
                                     <div className="pm-order-management__card-body">
                                         <div className="pm-order-management__grid">
                                             <div className="pm-order-management__col">
-                                                <div className="pm-order-management__row"><span className="label">Customer:</span><span className="value">{order.customerName || '-'}</span></div>
-                                                <div className="pm-order-management__row"><span className="label">Email:</span><span className="value">{order.email || '-'}</span></div>
-                                                <div className="pm-order-management__row"><span className="label">Phone:</span><span className="value">{order.phone || '-'}</span></div>
-                                                <div className="pm-order-management__row pm-order-management__row--description"><span className="label">Description:</span><span className="value">{order.description?.trim() || '-'}</span></div>
+                                                <div className="pm-order-management__row"><span
+                                                    className="label">Customer:</span><span
+                                                    className="value">{order.customerName || '-'}</span></div>
+                                                <div className="pm-order-management__row"><span
+                                                    className="label">Email:</span><span
+                                                    className="value">{order.email || '-'}</span></div>
+                                                <div className="pm-order-management__row"><span
+                                                    className="label">Phone:</span><span
+                                                    className="value">{order.phone || '-'}</span></div>
+                                                <div
+                                                    className="pm-order-management__row pm-order-management__row--description">
+                                                    <span className="label">Description:</span><span
+                                                    className="value">{order.description?.trim() || '-'}</span></div>
                                             </div>
 
                                             <div className="pm-order-management__col">
-                                                <div className="pm-order-management__row"><span className="label">Payment:</span><span className="value value--primary">{order.paymentMethod || '-'}</span></div>
-                                                <div className="pm-order-management__row"><span className="label">Address:</span><span className="value">{order.address || '-'}, {order.province || '-'}</span></div>
+                                                <div className="pm-order-management__row"><span
+                                                    className="label">Payment:</span><span
+                                                    className="value value--primary">{order.paymentMethod || '-'}</span>
+                                                </div>
+                                                <div className="pm-order-management__row"><span
+                                                    className="label">Address:</span><span
+                                                    className="value">{order.address || '-'}, {order.province || '-'}</span>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -324,8 +424,9 @@ function PMOrderManagement() {
                                                 <span>Delivery Fee</span>
                                                 <strong>{formatPrice(order.deliveryFee || 0)}</strong>
                                             </div>
-                                            <div className="pm-order-management__total-divider" />
-                                            <div className="pm-order-management__total-line pm-order-management__total-line--price">
+                                            <div className="pm-order-management__total-divider"/>
+                                            <div
+                                                className="pm-order-management__total-line pm-order-management__total-line--price">
                                                 <span>Grand Total</span>
                                                 <strong>{formatPrice(order.totalPrice || 0)}</strong>
                                             </div>
@@ -412,4 +513,3 @@ function PMOrderManagement() {
 }
 
 export default PMOrderManagement;
-

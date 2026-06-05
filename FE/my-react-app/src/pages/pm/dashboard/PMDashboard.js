@@ -26,7 +26,7 @@ function PMDashboard() {
 
     return (
         <div className="pm-dashboard">
-            <DashboardSidebar brand="PM Panel" navItems={pmNavItems}/>
+            <DashboardSidebar brand="PM Panel" navItems={pmNavItems} contextRole={1}/>
 
             <main className="pm-dashboard__content">
                 <Outlet/>

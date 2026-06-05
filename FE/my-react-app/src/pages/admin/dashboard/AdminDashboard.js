@@ -19,7 +19,7 @@ function AdminDashboard() {
 
     return (
         <div className="admin-dashboard">
-            <DashboardSidebar brand="Admin Panel" navItems={adminNavItems} />
+            <DashboardSidebar brand="Admin Panel" navItems={adminNavItems} contextRole={2}/>
 
             <main className="admin-dashboard__content">
                 <Outlet />
