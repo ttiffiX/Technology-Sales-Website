@@ -4,6 +4,7 @@ import com.example.sale_tech_web.exception.UnauthorizedException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -23,10 +24,6 @@ public class SseNotificationService {
     public SseEmitter subscribe(Long userId) {
         if (userId == null) {
             throw new UnauthorizedException("User not authenticated");
-        }
-
-        if (emitters.containsKey(userId)) {
-            return emitters.get(userId);
         }
 
         // Cài đặt timeout cho kết nối SSE
@@ -71,5 +68,19 @@ public class SseNotificationService {
         for (Long pmId : pmUserIds) {
             sendNotificationToUser(pmId, notificationPayload);
         }
+    }
+
+    @Async("notificationExecutor")
+    @Scheduled(fixedRate = 30000) // 30s chạy 1 lần để giữ kết nối SSE luôn sống
+    public void ping() {
+        emitters.forEach((userId, emitter) -> {
+            try {
+                // Gửi sự kiện ping
+                emitter.send(SseEmitter.event().name("ping").data("keep-alive"));
+            } catch (Exception e) {
+                // Nếu gửi lỗi (user đã đóng tab), gỡ bỏ khỏi map
+                emitters.remove(userId);
+            }
+        });
     }
 }

@@ -28,8 +28,8 @@ public class NotificationController {
 
     @GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter subscribe() {
+        log.info("Subscribing to notifications");
         Long currentUserId = SecurityUtils.getCurrentUserId();
-
         return sseNotificationService.subscribe(currentUserId);
     }
 

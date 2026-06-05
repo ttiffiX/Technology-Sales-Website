@@ -1,6 +1,7 @@
 package com.example.sale_tech_web.feature.notification.manager;
 
 import com.example.sale_tech_web.feature.notification.dto.NotificationResponseDTO;
+import com.example.sale_tech_web.feature.notification.entity.Notification;
 import com.example.sale_tech_web.feature.notification.enums.NotificationType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,4 +18,6 @@ public interface NotificationServiceInterface {
     void markAsReadById(Integer context, Long notificationId);
 
     List<NotificationType> getAvailableTypes(Integer context);
+
+    Notification saveNotification(NotificationType type, Long referenceId, String content, Long targetUserId);
 }

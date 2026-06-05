@@ -130,6 +130,20 @@ public class NotificationService implements NotificationServiceInterface {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    @Transactional
+    public Notification saveNotification(NotificationType type, Long referenceId, String content, Long targetUserId) {
+        Notification notification = Notification.builder()
+                .userId(targetUserId)
+                .targetRole(type.getTargetRole())
+                .type(type)
+                .referenceId(referenceId)
+                .content(content)
+                .isRead(false)
+                .build();
+
+        return notificationRepository.save(notification);
+    }
 
 
     // Hàm tiện ích để map dữ liệu

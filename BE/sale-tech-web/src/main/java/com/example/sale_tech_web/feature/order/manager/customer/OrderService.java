@@ -9,6 +9,8 @@ import com.example.sale_tech_web.exception.UnauthorizedException;
 import com.example.sale_tech_web.feature.cart.entity.CartDetail;
 import com.example.sale_tech_web.feature.cart.repository.CartDetailRepository;
 import com.example.sale_tech_web.feature.jwt.SecurityUtils;
+import com.example.sale_tech_web.feature.notification.enums.NotificationType;
+import com.example.sale_tech_web.feature.notification.event.AppNotificationEvent;
 import com.example.sale_tech_web.feature.order.dto.StatusCountDTO;
 import com.example.sale_tech_web.feature.order.dto.customer.OrderDTO;
 import com.example.sale_tech_web.feature.order.dto.customer.OrderDetailDTO;
@@ -34,6 +36,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -53,6 +56,7 @@ public class OrderService implements OrderServiceInterface {
     private final PaymentServiceInterface paymentServiceInterface;
     private final PaymentRepository paymentRepository;
     private final ProductRepository productRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Autowired
     private CacheManager cacheManager;
@@ -181,6 +185,14 @@ public class OrderService implements OrderServiceInterface {
         order.setOrderDetails(orderDetails);
         order.setTotalPrice(tempTotalPrice + order.getDeliveryFee());
         Order savedOrder = orderRepository.save(order);
+
+        eventPublisher.publishEvent(new AppNotificationEvent(
+                this,
+                NotificationType.NEW_ORDER,
+                savedOrder.getId(),
+                "New order placed by user " + user.getUsername() + " with order ID: " + savedOrder.getId(),
+                null // Bỏ trống để broadcast
+        ));
 
         // Check payment method
         if (request.getPaymentMethod() == PaymentMethod.VNPAY) {
