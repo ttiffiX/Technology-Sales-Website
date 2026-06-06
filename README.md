@@ -1,12 +1,10 @@
 # Technology Sales Website
 
-A modern full-stack e-commerce platform for selling technology products online. Built with **React** frontend and
-**Spring Boot** backend, featuring secure authentication, product management, shopping cart, and VNPay payment
-integration.
+A modern e-commerce platform for selling technology products online. Built with a **React** frontend and a **Spring Boot
+** backend, featuring secure authentication, product management, product reviews with replies, realtime notifications,
+and VNPay payment integration.
 
 **Live Demo**: Coming soon | **Documentation**: Coming soon
-
-
 
 ## Table of Contents
 
@@ -14,12 +12,8 @@ integration.
 
 - [Features](#features)
 - [Tech Stack](#tech-stack)
-- [System Architecture](#system-architecture)
 - [Project Structure](#project-structure)
 - [Installation & Setup](#installation--setup)
-- [Configuration](#configuration)
-- [Running the Application](#running-the-application)
-- [API Documentation](#api-documentation)
 - [Common Error Solutions](#common-error-solutions)
 - [License](#license)
 - [Learning Resources](#learning-resources)
@@ -31,673 +25,239 @@ integration.
 
 ### Customer Features
 
-#### Core E-Commerce Features
-- **Product Browsing** - Browse and explore technology products with detailed information
-- **Advanced Filtering** - Multi-level filtering by category, attributes, and specifications
-- **Product Comparison** - Compare multiple products side-by-side for better decision making
-- **Product Details** - View comprehensive product information with images and full specifications
-- **Shopping Cart** - Full CRUD operations for cart items with real-time quantity management
-- **Order Management** - Place orders, track order status, and view order history
-- **Order History** - View detailed order information and order tracking status
-- **Payment Integration** - VNPay payment gateway for secure online transactions
+| Area              | Features                                                                                                           |
+|-------------------|--------------------------------------------------------------------------------------------------------------------|
+| Product Catalog   | Browse products, product detail, advanced filtering by category/attributes/price, product comparison               |
+| Shopping & Orders | Cart CRUD, select/deselect items, place orders, order history, cancel order, continue payment                      |
+| Payments          | VNPay checkout, return callback, IPN handling                                                                      |
+| Account & Auth    | Register, login, refresh token (HttpOnly cookie), logout, change password, forgot password, email OTP verification |
+| Profile & Address | View/update profile, manage multiple addresses, set default address, province/ward lookup                          |
+| Reviews           | Create/update/delete product reviews, view star summary, list comments, filter by rating                           |
+| Notifications     | Realtime notifications via SSE, list notifications, mark read, filter by type                                      |
+| System            | Image upload via Cloudinary, background schedulers for cleanup and payment timeouts                                |
 
-#### Account & Profile Management
-- **User Profile** - Manage personal user information and account details
-- **Address Management** - Save, manage, and set default delivery addresses
-- **Email Management** - Verify and manage email addresses for account security
-- **Change Password** - Securely update account password
-- **Forgot Password** - Reset password through email verification
-- **Email Verification** - OTP-based email verification for account security
+### Product Manager (PM) Features
 
-#### System Features
-- **Image Upload** - Cloudinary integration for product image uploads
-- **Account Cleanup Scheduler** - Automatic system cleanup for unverified accounts
-- **Payment Timeout Scheduler** - Automatic cancellation of pending/timeout payments
+> PM accounts include all Customer features plus:
 
-### Product Manager Features
-
-#### Product Management
-- **Product Management** - Full CRUD operations for product inventory
-- **Product Category Management** - Full CRUD product categories
-- **Product Attribute Groups** - Manage attribute groups for product categorization
-- **Product Attributes** - Define and manage product attributes and specifications
-- **Product Import** - Batch import products from Excel files
-- **Product State Control** - Toggle product active/inactive status
-
-#### Order Management
-- **Order Processing** - View and manage all customer orders
-- **Order Status Tracking** - Track order status counts and history
-
-#### Access to Customer Features
-- All customer features are available to Product Managers for testing and validation
+| Area                  | Features                                                                                       |
+|-----------------------|------------------------------------------------------------------------------------------------|
+| Product Management    | Full CRUD for products, toggle active/inactive, import products from Excel, upload images      |
+| Category & Attributes | CRUD categories, attribute groups, attribute schemas; reorder groups/attributes                |
+| Order Management      | View and manage orders, approve/reject, move to shipping, complete orders, status counters     |
+| Review Moderation     | View all reviews, reply to reviews, update/delete replies, mark resolved, force-delete reviews |
 
 ### Admin Features
 
-#### Dashboard & Analytics
-- **Admin Dashboard** - View comprehensive sales metrics and analytics
-- **Revenue Analytics** - Track total revenue, pending revenue, and revenue trends
-- **Daily Revenue Report** - View daily revenue with charts and trends
-- **Category Revenue** - Revenue breakdown by product category
-- **Top Products Analysis** - Identify best-selling products with sales metrics
-- **Payment Method Analysis** - Revenue breakdown by payment methods
-- **Order Cancellation Rate** - Monitor order cancellation statistics
+> Admin accounts include all Customer and PM features plus:
 
-#### User Management
-- **User Account Management** - View all user accounts and manage user information
-- **User Role Assignment** - Assign and modify user roles (Customer, PM, Admin)
-- **User Ban Management** - Ban or unban user accounts as needed
-- **User Filtering** - Advanced filtering and search for user management
-
-#### Access to All Features
-- All customer and Product Manager features are available to Admin accounts
+| Area                | Features                                                                                                                       |
+|---------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| User Management     | List users, create users, assign roles, ban/unban, delete users                                                                |
+| Revenue & Analytics | Total revenue, pending revenue, cancellation rate, daily revenue, revenue by category, top products, revenue by payment method |
 
 ### Security Features
 
-- **Secure Authentication** - JWT-based authentication with access tokens and refresh tokens
-- **Token Refresh** - Automatic token refresh mechanism for seamless user sessions
-- **Email Verification** - OTP-based email verification for account security
-- **Role-Based Access Control (RBAC)** - Different permissions per user role (Customer, PM, Admin)
-- **Request Validation** - Input validation for all API requests
-- **Password Security** - Secure password hashing and change functionality
+| Feature            | Description                                        |
+|--------------------|----------------------------------------------------|
+| JWT Authentication | Access tokens and refresh tokens (HttpOnly cookie) |
+| Role-Based Access  | RBAC for Customer / PM / Admin                     |
+| Input Validation   | Request validation using Jakarta Validation        |
+| OTP Flows          | Email OTP for verification and password reset      |
+| Password Security  | Secure password hashing and change workflows       |
 
-## ️Tech Stack
+### System Features
 
----
+| Feature              | Description                                                    |
+|----------------------|----------------------------------------------------------------|
+| Cloudinary           | Image storage and delivery for product images                  |
+| VNPay Integration    | Create payment requests, verify callbacks and IPN messages     |
+| SSE Notifications    | Server-Sent Events for realtime notifications                  |
+| Background Scheduler | Periodic tasks for cleanup and payment timeout handling        |
+| Excel Import         | Bulk product import via Excel uploads (Apache POI / EasyExcel) |
 
-### Frontend
-
-- **Framework**: React 18.3.1
-- **Styling**: SASS/SCSS
-- **HTTP Client**: Axios
-- **Routing**: React Router DOM v6
-- **State Management**: React Context API
-- **UI Components**: Custom components
-- **Charts**: Recharts (for analytics)
-- **Notifications**: React Toastify
-- **Drag & Drop**: @hello-pangea/dnd
-- **Package Manager**: npm
-
-### Backend
-
-- **Framework**: Spring Boot 3.4.0
-- **Language**: Java 22
-- **Database**: PostgreSQL 12+
-- **ORM**: Hibernate/JPA
-- **Security**: Spring Security + JWT (JJWT)
-- **Build Tool**: Maven
-- **JSON Processing**: Gson, Lombok
-- **Email**: Spring Mail
-- **File Upload**: Cloudinary API
-- **Payment**: VNPay Gateway
-- **Caching**: Spring Cache with Caffeine
-- **Validation**: Spring Validation
-
-### Third-Party Services
-
-- **VNPay**: Payment gateway (Vietnam)
-- **Cloudinary**: Cloud file storage
-- **Gmail SMTP**: Email service
-
-## System Architecture
+## Tech Stack
 
 ---
 
-### Architecture Diagram
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Frontend (React)                     │
-│  ┌────────────────────────────────────────────────────┐ │
-│  │  Pages: Home, Product, Cart, Order, Profile, etc   │ │
-│  │  Components: Header, Nav, ProductGrid, Modals...   │ │
-│  │  Contexts: CartContext, CompareContext             │ │
-│  └────────────────────────────────────────────────────┘ │
-│                         ↕ (REST/HTTP)                   │
-├─────────────────────────────────────────────────────────┤
-│                  Backend (Spring Boot)                  │
-│  ┌────────────────────────────────────────────────────┐ │
-│  │ Controllers: Auth, Product, Cart, Order, Payment   │ │
-│  │ Services: Business logic for all features          │ │
-│  │ Repositories: Data access layer (JPA)              │ │
-│  │ Security: JWT Auth Filter, Role-based Access       │ │
-│  └────────────────────────────────────────────────────┘ │
-│                         ↕ (JDBC)                        │
-├─────────────────────────────────────────────────────────┤
-│              Database (PostgreSQL)                      │
-│  ┌────────────────────────────────────────────────────┐ │
-│  │ Tables: Users, Products, Orders, Payments, etc     │ │
-│  │ Schema: Normalized relational database design      │ │
-│  └────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────┘
-
-External Services:
-├── VNPay (Payment Gateway)
-├── Cloudinary (Image Storage)
-└── Gmail SMTP (Email Service)
-```
+| Layer        | Technology                                                                                                                  |
+|--------------|-----------------------------------------------------------------------------------------------------------------------------|
+| Frontend     | React 18, React Router DOM v6, Axios, Context API, SASS/SCSS, Recharts, React Toastify, @hello-pangea/dnd                   |
+| Backend      | Spring Boot 3.4.0, Java 22, Spring Web, Spring Security, Spring Data JPA, Spring Validation, Spring Mail, Spring Cache, SSE |
+| Database     | PostgreSQL 16 (Docker), JPA / Hibernate                                                                                     |
+| Auth         | JWT (JJWT) + refresh token (HttpOnly cookie)                                                                                |
+| File Storage | Cloudinary                                                                                                                  |
+| Payment      | VNPay                                                                                                                       |
+| Excel Import | Apache POI, EasyExcel                                                                                                       |
+| DevOps       | Docker, Docker Compose, Nginx (frontend container)                                                                          |
+| Utilities    | Gson, Lombok, Caffeine                                                                                                      |
 
 ## Project Structure
 
 ---
 
-### Full Directory Tree
+> The full directory tree is available in the `BE/` and `FE/` folders:
+> - Backend structure: [`backend_structure.txt`](./BE/sale-tech-web/backend_structure.txt)
+> - Frontend structure: [`frontend_structure.txt`](./FE/my-react-app/frontend_structure.txt)
+>
+> Below are the key paths and their purpose.
 
-```
-Technology-Sales-Website/
-├── README.md                         # This file
-├── Documents/                        # Project documentation
-│   ├── SRS.docx                      # Software Requirements Specification
-│   ├── ClassDiagram.png              # UML Class diagram
-│   ├── Overall Use Case Diagram.png  # Use case diagram
-│   ├── SalesTechWebDB.drawio.png     # Database diagram
-│   ├── Activity Diagrams/            # UML Activity diagrams for each use case
-│   └── Sequence Diagrams/            # UML Sequence diagrams
-│
-├── BE/                               # Backend (Spring Boot)
-│   └── sale-tech-web/
-│       ├── pom.xml                   # Maven dependencies
-│       ├── mvnw / mvnw.cmd           # Maven wrapper
-│       ├── src/
-│       │   ├── main/
-│       │   │   ├── java/com/example/sale_tech_web/
-│       │   │   │   ├── SaleTechWebApplication.java    # Main Spring Boot app
-│       │   │   │   ├── config/                        # Configuration classes
-│       │   │   │   │   ├── WebSecurityConfig.java     # Spring Security config
-│       │   │   │   │   └── AuthTokenFilter.java       # JWT filter
-│       │   │   │   ├── controller/                    # REST Controllers
-│       │   │   │   │   ├── AuthController.java        # Authentication endpoints
-│       │   │   │   │   ├── ProductController.java     # Product endpoints
-│       │   │   │   │   ├── CartController.java        # Shopping cart endpoints
-│       │   │   │   │   ├── OrderController.java       # Order endpoints
-│       │   │   │   │   └── PaymentController.java     # Payment endpoints
-│       │   │   │   ├── exception/                     # Exception handlers
-│       │   │   │   │   ├── ErrorCode.java             # Error code
-│       │   │   │   │   ├── ErrorResponse.java         # Error Response DTO
-│       │   │   │   │   └── ExceptionController.java   # Exception handlers for all project
-│       │   │   │   ├── feature/                       # Feature modules
-│       │   │   │   │   ├── cart/                      # Shopping cart serivce
-│       │   │   │   │   ├── cloudinary/                # Cloudinary serivce
-│       │   │   │   │   ├── email/                     # Email serivce
-│       │   │   │   │   ├── jwt/                       # JWT serivce
-│       │   │   │   │   ├── order/                     # Order serivce
-│       │   │   │   │   ├── payment/                   # Payment processing
-│       │   │   │   │   ├── product/                   # Product serivce
-│       │   │   │   │   ├── profile/                   # Profile service
-│       │   │   │   │   ├── province/                  # Province data service
-│       │   │   │   │   ├── revenue/                   # Revenue service
-│       │   │   │   │   ├── user_address/              # User Address service
-│       │   │   │   │   └── users/                     # User serivce
-│       │   │   │   └── utils/                         # Utility classes
-│       │   │   └── resources/
-│       │   │       ├── application.properties         # Application config
-│       │   │       ├── SalesTechWeb.sql              # Database schema (v1)
-│       │   │       └── SalesTechWeb2.sql             # Database schema (v2)
-│       │   └── test/
-│       │       └── java/SaleTechWebApplicationTests.java
-│       └── target/                   # Compiled classes (auto-generated)
-│
-└── FE/                                # Frontend (React)
-    └── my-react-app/
-        ├── package.json              # npm dependencies
-        ├── public/
-        │   ├── index.html            # HTML entry point
-        │   ├── indexIcon.png         # Favicon
-        │   ├── manifest.json         # PWA manifest
-        │   └── robots.txt
-        ├── src/
-        │   ├── index.js              # React entry point
-        │   ├── App.js                # Main React component
-        │   ├── App.scss              # Global app styles
-        │   ├── reportWebVitals.js    # Performance metrics
-        │   ├── api/                  # API client layer
-        │   │   ├── apiClient.js      # Axios configuration
-        │   │   ├── AuthAPI.js        # Authentication endpoints
-        │   │   ├── ProductAPI.js     # Product endpoints
-        │   │   ├── CartAPI.js        # Cart endpoints
-        │   │   ├── OrderAPI.js       # Order endpoints
-        │   │   └── PaymentAPI.js     # Payment endpoints
-        │   ├── assets/               # Static assets
-        │   │   ├── icon/             # Icons
-        │   │   └── images/           # Product/banner images
-        │   ├── components/           # Reusable components
-        │   │   ├── header/           # Header/navbar
-        │   │   ├── navigation/       # Navigation menu
-        │   │   ├── productgrid/      # Product listing grid
-        │   │   ├── productdetail/    # Product detail card
-        │   │   ├── cartgrid/         # Cart items display
-        │   │   ├── filtersidebar/    # Advanced search/filter
-        │   │   ├── searchbar/        # Search component
-        │   │   ├── modal/            # Modal components
-        │   │   ├── pagination/       # Pagination component
-        │   │   ├── Toast/            # Notification component
-        │   │   ├── Loading/          # Loading spinner
-        │   │   └── comparebar/       # Product comparison bar
-        │   ├── contexts/             # React context providers
-        │   │   ├── CartContext.js    # Shopping cart state
-        │   │   └── CompareContext.js # Product comparison state
-        │   ├── pages/                # Page components
-        │   │   ├── login/            # Login/Register pages
-        │   │   ├── homepage/         # Home page
-        │   │   ├── productdetail/    # Product detail page
-        │   │   ├── cart/             # Shopping cart page
-        │   │   ├── order/            # Checkout/place order page
-        │   │   ├── orderhistory/     # Order history/details
-        │   │   ├── profile/          # User profile page
-        │   │   ├── admin/            # Admin dashboard pages
-        │   │   ├── pm/               # Product Manager pages
-        │   │   ├── customer/         # Customer-specific pages
-        │   │   ├── paymentresult/    # Payment success/fail pages
-        │   │   ├── verifyemail/      # Email verification page
-        │   │   └── aboutme/          # About page
-        │   ├── router/               # Routing configuration
-        │   │   ├── RouterPages.js    # Main router setup
-        │   │   ├── ProtectedRoute.js # Protected route wrapper
-        │   │   ├── RoleProtectedRoute.js # Role-based route protection
-        │   │   ├── AdminRoutes.js    # Admin routes
-        │   │   ├── CustomerRoutes.js # Customer routes
-        │   │   └── PMRoutes.js       # Product Manager routes
-        │   ├── styles/               # Global SCSS
-        │   │   ├── index.scss        # Main stylesheet
-        │   │   ├── _variables.scss   # CSS variables/colors
-        │   │   ├── _mixins.scss      # SCSS mixins
-        │   │   └── _base.scss        # Base styles
-        │   └── utils/                # Utility functions
-        ├── build/                    # Production build (auto-generated)
-        └── README.md                 # Frontend-specific docs
-```
+### Backend structure:
 
-### Key Directories Explained
+| Path          | Purpose                                                                                       |
+|---------------|-----------------------------------------------------------------------------------------------|
+| `/controller` | REST controllers for Customer, PM, Admin, and Notifications                                   |
+| `/feature`    | Business logic grouped by feature (product, order, payment, review, notification, user, etc.) |
+| `/exception`  | Custom exceptions and global exception handler                                                |
+| `/config`     | Security, cache, async, and JWT configuration                                                 |
+| `/resources`  | Application properties and SQL initialization files                                           |
 
-#### Backend (`BE/sale-tech-web/`)
+### Frontend structure:
 
-- **config/**: Spring Security, JWT, security filters
-- **controller/**: REST API endpoints
-- **Exception/**: Error handling
-- **feature/**: Business logic separated by feature (users, products, cart, orders, payments)
-- **resources/**: Configuration files and SQL scripts
-
-#### Frontend (`FE/my-react-app/`)
-
-- **api/**: Centralized API client for backend communication
-- **components/**: Reusable UI components
-- **pages/**: Route page components with full features
-- **contexts/**: Global state management (Cart, Compare products)
-- **router/**: Navigation setup with role-based access control
-- **utils/**: Helper functions for common operations
+| Path          | Purpose                                         |
+|---------------|-------------------------------------------------|
+| `/api`        | API client layer (Axios)                        |
+| `/assets`     | Static assets (images, fonts)                   |
+| `/components` | Reusable UI components                          |
+| `/contexts`   | React Contexts for shared state (Cart, Compare) |
+| `/pages`      | Page components per feature/role                |
+| `/router`     | Route definitions and role-based protection     |
+| `/styles`     | Global and component-specific styles            |
+| `/utils`      | Utility functions (API calls, auth helpers)     |
 
 ## Installation & Setup
 
 ---
 
-### Step 1: Clone the Repository
+### 1) Create your `.env` from template
 
-```bash
-git clone https://github.com/yourusername/Technology-Sales-Website.git
-cd Technology-Sales-Website
-```
+Use the template file: [`./.env.example`](./.env.example)
 
-### Step 2: Backend Setup
+1. Copy `.env.example` to `.env` in the project root.
+2. Fill all required values.
+3. Keep `.env` private (do not commit it).
 
-#### 2.1 Install Java and Maven
+### 2) Configure each block in `.env`
 
-```bash
-# Verify Java installation
-java -version  # Should be 17 or higher
+#### PostgreSQL
 
-# Verify Maven installation
-mvn -version   # Should be 3.6 or higher
-```
+What you need to do:
 
-#### 2.2 Install Backend Dependencies
+- Set database name, user, and password.
+- Keep values consistent with your local PostgreSQL conventions.
 
-```bash
-cd BE/sale-tech-web
-mvn clean install
-```
+Required variables:
 
-#### 2.3 Create PostgreSQL Database
+| Environment Variable | Example Value / Description                   |
+|:---------------------|:----------------------------------------------|
+| `POSTGRES_DB`        | Database name (e.g., `sale_tech_db`)          |
+| `POSTGRES_USER`      | Database user (e.g., `sale_tech_user`)        |
+| `POSTGRES_PASSWORD`  | Database password (e.g., `strongpassword123`) |
 
-```bash
-# Connect to PostgreSQL
-psql -U postgres
+<br>
 
-# Create database
-CREATE DATABASE salestech_db;
-GRANT ALL PRIVILEGES ON DATABASE salestech_db TO postgres;
+#### JWT
 
-# Exit psql
-\q
-```
+What you need to do:
 
-#### 2.4 Import Database Schema
+- Generate a strong random `JWT_SECRET` (at least 32 characters).
+- Keep expiration values as default unless you need a different session policy.
 
-```bash
-# Using psql (recommended)
-psql -U postgres -d salestech_db -f src/main/resources/SalesTechWeb2.sql
+Variables:
 
-# Or using pgAdmin if you prefer GUI
-```
+| Environment Variable     | Default Value | Description                                               |
+|:-------------------------|:--------------|:----------------------------------------------------------|
+| `JWT_SECRET`             | *Required*    | The secret key used to sign and verify JWT tokens.        |
+| `JWT_EXPIRATION`         | `300000`      | Access token expiration time in milliseconds (5 minutes). |
+| `JWT_REFRESH_EXPIRATION` | `604800000`   | Refresh token expiration time in milliseconds (7 days).   |
 
-### Step 3: Frontend Setup
+<br>
 
-#### 3.1 Install Node.js and npm
+#### VNPay (Sandbox) + Ngrok
 
-```bash
-# Verify installations
-node --version   # Should be 16 or higher
-npm --version    # Should be 8 or higher
-```
+What you need to do:
 
-#### 3.2 Install Frontend Dependencies
+1. Register/login at [VNPay Sandbox Merchant portal](https://sandbox.vnpayment.vn/devreg/).
+2. Copy `TMN_CODE` and `HASH_SECRET`.
+3. Create a reserved domain on Ngrok (required for VNPay IPN callbacks to reach your local backend).
+4. Set return and IPN URLs in VNPay dashboard.
 
-```bash
-cd FE/my-react-app
-npm install
-```
+**How to create Ngrok Reserved Domain:**
 
-## Configuration
+1. Sign up at [ngrok.com](https://ngrok.com/).
+2. Log in to your ngrok dashboard: [dashboard.ngrok.com](https://dashboard.ngrok.com).
+3. Go to **Cloud Edge** → **Domains** (left sidebar).
+4. Click **+ Create Domain** → Choose a domain name (e.g., `my-saletech-api`).
+5. Copy your **Auth Token** from the dashboard (Setup & Usage section).
+6. Add both to your `.env` file.
 
----
+Variables:
 
-### Backend Configuration
+| Environment Variable | Example Value                                   | Description                                                     |
+|:---------------------|:------------------------------------------------|:----------------------------------------------------------------|
+| `VNPAY_TMN_CODE`     | *Required (From VNPay)*                         | The Terminal ID provided by VNPay merchant dashboard.           |
+| `VNPAY_HASH_SECRET`  | *Required (From VNPay)*                         | The secret key used to secure and sign VNPay transactions.      |
+| `VNPAY_RETURN_URL`   | `http://localhost:3000/payment-result`          | Frontend callback URL where users are redirected after payment. |
+| `VNPAY_IPN_URL`      | `https://<your-ngrok-domain>/payment/vnpay/ipn` | Your ngrok reserved domain URL for VNPay webhook callbacks.     |
+| `NGROK_AUTHTOKEN`    | *Required (From ngrok.com dashboard)*           | Your ngrok authentication token for tunnel setup.               |
 
-#### 3.1 Create `.env` File
+<br>
 
-Create `BE/sale-tech-web/.env` file (`BE/sale-tech-web/.evn.example` for example):
+#### Email (Gmail SMTP)
 
-```properties
-# ========== Database Configuration ==========
-DB_URL=jdbc:postgresql://localhost:5432/salestech_db
-DB_USER=postgres
-DB_PASS=your_postgres_password
-# ========== JWT Configuration ==========
-JWT_SECRET=your_super_secret_jwt_key_min_32_chars_long
-JWT_EXPIRATION=your_app_expiration_access_token
-JWT_REFRESH_EXPIRATION=your_app_expiration_refresh_token
-# ========== VNPay Configuration (Payment) ==========
-VNPAY_TMN_CODE=your_vnpay_terminal_code
-VNPAY_HASH_SECRET=your_vnpay_hash_secret
-VNPAY_RETURN_URL=http://localhost:3000/payment-result
-VNPAY_IPN_URL=http://localhost:8080/api/payment/vnpay-ipn
-# ========== Email Configuration ==========
-EMAIL_USERNAME=your_email@gmail.com
-EMAIL_PASSWORD=your_app_specific_password
-EMAIL_FROM=your_email@gmail.com
-# ========== Cloudinary Configuration (Image Upload) ==========
-CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
-CLOUDINARY_API_KEY=your_cloudinary_api_key
-CLOUDINARY_API_SECRET=your_cloudinary_api_secret
-```
+What you need to do:
 
-#### 3.2 Generate JWT Secret (for security)
+1. Open [Gmail Account Security](https://myaccount.google.com/security).
+2. Enable 2-Step Verification.
+3. Go to [App Passwords](https://myaccount.google.com/apppasswords) and create a password for "Mail" and "Windows
+   Computer".
+4. Copy the 16-character app password.
+5. Put your Gmail address + app password in `.env`.
 
-```bash
-# Generate a strong JWT secret (Linux/Mac)
-openssl rand -base64 32
+Variables:
 
-# Or use online tool: https://www.randomkeygen.com/
-```
+| Environment Variable | Example Value                    | Description                                                  |
+|:---------------------|:---------------------------------|:-------------------------------------------------------------|
+| `EMAIL_USERNAME`     | `your-email@gmail.com`           | Your Gmail address.                                          |
+| `EMAIL_PASSWORD`     | `16-character-app-password-here` | App-specific password from Gmail (not your normal password). |
+| `EMAIL_FROM`         | `your-email@gmail.com`           | Sender address for OTP/notification emails.                  |
 
-#### 3.3 VNPay Setup (Payment Integration)
+<br>
 
-1. Register account at [VNPay](https://sandbox.vnpayment.vn/)
-2. Get TMN Code and Hash Secret from VNPay merchant portal
-3. Add credentials to `.env` file
+#### Cloudinary
 
-#### 3.4 Cloudinary Setup (Image Upload)
+What you need to do:
 
-1. Create account at [Cloudinary](https://cloudinary.com/)
-2. Go to Dashboard → Settings
-3. Copy Cloud Name, API Key, and API Secret
-4. Add to `.env` file
-
-#### 3.5 Gmail App Password (Email Service)
-
-1. Enable 2-factor authentication on Gmail account
-2. Go to [App Passwords](https://myaccount.google.com/apppasswords)
-3. Generate app-specific password
-4. Set `EMAIL_PASSWORD` to this app password in `.env`
-
-## Running the Application
-
----
-
-### Start PostgreSQL Database
-
-```bash
-# Windows (if using pgAdmin)
-# Open pgAdmin and ensure PostgreSQL is running
-
-# Or via command line (macOS/Linux)
-brew services start postgresql
-
-# Or (Windows with PostgreSQL service)
-net start postgresql-x64-15
-```
-
-### Start Backend Server
-
-#### Option 1: Using Maven
-
-```bash
-cd BE/sale-tech-web
-mvnw spring-boot:run
-```
-
-#### Option 2: Using Java
-
-```bash
-cd BE/sale-tech-web
-mvnw clean package
-java -jar target/sale-tech-web-0.0.1-SNAPSHOT.jar
-```
-
-**Backend will run at**: `http://localhost:8080`
-
-Verify backend is running:
-
-```bash
-curl http://localhost:8080/api/products
-```
-
-### Start Frontend Server
-
-```bash
-cd FE/my-react-app
-npm start
-```
-
-Frontend will run at: `http://localhost:3000`
-
-## API Documentation
-
----
-
-### Base URL
-
-```
-http://localhost:8080
-```
-
-### Authentication (`/auth`)
-
-```http
-POST  /auth/login                   # Login
-POST  /auth/refresh-token           # Refresh access token using refresh cookie
-POST  /auth/logout                  # Logout and clear refresh cookie
-POST  /auth/register                # Register new user
-PATCH /auth/change-password         # Change password
-POST  /auth/verify-email            # Verify email with OTP
-POST  /auth/resend-verification     # Resend verification email (?email=)
-POST  /auth/forgot-password         # Send forgot-password OTP (?email=)
-POST  /auth/verify-reset-otp        # Verify reset OTP
-POST  /auth/reset-password          # Reset password with reset token
-```
-
-### Cart (`/cart`)
-
-```http
-GET    /cart                        # Get current user's cart
-GET    /cart/total-quantity         # Get total selected quantity
-POST   /cart                        # Add product to cart
-PATCH  /cart                        # Change product quantity
-DELETE /cart                        # Remove product from cart
-PATCH  /cart/toggle-selection       # Toggle one product selection
-PATCH  /cart/toggle-all             # Toggle all product selection
-```
-
-### Orders (`/orders`)
-
-```http
-GET    /orders                      # Get paged orders for current user
-GET    /orders/{orderId}            # Get order details
-GET    /orders/status-count         # Get order count by status
-POST   /orders                      # Place order
-PATCH  /orders/{orderId}/cancel     # Cancel order
-```
-
-### Payment (`/payment`)
-
-```http
-GET /payment/vnpay/callback         # VNPay return callback
-GET /payment/vnpay/ipn              # VNPay IPN notification
-```
-
-### Product Catalog (`/product`)
-
-```http
-GET    /product                     # Get top 10 products by category
-GET    /product/{id}                # Get product detail
-GET    /product/categories          # Get all categories
-GET    /product/category/{categoryId} # Get products by category
-GET    /product/filter-options      # Get filter options (?categoryId=)
-GET    /product/filter              # Unified search/filter endpoint
-POST   /product/compare             # Compare multiple products
-```
-
-### Profile (`/profile`)
-
-```http
-GET  /profile                       # Get current user's profile
-PUT  /profile                       # Update profile
-```
-
-### Province (`/province`)
-
-```http
-GET /province                       # Get all provinces
-GET /province/{provinceCode}/wards   # Get wards by province code
-```
-
-### Address (`/address`)
-
-```http
-GET    /address                     # Get all addresses
-GET    /address/{id}                # Get address by id
-POST   /address                     # Create address
-PUT    /address/{id}                # Update address
-DELETE /address/{id}                # Delete address
-PATCH  /address/{id}/set-default    # Set default address
-```
-
-### Admin (`/admin`)
-
-```http
-GET    /admin/users                 # Get users with filters/pagination
-GET    /admin/roles                 # Get all roles
-POST   /admin/users                 # Create user
-PATCH  /admin/users/{id}/role       # Update user role
-DELETE /admin/users/{id}            # Delete user
-PATCH  /admin/users/{id}/ban        # Update ban status (?status=)
-```
-
-### Admin Revenue (`/admin/revenue`)
-
-```http
-GET /admin/revenue/total            # Total revenue
-GET /admin/revenue/pending          # Pending revenue
-GET /admin/revenue/cancel-rate      # Cancel rate
-GET /admin/revenue/daily            # Daily revenue chart (?date=)
-GET /admin/revenue/category         # Revenue by category
-GET /admin/revenue/top-products     # Top products
-GET /admin/revenue/payment-method   # Revenue by payment method
-```
-
-### Product Manager Orders (`/pm/orders`)
-
-```http
-GET    /pm/orders                   # Get orders for PM
-GET    /pm/orders/{orderId}         # Get order details
-GET    /pm/orders/status-count      # Get order count by status
-PATCH  /pm/orders/{orderId}/approve # Approve order
-PATCH  /pm/orders/{orderId}/reject  # Reject order (?reason=)
-PATCH  /pm/orders/{orderId}/shipping # Move order to shipping
-PATCH  /pm/orders/{orderId}/complete # Complete order
-```
-
-### Product Manager Products (`/pm/products`)
-
-```http
-GET    /pm/products                           # Get all products for PM
-GET    /pm/products/{productId}               # Get product detail
-POST   /pm/products                           # Add product (multipart form-data)
-POST   /pm/products/category/{categoryId}/import # Import products from Excel
-PUT    /pm/products/{productId}               # Update product (multipart form-data)
-PATCH  /pm/products/{productId}/state         # Toggle product active state (?active=)
-DELETE /pm/products/{productId}               # Delete product
-```
-
-### Product Manager Categories (`/pm/category`)
-
-```http
-POST   /pm/category?name=           # Add category
-PUT    /pm/category/{categoryId}    # Update category (?name=)
-DELETE /pm/category/{categoryId}    # Delete category
-```
-
-### Product Manager Attribute Groups (`/pm/attribute-groups`)
-
-```http
-GET    /pm/attribute-groups/category/{categoryId}          # Get groups by category
-POST   /pm/attribute-groups                                 # Create attribute group
-PUT    /pm/attribute-groups/{groupId}                       # Update attribute group
-PATCH  /pm/attribute-groups/category/{categoryId}/reorder   # Reorder groups
-DELETE /pm/attribute-groups/{groupId}                       # Delete attribute group
-```
-
-### Product Manager Category Attributes (`/pm/category-attributes`)
-
-```http
-GET    /pm/category-attributes/category/{categoryId}              # Get attributes by category
-GET    /pm/category-attributes/category/{categoryId}/schemas      # Get category attribute schemas
-POST   /pm/category-attributes/category/{categoryId}              # Add attribute schema
-PUT    /pm/category-attributes/{attributeId}                      # Update attribute schema
-PATCH  /pm/category-attributes/{groupId}/reorder                  # Reorder attributes in a group
-DELETE /pm/category-attributes/{attributeId}                      # Delete attribute schema
-```
-
-### Endpoint Summary
-
-- **Total documented endpoints**: 80
-- Covers customer, admin, and product manager APIs
+1. Sign up at [Cloudinary](https://cloudinary.com/).
+2. Go to [Dashboard](https://cloudinary.com/console/settings/basic).
+3. Copy `Cloud Name`, `API Key`, and generate/copy `API Secret`.
+4. Put them in `.env`.
+
+Variables:
+
+| Environment Variable    | Example Value          | Description                                    |
+|:------------------------|:-----------------------|:-----------------------------------------------|
+| `CLOUDINARY_CLOUD_NAME` | `your-cloud-name`      | Your Cloudinary cloud name (from Dashboard).   |
+| `CLOUDINARY_API_KEY`    | `1234567890123456`     | Your API Key (from Dashboard).                 |
+| `CLOUDINARY_API_SECRET` | `abcdefghijklmnopqrst` | Your API Secret (from Dashboard Settings/API). |
 
 ## Common Error Solutions
 
 ---
 
-| Error                        | Solution                              |
-|------------------------------|---------------------------------------|
-| `Connection refused on 5432` | Start PostgreSQL service              |
-| `Product image not loading`  | Check Cloudinary credentials          |
-| `Email not sending`          | Verify Gmail app password, enable 2FA |
-| `VNPay payment failed`       | Check VNPay credentials in .env       |
-| `404 Not Found API`          | Verify backend is running on 8080     |
+### Docker & Deployment
+
+| Error                                | Solution                                                                                                                 |
+|--------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
+| `docker compose: command not found`  | Install Docker Desktop which includes Docker Compose. Restart your terminal after installation.                          |
+| `error bind: address already in use` | Stop the process using the port or change port mappings in `docker-compose.yml`. Use `netstat -ano` to find the process. |
+| `Cannot connect to Docker daemon`    | Ensure Docker Desktop is running. On Windows, check that WSL2 is properly configured.                                    |
 
 ## License
 
 ---
 
-This project is private and for educational purposes.
+Private project for educational and internal development purposes.
 
 ## Learning Resources
 
@@ -706,25 +266,26 @@ This project is private and for educational purposes.
 - [Spring Boot Documentation](https://spring.io/projects/spring-boot)
 - [React Documentation](https://react.dev)
 - [PostgreSQL Documentation](https://www.postgresql.org/docs/)
+- [Docker Documentation](https://docs.docker.com/)
 - [VNPay Documentation](https://sandbox.vnpayment.vn/)
-- [JWT Guide](https://jwt.io/)
+- [Cloudinary Documentation](https://cloudinary.com/documentation)
 
 ## Project Statistics
 
 ---
 
-| Metric            | Value              |
-|-------------------|--------------------|
-| Frontend Language | JavaScript (React) |
-| Backend Language  | Java               |
-| Database          | PostgreSQL         |
-| Total Endpoints   | 80+                |
-| Tables            | 13+                |
-| Deployment Ready  | Yes                |
+| Metric          |                       Value |
+|-----------------|----------------------------:|
+| Frontend        |                    React 18 |
+| Backend         | Spring Boot 3.4.0 / Java 22 |
+| Database        |               PostgreSQL 16 |
+| Controllers     |                          11 |
+| Total endpoints |                          92 |
+| Tables          |                          16 |
+| Deployment      |              Docker Compose |
 
 ---
 
-**Last Updated**: May 2026  
+**Last Updated**: June 2026  
 **Version**: 1.0.0  
 **Status**: Active Development
-
