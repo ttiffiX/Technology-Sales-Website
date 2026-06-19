@@ -1,6 +1,6 @@
 package com.example.sale_tech_web.feature.order.manager.customer;
 
-import com.example.sale_tech_web.config.CacheNames;
+import com.example.sale_tech_web.config.app.CacheNames;
 import com.example.sale_tech_web.exception.BadRequestException;
 import com.example.sale_tech_web.exception.ConflictException;
 import com.example.sale_tech_web.exception.ForbiddenException;
@@ -27,7 +27,7 @@ import com.example.sale_tech_web.feature.payment.enums.PaymentMethod;
 import com.example.sale_tech_web.feature.payment.enums.PaymentStatus;
 import com.example.sale_tech_web.feature.payment.manager.PaymentServiceInterface;
 import com.example.sale_tech_web.feature.payment.repository.PaymentRepository;
-import com.example.sale_tech_web.feature.payment.service.VNPayService;
+import com.example.sale_tech_web.feature.payment.vnpay_manager.VNPayService;
 import com.example.sale_tech_web.feature.product.entity.Product;
 import com.example.sale_tech_web.feature.product.repository.ProductRepository;
 import com.example.sale_tech_web.feature.users.entity.Users;

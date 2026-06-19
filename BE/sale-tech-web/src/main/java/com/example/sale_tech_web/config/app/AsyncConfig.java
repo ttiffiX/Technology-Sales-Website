@@ -1,4 +1,4 @@
-package com.example.sale_tech_web.config;
+package com.example.sale_tech_web.config.app;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

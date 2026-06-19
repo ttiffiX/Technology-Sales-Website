@@ -1,4 +1,4 @@
-package com.example.sale_tech_web.feature.payment.service;
+package com.example.sale_tech_web.feature.payment.vnpay_manager;
 
 import com.example.sale_tech_web.exception.ConflictException;
 import com.example.sale_tech_web.exception.NotFoundException;

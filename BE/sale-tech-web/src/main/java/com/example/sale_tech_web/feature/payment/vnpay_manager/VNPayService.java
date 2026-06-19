@@ -1,11 +1,11 @@
-package com.example.sale_tech_web.feature.payment.service;
+package com.example.sale_tech_web.feature.payment.vnpay_manager;
 
 import com.example.sale_tech_web.feature.payment.config.PaymentConfig;
 import com.example.sale_tech_web.feature.payment.config.VNPayConfig;
 import com.example.sale_tech_web.feature.payment.dto.VNPayPaymentResponse;
 import com.example.sale_tech_web.feature.payment.dto.VNPayRefundRequest;
 import com.example.sale_tech_web.feature.payment.dto.VNPayRefundResponse;
-import com.example.sale_tech_web.feature.payment.util.VNPayUtil;
+import com.example.sale_tech_web.utils.VNPayUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import jakarta.servlet.http.HttpServletRequest;

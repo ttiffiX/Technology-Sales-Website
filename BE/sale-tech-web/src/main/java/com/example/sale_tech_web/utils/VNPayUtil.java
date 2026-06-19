@@ -1,4 +1,4 @@
-package com.example.sale_tech_web.feature.payment.util;
+package com.example.sale_tech_web.utils;
 
 import jakarta.servlet.http.HttpServletRequest;
 

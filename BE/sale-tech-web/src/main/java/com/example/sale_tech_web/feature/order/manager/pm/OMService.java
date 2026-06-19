@@ -15,7 +15,7 @@ import com.example.sale_tech_web.feature.payment.entity.Payment;
 import com.example.sale_tech_web.feature.payment.enums.PaymentMethod;
 import com.example.sale_tech_web.feature.payment.enums.PaymentStatus;
 import com.example.sale_tech_web.feature.payment.repository.PaymentRepository;
-import com.example.sale_tech_web.feature.payment.service.VNPayService;
+import com.example.sale_tech_web.feature.payment.vnpay_manager.VNPayService;
 import com.example.sale_tech_web.feature.product.repository.ProductRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;

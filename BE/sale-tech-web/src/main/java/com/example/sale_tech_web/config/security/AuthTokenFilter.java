@@ -1,4 +1,4 @@
-package com.example.sale_tech_web.config;
+package com.example.sale_tech_web.config.security;
 
 import com.example.sale_tech_web.feature.jwt.JwtUtils;
 import jakarta.servlet.FilterChain;

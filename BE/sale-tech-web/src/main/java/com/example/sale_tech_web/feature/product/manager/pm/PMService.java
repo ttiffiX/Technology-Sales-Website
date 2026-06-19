@@ -1,7 +1,7 @@
 package com.example.sale_tech_web.feature.product.manager.pm;
 
 import com.alibaba.excel.EasyExcel;
-import com.example.sale_tech_web.config.CacheNames;
+import com.example.sale_tech_web.config.app.CacheNames;
 import com.example.sale_tech_web.exception.BadRequestException;
 import com.example.sale_tech_web.exception.NotFoundException;
 import com.example.sale_tech_web.feature.cloudinary.dto.CloudinaryResponse;

@@ -1,4 +1,4 @@
-package com.example.sale_tech_web.config;
+package com.example.sale_tech_web.config.security;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

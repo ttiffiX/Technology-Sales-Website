@@ -1,6 +1,6 @@
 package com.example.sale_tech_web.feature.product.manager.customer;
 
-import com.example.sale_tech_web.config.CacheNames;
+import com.example.sale_tech_web.config.app.CacheNames;
 import com.example.sale_tech_web.exception.BadRequestException;
 import com.example.sale_tech_web.exception.NotFoundException;
 import com.example.sale_tech_web.feature.product.dto.customer.*;

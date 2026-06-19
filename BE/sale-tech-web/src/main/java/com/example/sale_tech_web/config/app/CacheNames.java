@@ -1,4 +1,4 @@
-package com.example.sale_tech_web.config;
+package com.example.sale_tech_web.config.app;
 
 public final class CacheNames {
     //Product

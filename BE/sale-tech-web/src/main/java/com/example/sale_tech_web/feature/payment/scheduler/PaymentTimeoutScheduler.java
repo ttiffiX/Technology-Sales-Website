@@ -4,7 +4,7 @@ import com.example.sale_tech_web.feature.payment.config.PaymentConfig;
 import com.example.sale_tech_web.feature.payment.entity.Payment;
 import com.example.sale_tech_web.feature.payment.enums.PaymentStatus;
 import com.example.sale_tech_web.feature.payment.repository.PaymentRepository;
-import com.example.sale_tech_web.feature.payment.service.PaymentProcessingService;
+import com.example.sale_tech_web.feature.payment.vnpay_manager.PaymentProcessingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

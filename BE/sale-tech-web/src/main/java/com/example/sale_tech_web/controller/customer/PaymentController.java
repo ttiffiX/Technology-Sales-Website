@@ -1,7 +1,7 @@
 package com.example.sale_tech_web.controller.customer;
 
-import com.example.sale_tech_web.feature.payment.service.PaymentProcessingService;
-import com.example.sale_tech_web.feature.payment.service.VNPayService;
+import com.example.sale_tech_web.feature.payment.vnpay_manager.PaymentProcessingService;
+import com.example.sale_tech_web.feature.payment.vnpay_manager.VNPayService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

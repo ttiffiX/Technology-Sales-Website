@@ -1,4 +1,4 @@
-package com.example.sale_tech_web.config;
+package com.example.sale_tech_web.config.app;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import org.springframework.cache.CacheManager;
