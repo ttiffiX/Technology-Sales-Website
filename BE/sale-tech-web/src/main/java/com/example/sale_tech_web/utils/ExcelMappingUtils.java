@@ -1,5 +1,6 @@
 package com.example.sale_tech_web.utils;
 
+import com.example.sale_tech_web.exception.BadRequestException;
 import com.example.sale_tech_web.feature.product.dto.pm.product_dto.ProductImportDTO;
 
 import java.util.HashMap;
@@ -76,17 +77,22 @@ public class ExcelMappingUtils {
     }
 
     private static Integer getInt(Object obj) {
-        if (obj == null) return 0;
+        if (obj == null) {
+            throw new BadRequestException("Integer value is required");
+        }
         try {
             return Double.valueOf(String.valueOf(obj)).intValue();
         } catch (Exception e) {
-            return 0;
+            throw new BadRequestException("Invalid integer value: " + obj);
         }
     }
 
     private static Boolean getBool(Object obj) {
-        if (obj == null) return true;
-        String val = String.valueOf(obj).toLowerCase();
-        return val.equals("true") || val.equals("1");
+        if (obj == null) throw new BadRequestException("Boolean value is required");
+        if (obj instanceof Boolean) return (Boolean) obj;
+        String val = String.valueOf(obj).trim().toLowerCase();
+        if (val.equals("true")) return true;
+        if (val.equals("false")) return false;
+        throw new BadRequestException("Boolean value is required");
     }
 }

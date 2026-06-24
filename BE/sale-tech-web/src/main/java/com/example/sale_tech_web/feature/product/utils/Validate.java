@@ -56,11 +56,18 @@ public class Validate {
                     processedValue = rawValue;
                 }
                 case "boolean" -> {
-                    if (!(rawValue instanceof Boolean)) {
-                        throw new BadRequestException(
-                                "Attribute '" + rawCode + "' must be BOOLEAN");
-                    }
-                    processedValue = rawValue;
+                    processedValue = switch (rawValue) {
+                        case Boolean boolVal -> boolVal;
+
+                        case String strVal -> {
+                            String lowerStr = strVal.trim().toLowerCase();
+                            if (lowerStr.equals("true")) yield true;
+                            if (lowerStr.equals("false")) yield false;
+                            throw new BadRequestException("Attribute '" + rawCode + "' must be BOOLEAN");
+                        }
+
+                        default -> throw new BadRequestException("Attribute '" + rawCode + "' must be BOOLEAN");
+                    };
                 }
                 case "text" -> {
                     processedValue = String.valueOf(rawValue);
