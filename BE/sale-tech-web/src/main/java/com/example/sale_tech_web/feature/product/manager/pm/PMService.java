@@ -4,8 +4,10 @@ import com.alibaba.excel.EasyExcel;
 import com.example.sale_tech_web.config.app.CacheNames;
 import com.example.sale_tech_web.exception.BadRequestException;
 import com.example.sale_tech_web.exception.NotFoundException;
+import com.example.sale_tech_web.feature.cart.repository.CartDetailRepository;
 import com.example.sale_tech_web.feature.cloudinary.dto.CloudinaryResponse;
 import com.example.sale_tech_web.feature.cloudinary.manager.CloudinaryService;
+import com.example.sale_tech_web.feature.order.repository.OrderDetailRepository;
 import com.example.sale_tech_web.feature.product.dto.customer.ProductFilterGroupDTO;
 import com.example.sale_tech_web.feature.product.dto.pm.product_dto.PMProductDetailDTO;
 import com.example.sale_tech_web.feature.product.dto.pm.product_dto.PMProductListDTO;
@@ -48,6 +50,8 @@ public class PMService implements PMServiceInterface {
     private final CategoryRepository categoryRepository;
     private final CategoryAttributeSchemaRepository categoryAttributeSchemaRepository;
     private final CloudinaryService cloudinaryService;
+    private final OrderDetailRepository orderDetailRepository;
+    private final CartDetailRepository cartDetailRepository;
 
     @Autowired
     private CacheManager cacheManager;
@@ -245,6 +249,13 @@ public class PMService implements PMServiceInterface {
     public String deleteProduct(Long productId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new NotFoundException("Product not found"));
+
+        boolean existsInOrder = orderDetailRepository.existsByProductId(productId);
+        if (existsInOrder) {
+            throw new BadRequestException("Cannot delete product that exists in orders. Use deactivate method instead.");
+        }
+
+        cartDetailRepository.deleteByProductId(productId);
 
         String result = "Product with ID " + productId + " has been deleted.";
 

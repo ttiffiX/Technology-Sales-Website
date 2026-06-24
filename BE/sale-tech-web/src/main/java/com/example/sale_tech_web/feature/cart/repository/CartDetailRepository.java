@@ -30,4 +30,6 @@ public interface CartDetailRepository extends JpaRepository<CartDetail, Long> {
 
     @Query("SELECT COUNT(cd) FROM CartDetail cd WHERE cd.cart.user.id = :userId")
     int countCartItemsByUserId(@Param("userId") Long userId);
+
+    void deleteByProductId(Long productId);
 }
