@@ -8,7 +8,7 @@ import com.example.sale_tech_web.feature.product.entity.Category;
 import com.example.sale_tech_web.feature.product.entity.CategoryAttributeSchema;
 import com.example.sale_tech_web.feature.product.entity.Product;
 import com.example.sale_tech_web.feature.product.repository.ProductRepository;
-import com.example.sale_tech_web.utils.ExcelMappingUtils;
+import com.example.sale_tech_web.feature.product.utils.ExcelMappingUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;

@@ -1,4 +1,4 @@
-package com.example.sale_tech_web.utils;
+package com.example.sale_tech_web.feature.product.utils;
 
 import com.example.sale_tech_web.exception.BadRequestException;
 import com.example.sale_tech_web.feature.product.dto.pm.product_dto.ProductImportDTO;
