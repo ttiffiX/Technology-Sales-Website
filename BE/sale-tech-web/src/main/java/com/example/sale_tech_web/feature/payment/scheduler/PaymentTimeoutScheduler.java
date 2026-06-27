@@ -1,10 +1,14 @@
 package com.example.sale_tech_web.feature.payment.scheduler;
 
+import com.example.sale_tech_web.feature.order.entity.orderdetails.OrderDetail;
+import com.example.sale_tech_web.feature.order.entity.orders.Order;
+import com.example.sale_tech_web.feature.order.enums.OrderStatus;
+import com.example.sale_tech_web.feature.order.repository.OrderRepository;
 import com.example.sale_tech_web.feature.payment.config.PaymentConfig;
 import com.example.sale_tech_web.feature.payment.entity.Payment;
 import com.example.sale_tech_web.feature.payment.enums.PaymentStatus;
 import com.example.sale_tech_web.feature.payment.repository.PaymentRepository;
-import com.example.sale_tech_web.feature.payment.vnpay_manager.PaymentProcessingService;
+import com.example.sale_tech_web.feature.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -26,7 +30,8 @@ import static com.example.sale_tech_web.utils.Color.*;
 public class PaymentTimeoutScheduler {
 
     private final PaymentRepository paymentRepository;
-    private final PaymentProcessingService paymentProcessingService;
+    private final ProductRepository productRepository;
+    private final OrderRepository orderRepository;
 
     /**
      * Automatically cancel expired PENDING payments and restore product inventory
@@ -57,10 +62,23 @@ public class PaymentTimeoutScheduler {
 
             for (Payment payment : expiredPayments) {
                 try {
-                    Long orderId = payment.getOrder().getId();
-                    paymentProcessingService.processFailedPayment(orderId, payment.getTransactionId(), payment.getVnpTransactionNo(), payment.getTransactionId());
+                    Order order = payment.getOrder();
+                    for (OrderDetail orderDetail : order.getOrderDetails()) {
+                        productRepository.incrementStockOnRevert(orderDetail.getProduct().getId(), orderDetail.getQuantity());
+                    }
+
+                    payment.setStatus(PaymentStatus.FAILED);
+                    payment.setUpdatedAt(LocalDateTime.now());
+                    paymentRepository.save(payment);
+
+                    if (order.getStatus() == OrderStatus.PENDING) {
+                        order.setStatus(OrderStatus.CANCELLED);
+                        order.setUpdatedAt(LocalDateTime.now());
+                        orderRepository.save(order);
+                    }
+
                     successCount++;
-                    System.out.println("Auto-cancelled expired payment for order " + orderId + ", inventory restored, expiresAt: " + payment.getExpiresAt());
+                    System.out.println("Auto-cancelled expired payment for order " + order.getId() + ", inventory restored, expiresAt: " + payment.getExpiresAt());
                 } catch (Exception e) {
                     failCount++;
                     log.error("Error cancelling payment for order {}",

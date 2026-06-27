@@ -23,10 +23,14 @@ public interface CartDetailRepository extends JpaRepository<CartDetail, Long> {
             "WHERE c.user.id = :userId AND cd.isSelected = true")
     List<CartDetail> findSelectedByUserId(Long userId);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Transactional
-    @Query("DELETE FROM CartDetail cd WHERE cd.cart.user.id = :userId AND cd.isSelected = true")
-    void deleteByUserId(Long userId);
+    @Query("""
+                DELETE FROM CartDetail cd\s
+                WHERE cd.cart.id IN (SELECT c.id FROM Cart c WHERE c.user.id = :userId)
+                  AND cd.product.id IN :productIds
+           \s""")
+    void deleteByUserIdAndProductIds(@Param("userId") Long userId, @Param("productIds") List<Long> productIds);
 
     @Query("SELECT COUNT(cd) FROM CartDetail cd WHERE cd.cart.user.id = :userId")
     int countCartItemsByUserId(@Param("userId") Long userId);

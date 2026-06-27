@@ -17,5 +17,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     @Query("SELECT p FROM Payment p WHERE p.status = :status AND p.expiresAt < :now")
     List<Payment> findExpiredPendingPayments(@Param("status") PaymentStatus status, @Param("now") LocalDateTime now);
+
+    Optional<Payment> findByTransactionId(String transactionId);
 }
 

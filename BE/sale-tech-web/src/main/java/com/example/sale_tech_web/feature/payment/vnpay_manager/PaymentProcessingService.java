@@ -1,7 +1,5 @@
 package com.example.sale_tech_web.feature.payment.vnpay_manager;
 
-import com.example.sale_tech_web.exception.ConflictException;
-import com.example.sale_tech_web.exception.NotFoundException;
 import com.example.sale_tech_web.feature.cart.repository.CartDetailRepository;
 import com.example.sale_tech_web.feature.order.entity.orderdetails.OrderDetail;
 import com.example.sale_tech_web.feature.order.entity.orders.Order;
@@ -17,8 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -31,76 +28,65 @@ public class PaymentProcessingService {
     private final ProductRepository productRepository;
 
     @Transactional
-    public void processSuccessfulPayment(Long orderId, Long receivedAmount, String transactionId, String transactionNo, String payDate) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new NotFoundException("Order not found: " + orderId));
+    public String processSuccessfulPayment(String transactionId, Long receivedAmount, String transactionNo, String payDate) {
+        Payment payment = paymentRepository.findByTransactionId(transactionId).orElse(null);
 
-        // Verify amount
-        long expectedAmount = order.getTotalPrice() * 100L;
-        if (expectedAmount != receivedAmount) {
-            throw new ConflictException("Payment amount mismatch for order " + orderId +
-                    ": expected " + expectedAmount + ", received " + receivedAmount);
+        if (payment == null) {
+            return "01"; // Order not found
         }
 
-        // Find existing Payment (created in placeOrder)
-        Payment payment = paymentRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new NotFoundException("Payment not found for order: " + orderId));
-
-        if (payment.getTransactionId() != null && !payment.getTransactionId().equals(transactionId)) {
-            throw new ConflictException("Payment transaction ID mismatch for order " + orderId);
+        // Verify amount
+        long expectedAmount = payment.getAmount() * 100L;
+        if (expectedAmount != receivedAmount) {
+            log.warn("Payment amount mismatch for txnRef {}: expected {}, received {}", transactionId, expectedAmount, receivedAmount);
+            return "04"; // Invalid amount
         }
 
         // Check if already processed
-        if (payment.getStatus() == PaymentStatus.PAID) {
-            throw new ConflictException("Payment for order " + orderId + " already processed as PAID");
+        if (payment.getStatus() != PaymentStatus.PENDING) {
+            return "02"; // Order already confirmed
         }
 
         // Update Payment to SUCCESS
         payment.setStatus(PaymentStatus.PAID);
-//        payment.setTransactionId(transactionId);
         payment.setVnpTransactionNo(transactionNo);
         payment.setVnpPayDate(payDate);
         payment.setUpdatedAt(LocalDateTime.now());
         paymentRepository.save(payment);
 
-        // Order stays PENDING - waiting for PM approval
-        if (order.getStatus() != OrderStatus.PENDING) {
-            log.warn("Order {} has unexpected status: {}", orderId, order.getStatus());
-            throw new ConflictException("Order has unexpected status: " + order.getStatus());
-        }
-
         // Clear cart
-        cartDetailRepository.deleteByUserId(order.getUser().getId());
+        Order order = payment.getOrder();
+        List<Long> purchasedProductIds = order.getOrderDetails().stream()
+                .map(orderDetail -> orderDetail.getProduct().getId())
+                .toList();
 
-        log.info("VNPay payment SUCCESS for order {}, Payment updated, Order remains PENDING for PM approval", orderId);
+        cartDetailRepository.deleteByUserIdAndProductIds(order.getUser().getId(), purchasedProductIds);
+
+        log.info("VNPay payment SUCCESS for order {}, Payment updated", order.getId());
+        return "00"; // Confirm Success
     }
 
     @Transactional
-    public void processFailedPayment(Long orderId, String transactionId, String transactionNo, String payDate) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new NotFoundException("Order not found: " + orderId));
+    public String processFailedPayment(String transactionId, String transactionNo, String payDate) {
+        Payment payment = paymentRepository.findByTransactionId(transactionId).orElse(null);
 
-        // Find existing Payment (created in placeOrder)
-        Payment payment = paymentRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new NotFoundException("Payment not found for order: " + orderId));
+        if (payment == null) {
+            return "01"; // Order not found
+        }
+
+        if (payment.getStatus() != PaymentStatus.PENDING) {
+            return "02"; // Order already confirmed
+        }
+
+        Order order = payment.getOrder();
 
         // Restore inventory atomically for each product (since payment failed)
         for (OrderDetail orderDetail : order.getOrderDetails()) {
             productRepository.incrementStockOnRevert(orderDetail.getProduct().getId(), orderDetail.getQuantity());
         }
 
-        if (payment.getTransactionId() != null && !payment.getTransactionId().equals(transactionId)) {
-            throw new ConflictException("Payment transaction ID mismatch for order " + orderId);
-        }
-
-        // Check if already processed
-        if (payment.getStatus() == PaymentStatus.FAILED || payment.getStatus() == PaymentStatus.PAID) {
-            throw new ConflictException("Payment for order " + orderId + " already processed with status: " + payment.getStatus());
-        }
-
         // Update Payment to FAILED
         payment.setStatus(PaymentStatus.FAILED);
-//        payment.setTransactionId(transactionId);
         payment.setVnpTransactionNo(transactionNo);
         payment.setVnpPayDate(payDate);
         payment.setUpdatedAt(LocalDateTime.now());
@@ -112,32 +98,8 @@ public class PaymentProcessingService {
             order.setUpdatedAt(LocalDateTime.now());
             orderRepository.save(order);
         }
-        log.info("Order {} cancelled due to VNPay payment failure", orderId);
-    }
-
-    /**
-     * Extract order ID from VNPay orderInfo string
-     * Format: "Thanh toan don hang 123"
-     */
-    public Long extractOrderId(String orderInfo) {
-        try {
-            if (orderInfo == null || orderInfo.isEmpty()) {
-                return null;
-            }
-
-            // Regex tìm dãy số nằm ở cuối chuỗi
-            Pattern pattern = Pattern.compile("(\\d+)$");
-            Matcher matcher = pattern.matcher(orderInfo.trim());
-
-            if (matcher.find()) {
-                return Long.parseLong(matcher.group(1));
-            }
-
-            return null;
-        } catch (Exception e) {
-            log.error("Error extracting orderId from orderInfo: {}", orderInfo, e);
-            return null;
-        }
+        log.info("Order {} cancelled due to VNPay payment failure", order.getId());
+        return "00"; // Confirm Success
     }
 }
 
