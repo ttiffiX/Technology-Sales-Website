@@ -123,8 +123,8 @@ const Order = () => {
         syncFormWithAddress(address);
     };
 
-    const handleAddressModalSuccess = async () => {
-        await loadAddresses();
+    const handleAddressModalSuccess = () => {
+        return loadAddresses();
     };
 
     const handlePlaceOrder = (e) => {

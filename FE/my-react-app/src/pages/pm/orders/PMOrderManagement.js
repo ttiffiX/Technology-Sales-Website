@@ -72,8 +72,11 @@ function PMOrderManagement() {
     // ==========================================
     // 1. HÀM TẢI DỮ LIỆU TỪ API
     // ==========================================
-    const loadOrders = async (nextPage = pageNumber) => {
-        setLoading(true);
+    // Thêm 1 tham số 'isSilent' để kiểm soát có hiện Loading che màn hình hay không
+    const loadOrders = async (nextPage = pageNumber, isSilent = false) => {
+        if (!isSilent) {
+            setLoading(true); // Chỉ hiện chữ Loading ở lần đầu mở trang
+        }
         setError('');
         try {
             const params = normalizePMOrderFilterParams({
@@ -104,7 +107,7 @@ function PMOrderManagement() {
             setTotalElements(0);
             triggerToastRef.current('error', message);
         } finally {
-            setLoading(false);
+            setLoading(false); // Trả về trạng thái cũ
         }
     };
 
@@ -195,7 +198,7 @@ function PMOrderManagement() {
         try {
             const message = await action();
             triggerToast('success', typeof message === 'string' ? message : 'Order updated successfully');
-            await loadOrders(pageNumber);
+            await loadOrders(pageNumber, true);
         } catch (err) {
             const message = err?.response?.data?.message || 'Failed to update order';
             triggerToast('error', message);

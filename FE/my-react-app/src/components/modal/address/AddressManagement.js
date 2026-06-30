@@ -104,7 +104,7 @@ const InlineSearchDropdown = ({
 };
 
 // --- Main Component ---
-const AddressManagement = ({isOpen, onClose, selectionMode = false, onSelectAddress}) => {
+const AddressManagement = ({isOpen, onClose, selectionMode = false, onSelectAddress, onSuccess}) => {
     const {triggerToast} = useToast();
     const [addresses, setAddresses] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -191,8 +191,13 @@ const AddressManagement = ({isOpen, onClose, selectionMode = false, onSelectAddr
         if (result.success) { triggerToast("success", "Default updated"); loadAddresses(); }
     };
 
-    const handleUseAddress = (address) => {
+    const handleUseAddress = async (address) => {
         if (!address) return;
+
+        if (onSuccess) {
+            await onSuccess();
+        }
+
         onSelectAddress?.(address);
         onClose?.();
     };
