@@ -122,7 +122,7 @@ public interface RevenueRepository extends JpaRepository<Order, Long> {
      */
     @Query(value = """
             SELECT
-                COALESCE(SUM(o.total_price), 0) AS pendingRevenue,
+                COALESCE(SUM(od.price * od.quantity), 0) AS pendingRevenue,
                 COALESCE(COUNT(DISTINCT o.id), 0) AS pendingOrders
             FROM orders o
             LEFT JOIN order_detail od ON o.id = od.order_id
@@ -142,7 +142,7 @@ public interface RevenueRepository extends JpaRepository<Order, Long> {
      */
     @Query(value = """
             SELECT
-                COALESCE(SUM(CASE WHEN o.status = 'CANCELLED' THEN o.total_price ELSE 0 END), 0) AS cancelledRevenue,
+                COALESCE(SUM(CASE WHEN o.status = 'CANCELLED' THEN (od.price * od.quantity) ELSE 0 END), 0) AS cancelledRevenue,
                 COALESCE(COUNT(DISTINCT CASE WHEN o.status = 'CANCELLED' THEN o.id END), 0) AS cancelledOrders,
                 COALESCE(COUNT(DISTINCT o.id), 0) AS totalOrders
             FROM orders o
