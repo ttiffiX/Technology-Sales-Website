@@ -63,8 +63,17 @@ export const safeNumber = (value) => Number(value || 0);
 
 export const formatPercent = (value) => `${safeNumber(value).toFixed(2)}%`;
 
-export const formatCompactNumber = (value) =>
-    new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 }).format(safeNumber(value));
+export const formatCompactNumber = (value) => {
+    const num = safeNumber(value);
+
+    // Nếu số lớn hơn hoặc bằng 1 triệu, rút gọn thành "tr" (Triệu)
+    if (num >= 1000000) {
+        return (num / 1000000).toFixed(0) + ' Tr';
+    }
+
+    // Dưới 1 triệu thì giữ nguyên phân tách hàng nghìn
+    return new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 }).format(num);
+};
 
 export const normalizeCategories = (data) => {
     const list = Array.isArray(data) ? data : data?.content || [];

@@ -88,7 +88,8 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
             "(:cateId IS NULL OR p.category.id = :cateId) AND " +
             "(:active IS NULL OR p.isActive = :active) AND " +
             "(:minPrice IS NULL OR p.price >= :minPrice) AND " +
-            "(:maxPrice IS NULL OR p.price <= :maxPrice)")
+            "(:maxPrice IS NULL OR p.price <= :maxPrice) " +
+            "ORDER BY p.quantity ASC") // Thêm dòng này để sắp xếp cứng
     Page<Product> findProductsCustom(
             @Param("kw") String keyword,
             @Param("cateId") Integer categoryId,
