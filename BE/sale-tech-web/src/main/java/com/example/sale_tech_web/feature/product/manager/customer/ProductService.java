@@ -147,7 +147,7 @@ public class ProductService implements ProductServiceInterface {
         // - Scalar: jsonb_extract_path_text(attributes, key) IN (values)
         // - Array:  jsonb_path_exists(attributes, '$.key[*] ? (@ == "v1" || @ == "v2")')
         // Dùng OR của cả 2 để Postgres tự chọn đúng theo kiểu thực tế của field
-        if (attributeFilters != null && !attributeFilters.isEmpty()) {
+        if (attributeFilters != null && !attributeFilters.isEmpty() && categoryId != null) {
             for (Map.Entry<String, List<String>> entry : attributeFilters.entrySet()) {
                 String key = entry.getKey();
                 List<String> values = entry.getValue();
@@ -160,9 +160,9 @@ public class ProductService implements ProductServiceInterface {
                     ).in(values);
 
                     // Array predicate — jsonb_path_exists với OR của tất cả values
-                    String jsonPath = "$.\"" + key + "\"[*] ? (" +
+                    String jsonPath = "$.\"" + escapeJsonPathText(key) + "\"[*] ? (" +
                             values.stream()
-                                    .map(v -> "@ == \"" + v + "\"")
+                                    .map(v -> "@ == \"" + escapeJsonPathText(v) + "\"")
                                     .collect(Collectors.joining(" || "))
                             + ")";
                     var arrayPredicate = cb.isTrue(
@@ -319,5 +319,10 @@ public class ProductService implements ProductServiceInterface {
                     }
                 }
         ));
+    }
+
+    private String escapeJsonPathText(String text) {
+        return text.replace("\\", "\\\\")
+                .replace("\"", "\\\"");
     }
 }
