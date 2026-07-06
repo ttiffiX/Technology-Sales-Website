@@ -4,24 +4,15 @@ import { resendVerificationEmail } from '../../api/AuthAPI';
 import Nav from '../../components/navigation/Nav';
 import { useCart } from '../../contexts/CartContext';
 import './VerificationHelp.scss';
+import {useResendCooldown} from "../../utils";
 
 const VerificationHelp = () => {
     const navigate = useNavigate();
     const { cartCount } = useCart();
     const [email, setEmail] = useState('');
     const [isResending, setIsResending] = useState(false);
-    const [resendCooldown, setResendCooldown] = useState(0);
+    const { cooldown: resendCooldown, startCooldown } = useResendCooldown();
     const [message, setMessage] = useState({ text: '', type: '' });
-
-    // Countdown timer effect
-    React.useEffect(() => {
-        if (resendCooldown > 0) {
-            const timer = setTimeout(() => {
-                setResendCooldown(resendCooldown - 1);
-            }, 1000);
-            return () => clearTimeout(timer);
-        }
-    }, [resendCooldown]);
 
     const handleResendEmail = async (e) => {
         e.preventDefault();
@@ -41,7 +32,7 @@ const VerificationHelp = () => {
                     text: 'A new OTP code has been sent! Please check your inbox.',
                     type: 'success'
                 });
-                setResendCooldown(60);
+                startCooldown(60);
                 // Chuyển sang trang nhập OTP sau 1.5 giây
                 setTimeout(() => navigate('/waiting-verification', { state: { email } }), 1500);
             } else {
@@ -53,7 +44,7 @@ const VerificationHelp = () => {
                 if (result.status === 429) {
                     const match = result.message.match(/(\d+)\s*seconds/);
                     const seconds = match ? parseInt(match[1]) : 60;
-                    setResendCooldown(seconds);
+                    startCooldown(seconds);
                 }
             }
         } catch (error) {

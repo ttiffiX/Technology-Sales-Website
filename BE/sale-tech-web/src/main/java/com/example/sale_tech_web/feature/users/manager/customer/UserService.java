@@ -209,8 +209,7 @@ public class UserService implements UserServiceInterface {
 
         // Kiểm tra rate limiting - chỉ cho phép gửi lại sau 60 giây
         if (verificationToken.getLastSent() != null) {
-            LocalDateTime cooldownExpiry = verificationToken.getLastSent()
-                    .plusSeconds(AccountCleanupConfig.RESEND_VERIFICATION_COOLDOWN_SECONDS);
+            LocalDateTime cooldownExpiry = verificationToken.getExpiryDate();
             if (LocalDateTime.now().isBefore(cooldownExpiry)) {
                 long secondsRemaining = Duration.between(LocalDateTime.now(), cooldownExpiry).getSeconds();
                 throw new TooManyRequestsException(
