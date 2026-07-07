@@ -1,7 +1,6 @@
 package com.example.sale_tech_web.feature.payment.manager;
 
 import com.example.sale_tech_web.feature.order.entity.orders.Order;
-import com.example.sale_tech_web.feature.payment.entity.Payment;
 import com.example.sale_tech_web.feature.payment.enums.PaymentMethod;
 import com.example.sale_tech_web.feature.payment.processor.PaymentProcessor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +36,7 @@ public class PaymentService implements PaymentServiceInterface {
 
     @Override
     @Transactional
-    public Payment createPayment(Order order, PaymentMethod paymentMethod, Map<String, Object> params) {
+    public Object createPayment(Order order, PaymentMethod paymentMethod, Map<String, Object> params) {
         PaymentProcessor processor = getProcessor(paymentMethod);
 
         // Use empty map if params is null
@@ -46,6 +45,16 @@ public class PaymentService implements PaymentServiceInterface {
         return processor.createPayment(order, safeParams);
     }
 
+    @Override
+    @Transactional
+    public String cancelPayment(Order order, PaymentMethod paymentMethod, Map<String, Object> params) {
+        PaymentProcessor processor = getProcessor(paymentMethod);
+        Map<String, Object> safeParams = params != null ? params : new HashMap<>();
+        return processor.cancelPayment(order, safeParams);
+    }
+
+
+    // Helper
     private PaymentProcessor getProcessor(PaymentMethod method) {
         PaymentProcessor processor = processors.get(method);
         if (processor == null) {

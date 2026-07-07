@@ -20,14 +20,11 @@ import com.example.sale_tech_web.feature.order.entity.orders.Order;
 import com.example.sale_tech_web.feature.order.enums.OrderStatus;
 import com.example.sale_tech_web.feature.order.repository.OrderRepository;
 import com.example.sale_tech_web.feature.payment.dto.VNPayPaymentResponse;
-import com.example.sale_tech_web.feature.payment.dto.VNPayRefundRequest;
-import com.example.sale_tech_web.feature.payment.dto.VNPayRefundResponse;
 import com.example.sale_tech_web.feature.payment.entity.Payment;
 import com.example.sale_tech_web.feature.payment.enums.PaymentMethod;
 import com.example.sale_tech_web.feature.payment.enums.PaymentStatus;
 import com.example.sale_tech_web.feature.payment.manager.PaymentServiceInterface;
 import com.example.sale_tech_web.feature.payment.repository.PaymentRepository;
-import com.example.sale_tech_web.feature.payment.vnpay_manager.VNPayService;
 import com.example.sale_tech_web.feature.product.entity.Product;
 import com.example.sale_tech_web.feature.product.repository.ProductRepository;
 import com.example.sale_tech_web.feature.users.entity.Users;
@@ -52,7 +49,6 @@ public class OrderService implements OrderServiceInterface {
     private final OrderRepository orderRepository;
     private final CartDetailRepository cartDetailRepository;
     private final UserRepository userRepository;
-    private final VNPayService vnPayService;
     private final PaymentServiceInterface paymentServiceInterface;
     private final PaymentRepository paymentRepository;
     private final ProductRepository productRepository;
@@ -194,33 +190,12 @@ public class OrderService implements OrderServiceInterface {
                 null // Bỏ trống để broadcast
         ));
 
-        // Check payment method
-        if (request.getPaymentMethod() == PaymentMethod.VNPAY) {
-            // Create VNPay payment URL
-            String orderInfo = "Thanh toan don hang " + savedOrder.getId();
+        Map<String, Object> processorParams = new HashMap<>();
+        processorParams.put("httpRequest", httpRequest);
+        processorParams.put("cartDetails", cartDetails);
 
-            // Create VNPay payment record with PENDING status
-            VNPayPaymentResponse vnpayResponse = vnPayService.createPayment(
-                    savedOrder.getId(),
-                    savedOrder.getTotalPrice(),
-                    orderInfo,
-                    httpRequest
-            );
-
-            // Create Payment entity with txnRef
-            Map<String, Object> params = new HashMap<>();
-            params.put("txnRef", vnpayResponse.getTxnRef());
-            paymentServiceInterface.createPayment(savedOrder, PaymentMethod.VNPAY, params);
-            Objects.requireNonNull(cacheManager.getCache(CacheNames.PAYMENT)).put(vnpayResponse.getOrderId(), vnpayResponse);
-            // Don't delete cart yet - will delete after successful payment
-            return vnpayResponse;
-        }
-
-        // For CASH payment - delete cart immediately
-        paymentServiceInterface.createPayment(order, PaymentMethod.CASH, null);
-        cartDetailRepository.deleteAll(cartDetails);
-
-        return "Order placed successfully for user: " + user.getUsername();
+        // Ra lệnh chạy động, trả về Object gì thì ném thẳng ra cho Controller xử lý tiếp
+        return paymentServiceInterface.createPayment(savedOrder, request.getPaymentMethod(), processorParams);
     }
 
     @Override
@@ -244,63 +219,9 @@ public class OrderService implements OrderServiceInterface {
                     "Only orders with PENDING status can be cancelled. Current status: " + order.getStatus());
         }
 
-        // Check if payment exists for this order
-        Payment payment = paymentRepository.findByOrderId(orderId).orElse(null);
-
-        String refundMessage = "";
-
-        // If payment exists and was successful with VNPay, process refund
-        if (payment != null && payment.getStatus() == PaymentStatus.PAID
-                && payment.getProvider() == PaymentMethod.VNPAY) {
-
-            try {
-                // Prepare refund request
-                VNPayRefundRequest refundRequest = VNPayRefundRequest.builder()
-                        .txnRef(payment.getTransactionId())
-                        .amount(Long.valueOf(payment.getAmount()))
-                        .transactionType("02") // "02" = Full refund, "03" = Partial refund
-                        .transactionDate(payment.getVnpPayDate())
-                        .transactionNo(payment.getVnpTransactionNo()) // VNPay transaction number if available
-                        .createBy(order.getUser().getUsername())
-                        .orderInfo("Hoan tien don hang " + orderId)
-                        .build();
-
-                // Call VNPay refund API
-                VNPayRefundResponse refundResponse = vnPayService.processRefund(refundRequest, request);
-
-                // Check refund response
-                if ("00".equals(refundResponse.getResponseCode())) {
-                    // Refund successful
-                    payment.setStatus(PaymentStatus.REFUND);
-                    payment.setUpdatedAt(LocalDateTime.now());
-                    paymentRepository.save(payment);
-
-                    refundMessage = " and payment has been refunded successfully";
-                } else {
-                    // Refund failed
-                    refundMessage = " but refund failed: " + refundResponse.getMessage();
-
-                    // Still cancel the order but mark payment status accordingly
-                    payment.setStatus(PaymentStatus.REFUND_FAILED);
-                    payment.setUpdatedAt(LocalDateTime.now());
-                    paymentRepository.save(payment);
-                }
-
-            } catch (Exception e) {
-                refundMessage = " but refund encountered an error: " + e.getMessage();
-
-                // Mark payment as refund failed
-                payment.setStatus(PaymentStatus.REFUND_FAILED);
-                payment.setUpdatedAt(LocalDateTime.now());
-                paymentRepository.save(payment);
-            }
-        } else if (payment != null && payment.getStatus() == PaymentStatus.PENDING) {
-            // If payment is still pending, just mark it as cancelled
-            payment.setStatus(PaymentStatus.FAILED);
-            payment.setUpdatedAt(LocalDateTime.now());
-            paymentRepository.save(payment);
-            refundMessage = " and pending payment has been cancelled";
-        }
+        Map<String, Object> processorParams = new HashMap<>();
+        processorParams.put("httpRequest", request);
+        String refundMessage = paymentServiceInterface.cancelPayment(order, order.getPaymentMethod(), processorParams);
 
         // Revert product quantities atomically
         for (OrderDetail orderDetail : order.getOrderDetails()) {
