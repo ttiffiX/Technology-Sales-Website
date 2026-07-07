@@ -181,6 +181,18 @@ const OrderHistory = () => {
     //     return statusCounts?.[statusValue] ?? 0;
     // };
 
+    const scrollToOrdersContainer = () => {
+        setTimeout(() => {
+            const container = document.querySelector('.orders-container');
+            if (container) {
+                // Cuộn đến vị trí của container, trừ bớt 20px khoảng cách nhìn cho đẹp mắt
+                const yOffset = -20;
+                const y = container.getBoundingClientRect().top + window.scrollY + yOffset;
+                window.scrollTo({ top: y, behavior: 'smooth' });
+            }
+        }, 100); // Trì hoãn 100ms để React kịp render lại danh sách mới
+    };
+
     const applyExtraFilters = () => {
         if (startDateInput && endDateInput && startDateInput > endDateInput) {
             triggerToast('error', 'Start date must be before or equal to end date');
@@ -191,6 +203,8 @@ const OrderHistory = () => {
         setAppliedStartDate(startDateInput);
         setAppliedEndDate(endDateInput);
         setPageNumber(0);
+
+        scrollToOrdersContainer();
     };
 
     const resetExtraFilters = () => {
@@ -201,6 +215,8 @@ const OrderHistory = () => {
         setAppliedStartDate('');
         setAppliedEndDate('');
         setPageNumber(0);
+
+        scrollToOrdersContainer();
     };
 
     return (
@@ -218,6 +234,7 @@ const OrderHistory = () => {
                             onClick={() => {
                                 setStatusFilter(filter.value);
                                 setPageNumber(0);
+                                scrollToOrdersContainer();
                             }}
                         >
                             {filter.label}

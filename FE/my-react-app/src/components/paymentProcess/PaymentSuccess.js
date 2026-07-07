@@ -18,35 +18,35 @@ const PaymentSuccess = ({ data, onNavigate }) => {
                 </svg>
             </div>
 
-            <h1 className="payment-result-title success">Thanh Toán Thành Công!</h1>
+            <h1 className="payment-result-title success">Payment Successful!</h1>
             <p className="payment-result-message">
-                Đơn hàng của bạn đã được thanh toán thành công. Cảm ơn bạn đã mua hàng!
+                Your order has been paid successfully. Thank you for shopping with us!
             </p>
 
             <div className="payment-result-details">
                 <div className="payment-detail-row">
-                    <span className="payment-detail-label">Mã giao dịch</span>
+                    <span className="payment-detail-label">Transaction ID</span>
                     <span className="payment-detail-value">{data?.txnRef || 'N/A'}</span>
                 </div>
 
                 {orderId && (
                     <div className="payment-detail-row">
-                        <span className="payment-detail-label">Mã đơn hàng</span>
+                        <span className="payment-detail-label">Order Number</span>
                         <span className="payment-detail-value">#{orderId}</span>
                     </div>
                 )}
 
                 <div className="payment-detail-row">
-                    <span className="payment-detail-label">Số tiền</span>
+                    <span className="payment-detail-label">Amount</span>
                     <span className="payment-detail-value amount">
                         {formatPrice(data?.amount || 0)}
                     </span>
                 </div>
 
                 <div className="payment-detail-row">
-                    <span className="payment-detail-label">Trạng thái</span>
+                    <span className="payment-detail-label">Status</span>
                     <span className="payment-detail-value" style={{ color: '#4caf50' }}>
-                        Thành công
+                        Success
                     </span>
                 </div>
             </div>
@@ -56,13 +56,13 @@ const PaymentSuccess = ({ data, onNavigate }) => {
                     className="btn-payment-result primary"
                     onClick={() => onNavigate('/orderhistory')}
                 >
-                    Xem đơn hàng
+                    View Orders
                 </button>
                 <button
                     className="btn-payment-result secondary"
                     onClick={() => onNavigate('/')}
                 >
-                    Về trang chủ
+                    Back to Home
                 </button>
             </div>
         </div>
@@ -70,4 +70,3 @@ const PaymentSuccess = ({ data, onNavigate }) => {
 };
 
 export default PaymentSuccess;
-

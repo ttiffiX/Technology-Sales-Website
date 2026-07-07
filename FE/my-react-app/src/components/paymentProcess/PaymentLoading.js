@@ -4,10 +4,9 @@ const PaymentLoading = () => {
     return (
         <div className="payment-loading-spinner">
             <div className="payment-spinner"></div>
-            <p>Đang xác thực thanh toán...</p>
+            <p>Verifying payment transaction...</p>
         </div>
     );
 };
 
 export default PaymentLoading;
-

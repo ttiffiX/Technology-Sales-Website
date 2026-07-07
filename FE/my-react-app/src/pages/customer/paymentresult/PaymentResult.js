@@ -42,20 +42,20 @@ const PaymentResult = () => {
                 if (result.success) {
                     setPaymentStatus('success');
                     setPaymentData(result);
-                    triggerToast('success', 'Thanh toán thành công!');
+                    triggerToast('success', 'Payment successfully!');
                 } else {
                     setPaymentStatus('failed');
                     setPaymentData(result);
-                    triggerToast('error', 'Thanh toán thất bại!');
+                    triggerToast('error', 'Payment failed!');
                 }
             } catch (error) {
                 console.error('Error verifying payment:', error);
                 setPaymentStatus('failed');
                 setPaymentData({
                     success: false,
-                    message: 'Lỗi xác thực thanh toán'
+                    message: 'Error verifying payment',
                 });
-                triggerToast('error', 'Lỗi xác thực thanh toán!');
+                triggerToast('error', 'Error verifying payment!');
             }
         };
 

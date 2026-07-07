@@ -345,7 +345,7 @@ const Order = () => {
                                         style={{backgroundImage: `url(${getImage(item.productList.imageUrl)})`}}
                                     />
                                     <div className="details">
-                                        <h3>{item.name}</h3>
+                                        <h3>{item.productList.title}</h3>
                                         <p>Price: {formatPrice(item.productList.price)}</p>
                                         <p>Quantity: {item.quantity}</p>
                                         <p className="item-subtotal">
