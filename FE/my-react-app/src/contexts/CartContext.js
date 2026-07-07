@@ -14,6 +14,10 @@ export const CartProvider = ({ children }) => {
         return !(path.startsWith('/admin') || path.startsWith('/pm'));
     }, []);
 
+    const clearCart = useCallback(() => {
+        setCartCount(0);
+    }, []);
+
     // Fetch cart count on mount
     const fetchCartCount = useCallback(async () => {
         if (!shouldLoadCartCount()) {
@@ -75,7 +79,8 @@ export const CartProvider = ({ children }) => {
                 refreshCartCount,
                 updateCartCount,
                 incrementCartCount,
-                decrementCartCount
+                decrementCartCount,
+                clearCart
             }}
         >
             {children}

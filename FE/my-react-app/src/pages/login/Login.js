@@ -7,7 +7,7 @@ import {login, isAuthenticated} from "../../api/AuthAPI";
 import {useToast} from "../../components/Toast/Toast";
 
 function Login() {
-    const {cartCount} = useCart();
+    const {cartCount, refreshCartCount} = useCart();
     const navigate = useNavigate();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -50,6 +50,7 @@ function Login() {
                 } else if (userRole === 'PM') {
                     navigate('/pm');
                 } else {
+                    await refreshCartCount();
                     navigate('/'); // Chuyển về trang chủ customer
                 }
             } else {

@@ -4,9 +4,11 @@ import {Link, useNavigate} from "react-router-dom";
 import avatarIcon from "../../assets/icon/img.png";
 import {isAuthenticated, getCurrentUser, logout} from "../../api/AuthAPI";
 import {useToast} from "../Toast/Toast";
+import {useCart} from "../../contexts/CartContext";
 
 function Nav({count}) {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const { clearCart } = useCart();
     const [userName, setUserName] = useState("");
     const [userAvatar, setUserAvatar] = useState(avatarIcon);
     const navigate = useNavigate();
@@ -48,6 +50,7 @@ function Nav({count}) {
         setIsLoggedIn(false);
         setUserName("");
         setUserAvatar(avatarIcon);
+        clearCart();
         // window.alert(`Logout successfully`);
         triggerToast('success', 'Logout successfully');
         navigate("/");
