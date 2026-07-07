@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
 import './ChangePasswordModal.scss';
-import { changePassword } from '../../../api/AuthAPI';
+import {changePassword, logout} from '../../../api/AuthAPI';
 import { isRequired, isValidPassword, passwordsMatch, isPasswordDifferent } from '../../../utils';
+import {useToast} from "../../Toast/Toast";
+import {useNavigate} from "react-router-dom";
 
 const ChangePasswordModal = ({ isOpen, onClose, onSuccess }) => {
+    const {triggerToast} = useToast();
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         oldPassword: '',
         newPassword: '',
@@ -58,6 +62,17 @@ const ChangePasswordModal = ({ isOpen, onClose, onSuccess }) => {
         return Object.keys(newErrors).length === 0;
     };
 
+    const handleLogout = async () => {
+        try {
+            await logout();
+            triggerToast('success', 'Logout successfully, you need to login again.');
+            navigate('/login', {replace: true});
+        } catch (error) {
+            triggerToast('error', 'Logout failed');
+        }
+    };
+
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -105,6 +120,7 @@ const ChangePasswordModal = ({ isOpen, onClose, onSuccess }) => {
             });
         } finally {
             setLoading(false);
+            await handleLogout();
         }
     };
 

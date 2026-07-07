@@ -10,6 +10,8 @@ import {
 import {useToast} from "../Toast/Toast";
 import {formatPrice, getImage} from "../../utils";
 
+const MAX_ALLOWED_QUANTITY = 5;
+
 function CartGrid({products, count}) {
     const {triggerToast} = useToast();
     const navigate = useNavigate();
@@ -62,17 +64,26 @@ function CartGrid({products, count}) {
     }, [count]);
 
     const handleQuantitySubmit = useCallback(async (productId, newQuantity, cartDetailId) => {
+        if (newQuantity > MAX_ALLOWED_QUANTITY) {
+            triggerToast('error', `Quantity maximum limit is ${MAX_ALLOWED_QUANTITY}`);
+            const currentProduct = localProducts.find(p => p.cartDetailId === cartDetailId);
+            if (currentProduct) {
+                setInputValues(prev => ({ ...prev, [cartDetailId]: currentProduct.quantity }));
+            }
+            return;
+        }
+
         setUpdatingProducts(prev => new Set(prev).add(cartDetailId));
         try {
             const cartData = await updateCartQuantity(productId, newQuantity);
             updateCartFromResponse(cartData);
             triggerToast('success', 'Quantity updated');
         } catch (err) {
-            triggerToast('error', err);
-            // Revert to original value from products prop
-            const originalProduct = products.find(p => p.cartDetailId === cartDetailId);
-            if (originalProduct) {
-                setInputValues(prev => ({...prev, [cartDetailId]: originalProduct.quantity}));
+            triggerToast('error', err || 'Failed to update quantity');
+            // HỒI PHỤC: Lấy số lượng từ localProducts (Trạng thái thực tế mới nhất trước khi bấm lỗi)
+            const currentProduct = localProducts.find(p => p.cartDetailId === cartDetailId);
+            if (currentProduct) {
+                setInputValues(prev => ({ ...prev, [cartDetailId]: currentProduct.quantity }));
             }
         } finally {
             setUpdatingProducts(prev => {
@@ -81,7 +92,7 @@ function CartGrid({products, count}) {
                 return next;
             });
         }
-    }, [updateCartFromResponse, triggerToast, products]);
+    }, [updateCartFromResponse, triggerToast, localProducts]);
 
     const handleQuantityChange = (cartDetail, check) => {
         const cartDetailId = cartDetail.cartDetailId;
@@ -90,18 +101,22 @@ function CartGrid({products, count}) {
 
         if (check) {
             newQty = currentQty + 1;
+            // Chặn bấm nút "+" nếu chuẩn bị vượt quá giới hạn cấu hình
+            if (newQty > MAX_ALLOWED_QUANTITY) {
+                triggerToast('error', `Quantity maximum limit is ${MAX_ALLOWED_QUANTITY}`);
+                return;
+            }
         } else {
             if (currentQty <= 1) {
                 setProductToDelete(cartDetail);
                 setShowConfirmPopup(true);
                 return;
             }
-
             newQty = currentQty - 1;
         }
 
         // Update local state immediately
-        setInputValues(prev => ({...prev, [cartDetailId]: newQty}));
+        setInputValues(prev => ({ ...prev, [cartDetailId]: newQty }));
 
         // Clear existing timer
         if (clickTimers.current[cartDetailId]) {
@@ -117,16 +132,14 @@ function CartGrid({products, count}) {
     const handleInputChange = (cartDetailId, productId, currentQuantity, newValue) => {
         // Allow empty string temporarily for user to type
         if (newValue === '') {
-            setInputValues(prev => ({...prev, [cartDetailId]: ''}));
+            setInputValues(prev => ({ ...prev, [cartDetailId]: '' }));
 
-            // Clear existing timer
             if (updateTimers.current[cartDetailId]) {
                 clearTimeout(updateTimers.current[cartDetailId]);
             }
 
-            // Set timer to revert to current quantity if user doesn't type
             updateTimers.current[cartDetailId] = setTimeout(() => {
-                setInputValues(prev => ({...prev, [cartDetailId]: currentQuantity}));
+                setInputValues(prev => ({ ...prev, [cartDetailId]: currentQuantity }));
             }, 2000);
             return;
         }
@@ -143,12 +156,11 @@ function CartGrid({products, count}) {
         }
 
         // Validate input
-        if (isNaN(numValue) || numValue < 1 || numValue > 10) {
-            // Revert after delay if invalid
+        if (isNaN(numValue) || numValue < 1 || numValue > MAX_ALLOWED_QUANTITY) {
             updateTimers.current[cartDetailId] = setTimeout(() => {
-                setInputValues(prev => ({...prev, [cartDetailId]: currentQuantity}));
+                setInputValues(prev => ({ ...prev, [cartDetailId]: currentQuantity }));
                 if (!isNaN(numValue)) {
-                    triggerToast('error', 'Quantity must be between 1 and 10');
+                    triggerToast('error', `Quantity must be between 1 and ${MAX_ALLOWED_QUANTITY}`);
                 }
             }, 1500);
             return;
@@ -316,7 +328,7 @@ function CartGrid({products, count}) {
                                     type="number"
                                     className="quantity-input"
                                     min="1"
-                                    max="10"
+                                    max={MAX_ALLOWED_QUANTITY}
                                     value={inputValues[cd.cartDetailId] ?? cd.quantity}
                                     onChange={(e) => handleInputChange(
                                         cd.cartDetailId,
