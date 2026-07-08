@@ -82,6 +82,10 @@ public class AdminService implements AdminServiceInterface {
         Users user = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("User not found."));
 
+        if (user.getIsDeleted()) {
+            throw new BadRequestException("Cannot update role for a deleted user.");
+        }
+
         if (Role.ADMIN.equals(role) || user.getRole().equals(Role.ADMIN)) {
             throw new BadRequestException("Cannot change role to or from ADMIN.");
         }
@@ -117,6 +121,10 @@ public class AdminService implements AdminServiceInterface {
         Users user = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("User not found."));
 
+        if (user.getIsDeleted()) {
+            throw new BadRequestException("User has already been deleted.");
+        }
+
         if (Role.ADMIN.equals(user.getRole())) {
             throw new ForbiddenException("Cannot delete ADMIN.");
         }
@@ -132,6 +140,10 @@ public class AdminService implements AdminServiceInterface {
     public UserDTO updateBanStatus(Long id, Boolean status) {
         Users user = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("User not found."));
+
+        if (user.getIsDeleted()) {
+            throw new BadRequestException("Cannot update ban status for a deleted user.");
+        }
 
         if (Role.ADMIN.equals(user.getRole())) {
             throw new ForbiddenException("Cannot ban ADMIN user.");

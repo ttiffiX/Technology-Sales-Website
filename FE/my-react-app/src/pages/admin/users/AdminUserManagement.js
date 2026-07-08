@@ -329,11 +329,11 @@ function AdminUserManagement() {
                     <strong>{totalElements}</strong>
                 </div>
                 <div className="admin-users__stat-card">
-                    <span>Current page active</span>
+                    <span>Current users active in page</span>
                     <strong>{stats.active}</strong>
                 </div>
                 <div className="admin-users__stat-card">
-                    <span>Current page banned</span>
+                    <span>Current users banned in page</span>
                     <strong>{stats.banned}</strong>
                 </div>
             </div>

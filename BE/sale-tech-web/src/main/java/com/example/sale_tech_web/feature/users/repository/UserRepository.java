@@ -38,6 +38,7 @@ public interface UserRepository extends JpaRepository<Users, Long> {
 
     @EntityGraph(attributePaths = {"cart"})
     @Query("SELECT u FROM Users u WHERE " +
+            "u.isDeleted = false AND " +
             "(:role IS NULL OR u.role = :role) AND " +
             "(:keyword IS NULL OR " +
             "LOWER(u.username) LIKE LOWER(CONCAT('%', CAST(:keyword as string), '%')) OR " +
