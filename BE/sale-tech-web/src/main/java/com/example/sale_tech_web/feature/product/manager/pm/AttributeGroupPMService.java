@@ -1,5 +1,6 @@
 package com.example.sale_tech_web.feature.product.manager.pm;
 
+import com.example.sale_tech_web.config.app.CacheNames;
 import com.example.sale_tech_web.exception.BadRequestException;
 import com.example.sale_tech_web.exception.NotFoundException;
 import com.example.sale_tech_web.feature.product.dto.pm.attribute_group_dto.AttributeGroupDTO;
@@ -10,6 +11,8 @@ import com.example.sale_tech_web.feature.product.repository.CategoryAttributeGro
 import com.example.sale_tech_web.feature.product.repository.CategoryAttributeSchemaRepository;
 import com.example.sale_tech_web.feature.product.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,6 +67,10 @@ public class AttributeGroupPMService implements AttributeGroupPMServiceInterface
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = CacheNames.PRODUCT_BY_ID, allEntries = true),
+            @CacheEvict(value = CacheNames.FILTER_OPTIONS, key = "#request.categoryId")
+    })
     public AttributeGroupDTO updateGroup(Long groupId, AttributeGroupRequest request) {
         CategoryAttributeGroup group = categoryAttributeGroupRepository.findById(groupId)
                 .orElseThrow(() -> new NotFoundException("Attribute Group Not Found"));
@@ -95,6 +102,10 @@ public class AttributeGroupPMService implements AttributeGroupPMServiceInterface
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = CacheNames.PRODUCT_BY_ID, allEntries = true),
+            @CacheEvict(value = CacheNames.FILTER_OPTIONS, key = "#categoryId")
+    })
     public String UpdateGroupOrder(Long categoryId, List<Long> groupIds) {
         if (groupIds == null || groupIds.isEmpty()) {
             return "Group ID list is null or empty.";

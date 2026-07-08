@@ -206,7 +206,7 @@ public class PMService implements PMServiceInterface {
 
         if (oldPublicId != null) {
             try {
-                cloudinaryService.deleteImage(oldPublicId);
+                cloudinaryService.deleteImage(oldPublicId, category.getName());
             } catch (IOException e) {
                 log.error("Failed to delete image from Cloudinary for product ID {}: {}", productId, e.getMessage());
             }
@@ -261,7 +261,7 @@ public class PMService implements PMServiceInterface {
 
         try {
             if (product.getPublicId() != null) {
-                cloudinaryService.deleteImage(product.getPublicId());
+                cloudinaryService.deleteImage(product.getPublicId(), product.getCategory().getName());
             }
         } catch (IOException e) {
             log.error("Failed to delete image from Cloudinary for product ID {}: {}", productId, e.getMessage());

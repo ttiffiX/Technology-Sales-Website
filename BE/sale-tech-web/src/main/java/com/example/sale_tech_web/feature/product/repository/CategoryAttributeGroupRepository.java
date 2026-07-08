@@ -1,5 +1,6 @@
 package com.example.sale_tech_web.feature.product.repository;
 
+import com.example.sale_tech_web.feature.product.entity.Category;
 import com.example.sale_tech_web.feature.product.entity.CategoryAttributeGroup;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -18,4 +19,7 @@ public interface CategoryAttributeGroupRepository extends JpaRepository<Category
     Integer findMaxGroupOrderByCategoryId(@Param("categoryId") Long categoryId);
 
     List<CategoryAttributeGroup> findByCategoryId(Long categoryId);
+
+    @Query("SELECT g.category FROM CategoryAttributeGroup g WHERE g.id = :groupId")
+    Category findCategoryByGroupId(@Param("groupId") Long groupId);
 }

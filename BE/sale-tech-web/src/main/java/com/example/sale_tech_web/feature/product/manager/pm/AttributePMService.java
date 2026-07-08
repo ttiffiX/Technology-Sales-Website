@@ -32,11 +32,11 @@ public class AttributePMService implements AttributePMServiceInterface {
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
     private final CategoryAttributeSchemaRepository categoryAttributeSchemaRepository;
+    private final CategoryAttributeGroupRepository categoryAttributeGroupRepository;
 
     @Autowired
     private CacheManager cacheManager;
-    @Autowired
-    private CategoryAttributeGroupRepository categoryAttributeGroupRepository;
+
 
     @Override
     public List<AttributeResponse> getAttrByCategoryId(Long categoryId) {
@@ -183,20 +183,37 @@ public class AttributePMService implements AttributePMServiceInterface {
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = CacheNames.PRODUCT_BY_ID, allEntries = true),
+    })
     public String updateDisplayOrder(Long groupId, List<Long> attributeIds) {
         if (attributeIds == null || attributeIds.isEmpty()) {
             return "Attribute ID list is null or empty.";
         }
 
+        Set<Long> uniqueIds = new HashSet<>(attributeIds);
+        if (uniqueIds.size() != attributeIds.size()) {
+            throw new BadRequestException("Attribute ID list must not contain duplicate values.");
+        }
+
         List<CategoryAttributeSchema> currentAttributes = categoryAttributeSchemaRepository.findByCategoryAttributeGroupId(groupId);
 
-        Map<Long, CategoryAttributeSchema> attributeMap = currentAttributes.stream()
-                .collect(Collectors.toMap(CategoryAttributeSchema::getId, a -> a));
+        if (currentAttributes == null || currentAttributes.isEmpty()) {
+            throw new NotFoundException("Attribute group not found.");
+        }
 
         if (currentAttributes.size() != attributeIds.size()) {
             throw new BadRequestException(
                     "Attribute Id list size does not match the number of attributes in system.");
         }
+
+        Category category = categoryAttributeGroupRepository.findCategoryByGroupId(groupId);
+        if (category == null) {
+            throw new NotFoundException("Category not found for the given group ID.");
+        }
+
+        Map<Long, CategoryAttributeSchema> attributeMap = currentAttributes.stream()
+                .collect(Collectors.toMap(CategoryAttributeSchema::getId, a -> a));
 
         for (int i = 0; i < attributeIds.size(); i++) {
             Long id = attributeIds.get(i);
@@ -211,6 +228,9 @@ public class AttributePMService implements AttributePMServiceInterface {
         }
 
         categoryAttributeSchemaRepository.saveAll(currentAttributes);
+
+        Objects.requireNonNull(cacheManager.getCache(CacheNames.FILTER_OPTIONS)).evict(category.getId());
+
         return "Display order updated successfully.";
     }
 
