@@ -9,13 +9,9 @@ import com.example.sale_tech_web.feature.order.entity.orderdetails.OrderDetail;
 import com.example.sale_tech_web.feature.order.entity.orders.Order;
 import com.example.sale_tech_web.feature.order.enums.OrderStatus;
 import com.example.sale_tech_web.feature.order.repository.OrderRepository;
-import com.example.sale_tech_web.feature.payment.dto.VNPayRefundRequest;
-import com.example.sale_tech_web.feature.payment.dto.VNPayRefundResponse;
 import com.example.sale_tech_web.feature.payment.entity.Payment;
-import com.example.sale_tech_web.feature.payment.enums.PaymentMethod;
 import com.example.sale_tech_web.feature.payment.enums.PaymentStatus;
-import com.example.sale_tech_web.feature.payment.repository.PaymentRepository;
-import com.example.sale_tech_web.feature.payment.vnpay_manager.VNPayService;
+import com.example.sale_tech_web.feature.payment.manager.PaymentServiceInterface;
 import com.example.sale_tech_web.feature.product.repository.ProductRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -34,8 +31,7 @@ import java.util.Map;
 public class OMService implements OMServiceInterface {
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
-    private final PaymentRepository paymentRepository;
-    private final VNPayService vnPayService;
+    private final PaymentServiceInterface paymentServiceInterface;
 
     @Override
     public Page<OrderDTO> getAllOrderByStatus(Long id,
@@ -107,62 +103,9 @@ public class OMService implements OMServiceInterface {
         validateTransition(order.getStatus(), OrderStatus.PENDING, "reject");
 
         // Check if payment exists for this order
-        Payment payment = paymentRepository.findByOrderId(orderId).orElse(null);
-
-        String refundMessage = "";
-
-        // If payment exists and was successful with VNPay, process refund
-        if (payment != null && payment.getStatus() == PaymentStatus.PAID
-                && payment.getProvider() == PaymentMethod.VNPAY) {
-
-            try {
-                // Prepare refund request
-                VNPayRefundRequest refundRequest = VNPayRefundRequest.builder()
-                        .txnRef(payment.getTransactionId())
-                        .amount(Long.valueOf(payment.getAmount()))
-                        .transactionType("02") // "02" = Full refund, "03" = Partial refund
-                        .transactionDate(payment.getVnpPayDate())
-                        .transactionNo(payment.getVnpTransactionNo()) // VNPay transaction number if available
-                        .createBy(order.getUser().getUsername())
-                        .orderInfo("Hoan tien don hang " + orderId)
-                        .build();
-
-                // Call VNPay refund API
-                VNPayRefundResponse refundResponse = vnPayService.processRefund(refundRequest, request);
-
-                // Check refund response
-                if ("00".equals(refundResponse.getResponseCode())) {
-                    // Refund successful
-                    payment.setStatus(PaymentStatus.REFUND);
-                    payment.setUpdatedAt(LocalDateTime.now());
-                    paymentRepository.save(payment);
-
-                    refundMessage = " and payment has been refunded successfully";
-                } else {
-                    // Refund failed
-                    refundMessage = " but refund failed: " + refundResponse.getMessage();
-
-                    // Still cancel the order but mark payment status accordingly
-                    payment.setStatus(PaymentStatus.REFUND_FAILED);
-                    payment.setUpdatedAt(LocalDateTime.now());
-                    paymentRepository.save(payment);
-                }
-
-            } catch (Exception e) {
-                refundMessage = " but refund encountered an error: " + e.getMessage();
-
-                // Mark payment as refund failed
-                payment.setStatus(PaymentStatus.REFUND_FAILED);
-                payment.setUpdatedAt(LocalDateTime.now());
-                paymentRepository.save(payment);
-            }
-        } else if (payment != null && payment.getStatus() == PaymentStatus.PENDING) {
-            // If payment is still pending, just mark it as rejected
-            payment.setStatus(PaymentStatus.FAILED);
-            payment.setUpdatedAt(LocalDateTime.now());
-            paymentRepository.save(payment);
-            refundMessage = " and pending payment has been rejected";
-        }
+        Map<String, Object> processorParams = new HashMap<>();
+        processorParams.put("httpRequest", request);
+        String refundMessage = paymentServiceInterface.cancelPayment(order, order.getPaymentMethod(), processorParams);
 
         for (OrderDetail orderDetail : order.getOrderDetails()) {
             productRepository.incrementStockOnRevert(orderDetail.getProduct().getId(), orderDetail.getQuantity());
@@ -173,7 +116,7 @@ public class OMService implements OMServiceInterface {
         order.setUpdatedAt(LocalDateTime.now());
         orderRepository.save(order);
 
-        return "Order #" + orderId + " rejected. Reason rejected: See description for details.";
+        return "Order #" + orderId + " rejected" + refundMessage;
     }
 
     @Override
