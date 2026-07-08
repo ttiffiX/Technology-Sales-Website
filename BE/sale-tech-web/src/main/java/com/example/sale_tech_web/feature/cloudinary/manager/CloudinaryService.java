@@ -40,9 +40,12 @@ public class CloudinaryService {
                 .build();
     }
 
-    public void deleteImage(String publicId) throws IOException {
+    public void deleteImage(String publicId, String categoryName) throws IOException {
         if (publicId != null && !publicId.isEmpty()) {
-            cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+            String slugCategory = SlugUtils.toSlug(categoryName);
+            String fullPublicId = "products/" + slugCategory + "/" + publicId;
+
+            cloudinary.uploader().destroy(fullPublicId, ObjectUtils.emptyMap());
         }
     }
 
