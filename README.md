@@ -3,8 +3,7 @@
 A modern e-commerce platform for selling technology products online. Built with a **React** frontend and a **Spring Boot** backend, featuring secure authentication, product management, product reviews with replies, realtime notifications,
 and VNPay payment integration.
 
-**Live Demo**: Coming soon | **Documentation**: Coming soon
-
+**Documentation**: (./Document)
 ## Table of Contents
 
 ---
@@ -278,9 +277,9 @@ Private project for educational and internal development purposes.
 | Frontend        |                    React 18 |
 | Backend         | Spring Boot 3.4.0 / Java 22 |
 | Database        |               PostgreSQL 16 |
-| Controllers     |                          11 |
-| Total endpoints |                          92 |
-| Tables          |                          16 |
+| Controllers     |                          18 |
+| Total endpoints |                          90+|
+| Tables          |                          15+|
 | Deployment      |              Docker Compose |
 
 ---
