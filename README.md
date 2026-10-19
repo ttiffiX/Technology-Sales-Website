@@ -3,7 +3,7 @@
 A modern e-commerce platform for selling technology products online. Built with a **React** frontend and a **Spring Boot** backend, featuring secure authentication, product management, product reviews with replies, realtime notifications,
 and VNPay payment integration.
 
-**Documentation**: (./Document)
+**Documentation**: [Document](./Document)
 ## Table of Contents
 
 ---
